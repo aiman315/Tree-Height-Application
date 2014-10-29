@@ -1,0 +1,60 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="${relativePackage}.${activityClass}" >
+
+    <FrameLayout
+        android:id="@+id/cameraPreviewLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true" >
+
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/cameraPreviewLayout"
+        android:layout_centerHorizontal="true"
+        android:text="@string/instruction_text" />
+
+    <ImageButton
+        android:id="@+id/imageButton1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:contentDescription="@string/button_capture"
+        android:src="@drawable/capture_button"
+        android:onClick = "takePicture" />
+    
+    <com.amb12u.treeheight.CameraPreview
+        android:id="@+id/cameraPreview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        />
+
+
+    <ImageButton
+        android:id="@+id/imageButton_close_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textView1"
+        android:contentDescription="@string/empty"
+        android:onClick="onClickCloseCamera"
+        android:src="@drawable/close_camera" />
+
+    <ImageButton
+        android:id="@+id/imageButton2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/cameraPreviewLayout"
+        android:contentDescription="@string/empty"
+        android:onClick="onClickSwapCamera"
+        android:src="@drawable/swap_camera" />
+        
+</RelativeLayout>
