@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.widget.Toast;
@@ -84,6 +85,7 @@ public class CameraActivity extends Activity {
 	 * @param v: The view that invoked the method
 	 */
 	public void onClickSwapCamera(View v) {
+		Log.d(TAG, "onClickSwapCamera");
 		if (selectedCameraId == frontFacingCameraId) {
 			selectedCameraId = getBackFacingCameraId();	
 		} else {
@@ -97,6 +99,7 @@ public class CameraActivity extends Activity {
 	 * @param v: The view that invoked the method
 	 */
 	public void onClickCloseCamera(View v) {
+		Log.d(TAG, "onClickCloseCamera");
 		releaseSelectedCamera();
 		selectedCameraId = CAMERA_ID_NOT_SET;
 	}
@@ -149,6 +152,7 @@ public class CameraActivity extends Activity {
 	 * Creates a Dialog to inform there is no camera functionality in device
 	 */
 	private void showNoCameraDialog() {
+		Log.d(TAG, "showNoCameraDialog");
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("No Camera");
 		builder.setMessage("Device does not have required camera supprt. " +
@@ -165,6 +169,7 @@ public class CameraActivity extends Activity {
 	 * @return cameraId: ID of camera requested
 	 */
 	private int getFacingCameraId(int facing) {
+		Log.d(TAG, "getFacingCameraId");
 		int cameraId = CAMERA_ID_NOT_SET;
 		
 		int nCameras = Camera.getNumberOfCameras();
@@ -186,6 +191,7 @@ public class CameraActivity extends Activity {
 	 * @return frontFacingCameraId
 	 */
 	private int getFrontFacingCameraId() {
+		Log.d(TAG, "getFrontFacingCameraId");
 		if(frontFacingCameraId == CAMERA_ID_NOT_SET) {
 			frontFacingCameraId = getFacingCameraId(Camera.CameraInfo.CAMERA_FACING_FRONT);
 		}
@@ -197,7 +203,7 @@ public class CameraActivity extends Activity {
 	 * @return backFacingCameraId
 	 */
 	private int getBackFacingCameraId() {
-		
+		Log.d(TAG, "getBackFacingCameraId");
 		if(backFacingCameraId == CAMERA_ID_NOT_SET) {
 			backFacingCameraId = getFacingCameraId(Camera.CameraInfo.CAMERA_FACING_BACK);
 		}
@@ -209,6 +215,7 @@ public class CameraActivity extends Activity {
 	 * and displays its preview on the activity
 	 */
 	private void openSelectedCamera() {
+		Log.d(TAG, "openSelectedCamera");
 		releaseSelectedCamera(); //to ensure no cameras are open
 		
 		if(selectedCameraId != CAMERA_ID_NOT_SET) {
@@ -231,6 +238,7 @@ public class CameraActivity extends Activity {
 	 * Releases the selected camera object, and resets it
 	 */
 	private void releaseSelectedCamera() {
+		Log.d(TAG, "releaseSelectedCamera");
 		if(selectedCamera != null) {
 			CameraPreview cameraPreview = (CameraPreview) findViewById(R.id.cameraPreview);
 			cameraPreview.releaseCamera();
@@ -238,8 +246,7 @@ public class CameraActivity extends Activity {
 			selectedCamera = null;
 		}
 	}
-
-
+	
 //	---------------- Activity Methods ---------------- //
 	
 	@Override
