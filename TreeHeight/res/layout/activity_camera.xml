@@ -6,55 +6,66 @@
 
     <FrameLayout
         android:id="@+id/cameraPreviewLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true" >
 
+        <com.amb12u.treeheight.CameraPreview
+            android:id="@+id/cameraPreview"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
     </FrameLayout>
 
-    <TextView
-        android:id="@+id/textView1"
+    <Space
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/cameraPreviewLayout"
-        android:layout_centerHorizontal="true"
-        android:text="@string/instruction_text" />
+        android:layout_height="wrap_content" />
 
-    <ImageButton
-        android:id="@+id/imageButton1"
+    <Space
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:contentDescription="@string/button_capture"
-        android:src="@drawable/capture_button"
-        android:onClick = "takePicture" />
-    
-    <com.amb12u.treeheight.CameraPreview
-        android:id="@+id/cameraPreview"
+        android:layout_height="wrap_content" />
+
+    <RelativeLayout
+        android:id="@+id/relativeLayout1"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        />
-
-
-    <ImageButton
-        android:id="@+id/imageButton_close_camera"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/textView1"
-        android:contentDescription="@string/empty"
-        android:onClick="onClickCloseCamera"
-        android:src="@drawable/close_camera" />
-
-    <ImageButton
-        android:id="@+id/imageButton2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/cameraPreviewLayout"
-        android:contentDescription="@string/empty"
-        android:onClick="onClickSwapCamera"
-        android:src="@drawable/swap_camera" />
+        android:layout_alignParentBottom="true" >
+ 
+        <View
+            android:id="@+id/horizontal_cross"
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:background="@android:color/darker_gray" />
         
+        <View
+            android:id="@+id/vertical_cross"
+            android:layout_width="1dp"
+            android:layout_height="fill_parent"
+            android:layout_above="@+id/imageButton1"
+            android:layout_centerHorizontal="true"
+            android:background="@android:color/darker_gray" />
+
+        <ImageButton
+            android:id="@+id/imageButton1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:contentDescription="@string/button_capture"
+            android:onClick="takePicture"
+            android:src="@drawable/capture_button" />
+
+    </RelativeLayout>
+
 </RelativeLayout>
