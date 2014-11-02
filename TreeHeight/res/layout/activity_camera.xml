@@ -79,6 +79,15 @@
             android:layout_marginTop="23dp"
             android:text="@string/empty" />
 
+        <TextView
+            android:id="@+id/textViewAngle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/vertical_cross"
+            android:layout_marginBottom="54dp"
+            android:layout_toRightOf="@+id/imageButton1"
+            android:text="@string/empty" />
+
     </RelativeLayout>
 
 </RelativeLayout>
