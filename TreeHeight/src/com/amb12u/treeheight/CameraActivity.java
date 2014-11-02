@@ -8,6 +8,7 @@ import java.util.Locale;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -21,17 +22,23 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Surface;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class CameraActivity extends Activity implements SensorEventListener {
 
 	//TODO: organize variables (private final, private, public, initialization is on create)
+	//TODO: Instantiate required layout components, and initialize them in functions
+	//TODO: Move all text to strings.xml
+
 	private final String TAG = "CameraActivity";
 
 	private final String SELETED_CAMERA_ID_KEY = "selectedCameraId";
@@ -55,6 +62,9 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	// Accelerometer variables
 	private SensorManager mSensorManager;
 	private Sensor mAccelerometer;
+
+	// Camera height
+	double heightCamera;
 
 
 
@@ -277,13 +287,13 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		TextView textY = (TextView)findViewById(R.id.textViewY);
 		TextView textZ = (TextView)findViewById(R.id.textViewZ);
 		TextView textAngle = (TextView)findViewById(R.id.textViewAngle);
-		
+
 		float valueX = event.values[0];
 		float valueY = event.values[1];
 		float valueZ = event.values[2];
-		
+
 		double angle = 0;
-		
+
 		int rotation = getRotation(this);
 		switch (rotation) {
 		case Surface.ROTATION_0:
@@ -303,12 +313,12 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			//angle = calculateAngle();
 			break;
 		}
-		
+
 		//TODO: remove if not needed
 		/*if(valueY < 0) {
 			Toast.makeText(this, "You have exceeded angle value", Toast.LENGTH_SHORT).show();
 		}*/
-		
+
 		textX.setText(Float.toString(valueX));
 		textY.setText(Float.toString(valueY));
 		textZ.setText(Float.toString(valueZ));
@@ -327,6 +337,51 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 */
 	private int getRotation(Context context){
 		return ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
+	}
+
+	private void setupCameraHeight() {
+		// EditText to allow user input
+		final EditText input = new EditText(this);
+		input.setHint(R.string.height_dialog_text);
+		input.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+
+		//camera height input-dialog setup
+		final AlertDialog heightDialog = new AlertDialog.Builder(this)
+		.setView(input)
+		.setTitle(R.string.height_dialog_title)
+		.setPositiveButton(android.R.string.ok, null)
+		.setNegativeButton(android.R.string.cancel, null)
+		.create();
+
+		heightDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+
+			@Override
+			public void onShow(DialogInterface dialog) {
+
+				Button buttonOk = heightDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+				buttonOk.setOnClickListener(new View.OnClickListener() {
+
+					@Override
+					public void onClick(View view) {
+						//verify correct input
+						try {
+							heightCamera = Double.parseDouble(input.getText().toString());
+							heightDialog.dismiss();
+
+							//Display Height
+							TextView textViewCameraHeight = (TextView) findViewById(R.id.textViewCameraHeight);
+							textViewCameraHeight.setText(String.format("Camera Height: %f", heightCamera));
+						} catch (NumberFormatException e) {
+							Toast.makeText(CameraActivity.this, "Invalid Input", Toast.LENGTH_SHORT).show();
+							Log.e(TAG, "exception", e);
+						}
+
+					}
+				});
+			}
+		});
+		heightDialog.setCanceledOnTouchOutside(false);
+		heightDialog.show();
 	}
 
 
@@ -368,6 +423,9 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 		mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+
+		setupCameraHeight();
+
 
 	}
 

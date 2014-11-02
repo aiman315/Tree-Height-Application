@@ -25,6 +25,8 @@
     <string name="title_activity_camera">CameraActivity</string>
     <string name="instruction_text">Instruction Text</string>
     <string name="button_capture">capture photo</string>
+    <string name="height_dialog_title">Camera Height (cm):</string>
+    <string name="height_dialog_text">"Enter current camera height"</string>
     
     
 </resources>
