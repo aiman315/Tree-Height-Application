@@ -295,12 +295,12 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		case Surface.ROTATION_180:
 			//TODO: implementation for orientation
 			//reverse portrait
-			//angle = calculateAngle();
+			tempAngle = calculateAngle(valueY, valueZ);
 			break;
 		default:
 			//TODO: implementation for orientation
 			//reverse landscape
-			//angle = calculateAngle();
+			tempAngle = calculateAngle(valueX, valueZ);
 			break;
 		}
 
@@ -443,7 +443,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 
 	}
-	
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.

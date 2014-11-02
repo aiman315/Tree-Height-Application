@@ -33,12 +33,8 @@
         </activity>
         <activity
             android:name=".CameraActivity"
-            android:label="@string/title_activity_camera" >     
-            <!-- 
-            android:screenOrientation="landscape"
-            android:configChanges="keyboardHidden|orientation|screenSize">
-             -->
-            
+            android:label="@string/title_activity_camera"
+            android:configChanges="orientation|keyboardHidden|screenSize" >     
         </activity>
     </application>
 </manifest>
