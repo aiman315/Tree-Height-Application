@@ -1,27 +1,16 @@
 package com.amb12u.treeheight;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
@@ -46,10 +35,6 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	private final String SELETED_CAMERA_ID_KEY = "selectedCameraId";
 	private final int CAMERA_ID_NOT_SET = -1;
 
-	private final int PHOTO_INTENT = 1000;
-
-	private Uri photoFileUri;
-
 	// Determine existence of cameras
 	private boolean hasCamera = false;
 	private boolean hasFrontCamera = false;
@@ -66,43 +51,38 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	private Sensor mAccelerometer;
 
 	// Camera height
-	double heightCamera;
+	private double heightCamera;
+	
+	// Angle readings
+	private double tempAngle;
+	private double angle1;
+	private double angle2;
+	
+	//Tree height
+	private double heightTree;
 
 
 
 	/**
-	 * Starts Camera application to capture an image with timeStamp name
+	 * Read and store current angle reading
 	 * @param v: The view that invoked the method
 	 */
-	public void takePicture(View v) {
-		Log.d(TAG, "takePicture");
-		photoFileUri = generateTimeStampPhotoFileUri();
-		if (photoFileUri != null) {
-			Intent intent = new Intent (MediaStore.ACTION_IMAGE_CAPTURE);
-			intent.putExtra(MediaStore.EXTRA_OUTPUT, photoFileUri);
-			startActivityForResult(intent, PHOTO_INTENT);
+	public void onClickReadAngle(View v) {
+		Log.d(TAG, "onClickReadAngle");
+		if (angle1 == angle2) {
+			//set angle1 value
+			angle1 = tempAngle;
+		} else {
+			//set angle2 value
+			angle2 = tempAngle;
+			//calculate heightTree
+			calculateTreeHeight();
+			//reset angle1 and angle2
+			angle1 = angle2 = 0;
 		}
-	}
-
-	protected void onActivityResult (int requestCode, int resultCode, Intent resultIntent) {
-		Log.d(TAG, "onActivityResult");
-		Log.d(TAG, String.format("requestCode: %d | resultCode: %d", requestCode, resultCode));
-
-		if (resultCode == RESULT_CANCELED) {
-			Toast.makeText(this, "User Canceled", Toast.LENGTH_SHORT).show();
-			return;
-		}
-
-		switch (requestCode) {
-		case PHOTO_INTENT:
-			//obtain image from application images directory and display it in activity
-			Bitmap imageBitmap = BitmapFactory.decodeFile(photoFileUri.getPath());
-			if (imageBitmap != null) {
-				//ImageView imageView = (ImageView) findViewById(R.id.imageView);
-				//imageView.setImageBitmap(imageBitmap);
-			}
-			break;
-		}
+		
+		
+		
 	}
 
 	/**
@@ -129,50 +109,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		selectedCameraId = CAMERA_ID_NOT_SET;
 	}
 
-	/** 
-	 * Get the photo directory for application, and creates it if necessary
-	 * @return File outputDir
-	 */
-	private File getPhotoDirectory() {
-		Log.d(TAG, "getPhotoDirectory");
-
-		File outputDir = null;
-		String externalStorageState = Environment.getExternalStorageState();
-		if (externalStorageState.equals(Environment.MEDIA_MOUNTED)) {
-			File pictureDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-			outputDir = new File (pictureDir, "TreeHeightApp");
-			if (!outputDir.exists()) {
-				if (!outputDir.mkdirs()) {
-					Toast.makeText(this,  "failed to create directory: " + outputDir.getAbsolutePath(), Toast.LENGTH_SHORT).show();
-					outputDir = null;
-				}
-			}
-		}
-		return outputDir;
-	}
-
-	/**
-	 * Creates a time stamp for captured image and converts it to full Uri
-	 * @return photoFileUri
-	 */
-	private Uri generateTimeStampPhotoFileUri() {
-		Log.d(TAG, "generateTimeStampPhotoFileUri");
-
-		Uri photoFileUri = null;
-		File outputDir = getPhotoDirectory();
-
-		if (outputDir != null) {
-			String timeStamp = 	new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss", Locale.UK).format(new Date()); 
-			Toast.makeText(this, timeStamp, Toast.LENGTH_SHORT).show();
-			String photoFileName = "IMG_" + timeStamp + ".jpg";
-
-			File photoFile = new File (outputDir, photoFileName);
-			photoFileUri = Uri.fromFile(photoFile);	
-		}
-
-		return photoFileUri;
-	}
-
+	
 	/**
 	 * Creates a Dialog to inform there is no camera functionality in device
 	 */
@@ -292,19 +229,17 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 		float valueX = event.values[0];
 		float valueY = event.values[1];
-		float valueZ = event.values[2];
-
-		double angle = 0;
+		float valueZ = -1 * event.values[2]; //multiply by -1 to obtain Z actual readings for device on its back
 
 		int rotation = getRotation(this);
 		switch (rotation) {
 		case Surface.ROTATION_0:
 			//portrait
-			angle = calculateAngle(valueY, valueZ);
+			tempAngle = calculateAngle(valueY, valueZ);
 			break;
 		case Surface.ROTATION_90:
 			//landscape
-			angle = calculateAngle(valueX, valueZ);
+			tempAngle = calculateAngle(valueX, valueZ);
 			break;
 		case Surface.ROTATION_180:
 			//reverse portrait
@@ -324,12 +259,13 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		textX.setText(Float.toString(valueX));
 		textY.setText(Float.toString(valueY));
 		textZ.setText(Float.toString(valueZ));
-		textAngle.setText(Double.toString(angle));
+		textAngle.setText(Double.toString(tempAngle));
 
 	}
 
 	private double calculateAngle(float axis, float depth) {
-		return (Math.atan(depth/axis))* 180 / Math.PI;
+		//TODO: remove to degrees. used only for easier reading
+		return Math.abs(Math.toDegrees(Math.atan(depth/axis)));
 	}
 
 	/**
@@ -384,6 +320,16 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		heightDialog.setCanceledOnTouchOutside(false);
 		heightDialog.show();
 	}
+	
+	/**
+	 * Calculate height for current angles readings
+	 * and display it
+	 */
+	private void calculateTreeHeight() {
+		TextView textViewTreeHeight = (TextView) findViewById(R.id.textViewTotalHeight);
+		heightTree = heightCamera*((Math.tan(Math.toRadians(angle1))/Math.tan(Math.toRadians(angle2)))+ 1);
+		textViewTreeHeight.setText(String.format("Tree Height = %.2f", heightTree));
+	}
 
 
 
@@ -402,6 +348,12 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		Log.d(TAG, "onCreate");
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_camera);
+		
+		//initializations
+		heightCamera = 0;
+		heightTree = 0;
+		angle1 = 0;
+		angle2 = 0;
 
 		//check for camera feature
 		PackageManager pm = getPackageManager();
@@ -425,6 +377,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
+		//camera height setup
 		setupCameraHeight();
 
 

@@ -48,7 +48,7 @@
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:contentDescription="@string/button_capture"
-            android:onClick="takePicture"
+            android:onClick="onClickReadAngle"
             android:src="@drawable/capture_button" />
 
         <TextView
@@ -95,6 +95,14 @@
             android:layout_alignParentTop="true"
             android:layout_marginTop="17dp"
             android:layout_toLeftOf="@+id/textViewX"
+            android:text="@string/empty" />
+
+        <TextView
+            android:id="@+id/textViewTotalHeight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/textViewAngle"
+            android:layout_alignRight="@+id/textViewZ"
             android:text="@string/empty" />
 
     </RelativeLayout>
