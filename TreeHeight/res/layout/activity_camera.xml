@@ -37,20 +37,48 @@
             android:id="@+id/vertical_cross"
             android:layout_width="1dp"
             android:layout_height="fill_parent"
-            android:layout_above="@+id/imageButton1"
+            android:layout_above="@+id/buttonReadAngle"
             android:layout_centerHorizontal="true"
             android:background="@android:color/darker_gray" />
 
-        <ImageButton
-            android:id="@+id/imageButton1"
+         <Button
+             android:id="@+id/buttonUndoAngle"
+             style="?android:attr/buttonStyleSmall"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_alignParentBottom="true"
+             android:layout_alignParentLeft="true"
+             android:layout_alignTop="@+id/buttonReadAngle"
+             android:layout_toLeftOf="@+id/buttonReadAngle"
+             android:text="@string/reset"
+             android:onClick="onClickUndoAngle"
+             android:enabled="false"
+             android:textSize="14sp" />
+        
+        <Button
+            android:id="@+id/buttonReadAngle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:contentDescription="@string/button_capture"
             android:onClick="onClickReadAngle"
-            android:src="@drawable/capture_button" />
-
+            android:enabled="false"
+            android:text="@string/buttonReadAngle"
+            android:textSize="14sp" />
+        
+        <Button
+            android:id="@+id/buttonCalculateHeight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignTop="@+id/buttonReadAngle"
+            android:layout_toRightOf="@+id/buttonReadAngle"
+            android:enabled="false"
+            android:onClick="onClickCalculateHeight"
+            android:text="@string/button_calculate_height"
+            android:textSize="14sp" />
+       
         <TextView
             android:id="@+id/textViewX"
             android:layout_width="wrap_content"
@@ -58,7 +86,7 @@
             android:layout_alignParentTop="true"
             android:layout_marginRight="17dp"
             android:layout_marginTop="73dp"
-            android:layout_toLeftOf="@+id/imageButton1"
+            android:layout_toLeftOf="@+id/buttonReadAngle"
             android:text="@string/empty" />
 
         <TextView
@@ -85,7 +113,7 @@
             android:layout_height="wrap_content"
             android:layout_alignBottom="@+id/vertical_cross"
             android:layout_marginBottom="54dp"
-            android:layout_toRightOf="@+id/imageButton1"
+            android:layout_toRightOf="@+id/buttonReadAngle"
             android:text="@string/empty" />
 
         <TextView

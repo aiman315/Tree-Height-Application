@@ -31,6 +31,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	//TODO: Move all text to strings.xml
 
 	private final String TAG = "CameraActivity";
+	private final int INVALID_ANGLE = -999;
 
 	private final String SELETED_CAMERA_ID_KEY = "selectedCameraId";
 	private final int CAMERA_ID_NOT_SET = -1;
@@ -55,8 +56,8 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	
 	// Angle readings
 	private double tempAngle;
-	private double angle1;
-	private double angle2;
+	private int angle1;
+	private int angle2;
 	
 	//Tree height
 	private double heightTree;
@@ -69,20 +70,70 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 */
 	public void onClickReadAngle(View v) {
 		Log.d(TAG, "onClickReadAngle");
-		if (angle1 == angle2) {
-			//set angle1 value
-			angle1 = tempAngle;
+		if (angle1 == INVALID_ANGLE) {
+			angle1 = (int) tempAngle;
+			Toast.makeText(this, String.format("1st angle reading: %dº", angle1), Toast.LENGTH_SHORT).show();
+			
+			Button buttonUndoAngle = (Button) findViewById(R.id.buttonUndoAngle);
+			buttonUndoAngle.setEnabled(true);
 		} else {
-			//set angle2 value
-			angle2 = tempAngle;
-			//calculate heightTree
-			calculateTreeHeight();
-			//reset angle1 and angle2
-			angle1 = angle2 = 0;
+			angle2 = (int) tempAngle;
+			Toast.makeText(this, String.format("2nd angle reading: %dº", angle2), Toast.LENGTH_SHORT).show();
+			
+			Button buttonReadAngle = (Button) v;
+			buttonReadAngle.setEnabled(false);
+			 
+			Button buttonCalculateHeight = (Button) findViewById(R.id.buttonCalculateHeight);
+			buttonCalculateHeight.setEnabled(true);
+		}	
+	}
+	
+	/**
+	 * Reset angles readings
+	 * @param v
+	 */
+	public void onClickUndoAngle(View v) {
+		Log.d(TAG, "onClickResetAngles");
+		
+		if (angle2 != INVALID_ANGLE) {
+			angle2 = INVALID_ANGLE;
+			Toast.makeText(this, "Cleared 2nd angle reading", Toast.LENGTH_SHORT).show();
+			
+			Button buttonCalculateHeight = (Button) findViewById(R.id.buttonCalculateHeight);
+			buttonCalculateHeight.setEnabled(false);
+			
+			Button buttonReadAngle = (Button) findViewById(R.id.buttonReadAngle);
+			buttonReadAngle.setEnabled(true);
+		} else {
+			angle1 = INVALID_ANGLE;
+			Toast.makeText(this, "Cleared 1st angle reading", Toast.LENGTH_SHORT).show();
+			
+			Button buttonUndoAngle = (Button) v;
+			buttonUndoAngle.setEnabled(false);
 		}
+	}
+	
+	/**
+	 * Calculate the total height of tree
+	 * and reset angles readings
+	 * @param v
+	 */
+	public void onClickCalculateHeight(View v) {
+		Log.d(TAG, "onClickCalculateHeight");
+		calculateTreeHeight();
+		//FIXME: what is the reasonable accuracy %.2f m or cm?
+		Toast.makeText(this, String.format("Total Tree Height: %.2f cm", heightTree), Toast.LENGTH_SHORT).show();
 		
+		angle1 = angle2 = INVALID_ANGLE;
 		
+		Button buttonCalculateHeight = (Button) v;
+		buttonCalculateHeight.setEnabled(false);
 		
+		Button buttonReadAngle = (Button) findViewById(R.id.buttonReadAngle);
+		buttonReadAngle.setEnabled(true);
+		
+		Button buttonUndoAngle = (Button) findViewById(R.id.buttonUndoAngle);
+		buttonUndoAngle.setEnabled(false);
 	}
 
 	/**
@@ -242,10 +293,12 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			tempAngle = calculateAngle(valueX, valueZ);
 			break;
 		case Surface.ROTATION_180:
+			//TODO: implementation for orientation
 			//reverse portrait
 			//angle = calculateAngle();
 			break;
 		default:
+			//TODO: implementation for orientation
 			//reverse landscape
 			//angle = calculateAngle();
 			break;
@@ -303,11 +356,19 @@ public class CameraActivity extends Activity implements SensorEventListener {
 						//verify correct input
 						try {
 							heightCamera = Double.parseDouble(input.getText().toString());
-							heightDialog.dismiss();
-
-							//Display Height
-							TextView textViewCameraHeight = (TextView) findViewById(R.id.textViewCameraHeight);
-							textViewCameraHeight.setText(String.format("Camera Height: %f", heightCamera));
+							
+							if (heightCamera > 0) {
+								heightDialog.dismiss();
+								//Display Height
+								TextView textViewCameraHeight = (TextView) findViewById(R.id.textViewCameraHeight);
+								textViewCameraHeight.setText(String.format(
+										"Camera Height: %f", heightCamera));
+								//Enable interface
+								Button buttonReadAngle = (Button) findViewById(R.id.buttonReadAngle);
+								buttonReadAngle.setEnabled(true);
+							} else {
+								Toast.makeText(CameraActivity.this, "Input Must be greater than zero", Toast.LENGTH_SHORT).show();
+							}
 						} catch (NumberFormatException e) {
 							Toast.makeText(CameraActivity.this, "Invalid Input", Toast.LENGTH_SHORT).show();
 							Log.e(TAG, "exception", e);
@@ -352,8 +413,8 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		//initializations
 		heightCamera = 0;
 		heightTree = 0;
-		angle1 = 0;
-		angle2 = 0;
+		angle1 = INVALID_ANGLE;
+		angle2 = INVALID_ANGLE;
 
 		//check for camera feature
 		PackageManager pm = getPackageManager();

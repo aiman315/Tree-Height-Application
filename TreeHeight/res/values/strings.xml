@@ -3,6 +3,7 @@
     
     <!-- General Strings -->
     <string name="empty"></string>
+    <string name="reset">Reset</string>
 
     
     <!-- MainActivity -->
@@ -24,9 +25,11 @@
     <!-- CameraActivity -->
     <string name="title_activity_camera">CameraActivity</string>
     <string name="instruction_text">Instruction Text</string>
-    <string name="button_capture">capture photo</string>
+    <string name="buttonReadAngle">Read Angle</string>
     <string name="height_dialog_title">Camera Height (cm):</string>
     <string name="height_dialog_text">"Enter current camera height"</string>
+    
+    <string name="button_calculate_height">Find Height</string>
     
     <string name="action_camera_height">Set Height</string>
     
