@@ -24,6 +24,8 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.InputType;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.Surface;
 import android.view.View;
 import android.view.Window;
@@ -350,7 +352,6 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		.setView(input)
 		.setTitle(R.string.height_dialog_title)
 		.setPositiveButton(android.R.string.ok, null)
-		.setNegativeButton(android.R.string.cancel, null)
 		.create();
 
 		heightDialog.setOnShowListener(new DialogInterface.OnShowListener() {
@@ -428,7 +429,34 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 
 	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.math, menu);
+		return true;
+	}
 
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		
+		
+		int id = item.getItemId();
+		
+		switch(id) {
+		case R.id.action_camera_height:
+			setupCameraHeight();
+			return true;
+		case R.id.action_settings:
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+	
 	@Override
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroy");
