@@ -9,7 +9,7 @@
     tools:context="com.amb12u.treeheight.MainActivity" >
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/textViewX"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -24,7 +24,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/textView1"
+        android:layout_below="@+id/textViewX"
         android:orientation="vertical" >
 
         <Button

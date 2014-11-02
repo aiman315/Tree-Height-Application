@@ -19,7 +19,7 @@ public class DescActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_desc);
 
-		desc = (TextView) findViewById(R.id.textView1);
+		desc = (TextView) findViewById(R.id.textViewX);
 
 		Intent intent = getIntent();
 		Bundle bundle = intent.getExtras();

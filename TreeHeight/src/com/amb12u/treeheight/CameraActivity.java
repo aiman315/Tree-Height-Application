@@ -7,23 +7,29 @@ import java.util.Locale;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
+import android.widget.TextView;
 import android.widget.Toast;
 
-public class CameraActivity extends Activity {
+public class CameraActivity extends Activity implements SensorEventListener {
 
+	//TODO: organize variables (private final, private, public, initialization is on create)
 	private final String TAG = "CameraActivity";
 	
 	private final String SELETED_CAMERA_ID_KEY = "selectedCameraId";
@@ -43,8 +49,13 @@ public class CameraActivity extends Activity {
 	private int frontFacingCameraId = CAMERA_ID_NOT_SET;
 	private int backFacingCameraId = CAMERA_ID_NOT_SET;
 	private int selectedCameraId = CAMERA_ID_NOT_SET;
-
 	
+	// Accelerometer variables
+	private SensorManager mSensorManager;
+    private Sensor mAccelerometer;
+
+    
+
 	/**
 	 * Starts Camera application to capture an image with timeStamp name
 	 * @param v: The view that invoked the method
@@ -247,6 +258,34 @@ public class CameraActivity extends Activity {
 		}
 	}
 	
+	
+	@Override
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+		Log.d(TAG, "onAccuracyChanged");
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onSensorChanged(SensorEvent event) {
+		Log.d(TAG, "onSensorChanged");
+		
+		//TODO: remove TextViews. Only need to capture the values
+		TextView textX = (TextView)findViewById(R.id.textViewX);
+		TextView textY = (TextView)findViewById(R.id.textViewY);
+		TextView textZ = (TextView)findViewById(R.id.textViewZ);
+
+		float valueX = event.values[0];
+		float valueY = event.values[1];
+		float valueZ = event.values[2];
+		
+		textX.setText(Float.toString(valueX));
+		textY.setText(Float.toString(valueY));
+		textZ.setText(Float.toString(valueZ));
+		
+	}
+	
+	
 //	---------------- Activity Methods ---------------- //
 	
 	@Override
@@ -279,6 +318,12 @@ public class CameraActivity extends Activity {
 			}
 			openSelectedCamera();
 		}
+
+		//accelerometer setup
+		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+		mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+		
 	}
 
 	@Override
@@ -292,6 +337,7 @@ public class CameraActivity extends Activity {
 		Log.d(TAG, "onPause");
 		super.onPause();
 		releaseSelectedCamera(); //to allow other applications to use selected camera
+		mSensorManager.unregisterListener(this);
 	}
 
 	@Override
@@ -299,6 +345,7 @@ public class CameraActivity extends Activity {
 		Log.d(TAG, "onResume");
 		super.onResume();
 		openSelectedCamera(); //to restore control of selected camera resource
+		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 	}
 
 	@Override
