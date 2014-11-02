@@ -32,6 +32,7 @@
     <string name="button_calculate_height">Find Height</string>
     
     <string name="action_camera_height">Set Height</string>
+    <string name="action_camera_swap">Swap Cameras</string>
     
     
 </resources>

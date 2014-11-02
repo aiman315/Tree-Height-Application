@@ -137,46 +137,6 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	}
 
 	/**
-	 * Swaps the selected camera, between front facing and back facing
-	 * @param v: The view that invoked the method
-	 */
-	public void onClickSwapCamera(View v) {
-		Log.d(TAG, "onClickSwapCamera");
-		if (selectedCameraId == frontFacingCameraId) {
-			selectedCameraId = getBackFacingCameraId();	
-		} else {
-			selectedCameraId = getFrontFacingCameraId();
-		}
-		openSelectedCamera();
-	}
-
-	/**
-	 * Stops the camera preview
-	 * @param v: The view that invoked the method
-	 */
-	public void onClickCloseCamera(View v) {
-		Log.d(TAG, "onClickCloseCamera");
-		releaseSelectedCamera();
-		selectedCameraId = CAMERA_ID_NOT_SET;
-	}
-
-	
-	/**
-	 * Creates a Dialog to inform there is no camera functionality in device
-	 */
-	private void showNoCameraDialog() {
-		Log.d(TAG, "showNoCameraDialog");
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle("No Camera");
-		builder.setMessage("Device does not have required camera supprt. " +
-				"Some features will not be available.");
-		builder.setPositiveButton("continue", null);
-		AlertDialog dialog = builder.create();
-		dialog.setCanceledOnTouchOutside(false);
-		dialog.show();
-	}
-
-	/**
 	 * Gets the ID of requested camera
 	 * @param facing: whether facing front or back
 	 * @return cameraId: ID of camera requested
@@ -246,6 +206,19 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
 		}
 	}
+	
+	/**
+	 * Swaps the selected camera, between front facing and back facing
+	 */
+	public void swapCamera() {
+		Log.d(TAG, "swapCamera");
+		if (selectedCameraId == frontFacingCameraId) {
+			selectedCameraId = getBackFacingCameraId();	
+		} else {
+			selectedCameraId = getFrontFacingCameraId();
+		}
+		openSelectedCamera();
+	}
 
 	/**
 	 * Releases the selected camera object, and resets it
@@ -293,12 +266,10 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			tempAngle = calculateAngle(valueX, valueZ);
 			break;
 		case Surface.ROTATION_180:
-			//TODO: implementation for orientation
 			//reverse portrait
 			tempAngle = calculateAngle(valueY, valueZ);
 			break;
 		default:
-			//TODO: implementation for orientation
 			//reverse landscape
 			tempAngle = calculateAngle(valueX, valueZ);
 			break;
@@ -318,7 +289,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 	private double calculateAngle(float axis, float depth) {
 		//TODO: remove to degrees. used only for easier reading
-		return Math.abs(Math.toDegrees(Math.atan(depth/axis)));
+		return Math.toDegrees(Math.atan(depth/axis));
 	}
 
 	/**
@@ -388,8 +359,13 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 */
 	private void calculateTreeHeight() {
 		TextView textViewTreeHeight = (TextView) findViewById(R.id.textViewTotalHeight);
-		heightTree = heightCamera*((Math.tan(Math.toRadians(angle1))/Math.tan(Math.toRadians(angle2)))+ 1);
-		textViewTreeHeight.setText(String.format("Tree Height = %.2f", heightTree));
+		
+		if (angle1 < angle2) {
+			heightTree = heightCamera*((Math.tan(Math.toRadians(angle2))/Math.tan(Math.toRadians(angle1)))+ 1);	
+		} else {
+			heightTree = heightCamera*((Math.tan(Math.toRadians(angle1))/Math.tan(Math.toRadians(angle2)))+ 1);
+		}
+		textViewTreeHeight.setText(String.format("Tree Height = %.2f", Math.abs(heightTree)));
 	}
 
 
@@ -422,7 +398,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		hasFrontCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT);
 
 		if (!(hasCamera || hasFrontCamera)) {
-			showNoCameraDialog();
+			Toast.makeText(this, "Camera Feature is not supported by this device", Toast.LENGTH_SHORT).show();
 		} else {
 			//sets back facing camera as default for selected camera
 			selectedCameraId = getBackFacingCameraId();
@@ -463,6 +439,9 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		switch(id) {
 		case R.id.action_camera_height:
 			setupCameraHeight();
+			return true;
+		case R.id.action_camera_swap:
+			swapCamera();
 			return true;
 		case R.id.action_settings:
 			return true;
