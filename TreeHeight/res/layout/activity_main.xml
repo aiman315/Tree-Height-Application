@@ -9,7 +9,7 @@
     tools:context="com.amb12u.treeheight.MainActivity" >
 
     <TextView
-        android:id="@+id/textViewX"
+        android:id="@+id/textViewIntro"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -24,25 +24,25 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/textViewX"
+        android:layout_below="@+id/textViewIntro"
         android:orientation="vertical" >
 
         <Button
-            android:id="@+id/button1"
+            android:id="@+id/buttonMath"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/button_math"
             android:onClick="onClickDesc" />
 
         <Button
-            android:id="@+id/button2"
+            android:id="@+id/buttonIP"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/button_image_processing" 
 			android:onClick="onClickDesc" />
 
         <Button
-            android:id="@+id/button3"
+            android:id="@+id/buttonRand"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/button_something_else"

@@ -28,11 +28,11 @@ public class DescActivity extends Activity {
 		{
 			int buttonId = (Integer) bundle.get("button_id");
 			switch(buttonId) {
-			case R.id.button1: 
+			case R.id.buttonMath: 
 				setTitle(R.string.button_math);
 				desc.setText(R.string.math_approach_desc); 
 				break;
-			case R.id.button2: 
+			case R.id.buttonRand: 
 				setTitle(R.string.button_image_processing);
 				desc.setText(R.string.img_processing_approach_desc); 
 				break;
