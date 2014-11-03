@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -416,8 +417,6 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 		//camera height setup
 		setupCameraHeight();
-
-
 	}
 
 	@Override
@@ -450,6 +449,15 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		}
 	}
 	
+	
+	
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		Log.d(TAG, "onConfigurationChanged");
+		super.onConfigurationChanged(newConfig);
+		openSelectedCamera();
+	}
+
 	@Override
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroy");
