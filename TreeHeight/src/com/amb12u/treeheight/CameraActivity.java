@@ -268,11 +268,11 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			break;
 		case Surface.ROTATION_180:
 			//reverse portrait
-			tempAngle = calculateAngle(valueY, valueZ);
+			tempAngle = calculateAngle(-1*valueY, valueZ);
 			break;
 		default:
 			//reverse landscape
-			tempAngle = calculateAngle(valueX, valueZ);
+			tempAngle = calculateAngle(-1*valueX, valueZ);
 			break;
 		}
 
@@ -366,7 +366,9 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		} else {
 			heightTree = heightCamera*((Math.tan(Math.toRadians(angle1))/Math.tan(Math.toRadians(angle2)))+ 1);
 		}
-		textViewTreeHeight.setText(String.format("Tree Height = %.2f", Math.abs(heightTree)));
+		
+		heightTree = Math.abs(heightTree);
+		textViewTreeHeight.setText(String.format("Tree Height = %.2f",heightTree));
 	}
 
 

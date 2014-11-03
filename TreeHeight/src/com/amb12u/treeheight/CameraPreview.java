@@ -22,13 +22,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 		Log.d(TAG, "CameraPreview");
 	}
 
-	public CameraPreview (Context context) {
+	public CameraPreview(Context context) {
 		super(context);
 		Log.d(TAG, "CameraPreview");
 	}
 
 	@Override
-	public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
+	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 		Log.d(TAG, "surfaceChanged");
 		stopPreview();
 		startPreview();
@@ -44,7 +44,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 	public void surfaceDestroyed(SurfaceHolder arg0) {
 		Log.d(TAG, "surfaceDestroyed");
 		stopPreview();
-
 	}
 
 	/**
