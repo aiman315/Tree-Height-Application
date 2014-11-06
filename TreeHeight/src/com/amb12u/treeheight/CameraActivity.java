@@ -288,6 +288,14 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 	}
 
+	/**
+	 * Calculate the angle between two dimensions in degrees
+	 * <b>axis</b>: either x-axis or y-axis
+	 * <b>axis</b>: z-axis
+	 * @param axis
+	 * @param depth
+	 * @return the angle between dimensions in degrees 
+	 */
 	private double calculateAngle(float axis, float depth) {
 		//TODO: remove to degrees. used only for easier reading
 		return Math.toDegrees(Math.atan(depth/axis));
@@ -302,6 +310,11 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		return ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
 	}
 
+	/**
+	 * Creates a dialog to input camera height
+	 * The value of camera height is positive double, and can't be zero
+	 * The unit for camera height is cm
+	 */
 	private void setupCameraHeight() {
 		// EditText to allow user input
 		final EditText input = new EditText(this);
