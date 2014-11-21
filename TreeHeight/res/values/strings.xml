@@ -1,38 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+
     <!-- General Strings -->
     <string name="empty"></string>
     <string name="reset">Reset</string>
 
-    
     <!-- MainActivity -->
     <string name="app_name">Tree Height</string>
     <string name="methods">Please Select One Of The Methods</string>
     <string name="button_math">Mathematical</string>
     <string name="button_image_processing">Image Processing</string>
     <string name="button_something_else">make up something</string>
-    
     <string name="action_settings">Settings</string>
-    
+
     <!-- DescActivity -->
     <string name="title_activity_desc">Approach Description</string>
     <string name="math_approach_desc">this is Math approach</string>
     <string name="img_processing_approach_desc">Image Processing Approach</string>
     <string name="button_try_me">Try Me!</string>
-    
-    
+
     <!-- CameraActivity -->
     <string name="title_activity_camera">CameraActivity</string>
     <string name="instruction_text">Instruction Text</string>
     <string name="buttonReadAngle">Read Angle</string>
     <string name="height_dialog_title">Camera Height (cm):</string>
     <string name="height_dialog_text">"Enter current camera height"</string>
-    
     <string name="button_calculate_height">Find Height</string>
-    
     <string name="action_camera_height">Set Height</string>
     <string name="action_camera_swap">Swap Cameras</string>
     
-    
+    <!-- Image Processing Activity -->
+    <string name="title_activity_image_processing">Image Processing</string>
+
 </resources>
