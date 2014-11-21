@@ -8,11 +8,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class DescActivity extends Activity {
 
 	private final String TAG = "DescActivity";
+	private final int INVALID_METHOD_SELECTION = -999;
+	private final int MATH_METHOD_SELECTION = 1;
+	private final int IMAGE_PROCESSING_METHOD_SELECTION = 2;
+
 	private TextView desc;
+	private int selectedMethod;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -20,6 +26,7 @@ public class DescActivity extends Activity {
 		setContentView(R.layout.activity_desc);
 
 		desc = (TextView) findViewById(R.id.textViewDesc);
+		selectedMethod = INVALID_METHOD_SELECTION;
 
 		Intent intent = getIntent();
 		Bundle bundle = intent.getExtras();
@@ -31,14 +38,18 @@ public class DescActivity extends Activity {
 			case R.id.buttonMath: 
 				setTitle(R.string.button_math);
 				desc.setText(R.string.math_approach_desc); 
+				selectedMethod = MATH_METHOD_SELECTION;
 				break;
-			case R.id.buttonRand: 
+			case R.id.buttonIP: 
 				setTitle(R.string.button_image_processing);
-				desc.setText(R.string.img_processing_approach_desc); 
+				desc.setText(R.string.img_processing_approach_desc);
+				selectedMethod = IMAGE_PROCESSING_METHOD_SELECTION;
 				break;
-			default: 
+			default:
+				//TODO: what to do here?
 				setTitle(R.string.button_something_else);
-				desc.setText("Error"); 
+				desc.setText("Error");
+				selectedMethod = INVALID_METHOD_SELECTION;
 				break;
 			}
 		}
@@ -100,7 +111,20 @@ public class DescActivity extends Activity {
 
 	public void onClickTry(View v) {
 		Log.d(TAG, "onClickTry");
-		Intent cameraIntent = new Intent(this, CameraActivity.class);
-		startActivity(cameraIntent);
+		switch(selectedMethod) {
+		case MATH_METHOD_SELECTION: {
+			Intent cameraIntent = new Intent(this, CameraActivity.class);
+			startActivity(cameraIntent);
+			break;
+		}
+		case IMAGE_PROCESSING_METHOD_SELECTION: {
+			Intent cameraIntent = new Intent(this, ImageProcessingActivity.class);
+			startActivity(cameraIntent);
+			break;
+		}	
+		default:
+			Toast.makeText(this, "Invalid method selection", Toast.LENGTH_SHORT).show();
+			break;
+		}
 	}
 }
