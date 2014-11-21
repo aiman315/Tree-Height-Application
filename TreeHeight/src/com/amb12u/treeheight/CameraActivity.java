@@ -27,8 +27,7 @@ import android.widget.Toast;
 
 public class CameraActivity extends Activity implements SensorEventListener {
 
-	//TODO: organize variables (private final, private, public, initialization is on create)
-	//TODO: Instantiate required layout components, and initialize them in functions
+
 	//TODO: Move all text to strings.xml
 
 	private final String TAG = "CameraActivity";
@@ -38,15 +37,15 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	private final int CAMERA_ID_NOT_SET = -1;
 
 	// Determine existence of cameras
-	private boolean hasCamera = false;
-	private boolean hasFrontCamera = false;
+	private boolean hasCamera;
+	private boolean hasFrontCamera;
 
 	private Camera selectedCamera;
 
 	// Holds ID values for cameras
-	private int frontFacingCameraId = CAMERA_ID_NOT_SET;
-	private int backFacingCameraId = CAMERA_ID_NOT_SET;
-	private int selectedCameraId = CAMERA_ID_NOT_SET;
+	private int frontFacingCameraId;
+	private int backFacingCameraId;
+	private int selectedCameraId;
 
 	// Accelerometer variables
 	private SensorManager mSensorManager;
@@ -247,7 +246,6 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
 		Log.d(TAG, "onAccuracyChanged");
-		// TODO Auto-generated method stub
 
 	}
 
@@ -423,11 +421,16 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		setContentView(R.layout.activity_camera);
 		
 		//initializations
+		frontFacingCameraId = CAMERA_ID_NOT_SET;
+		backFacingCameraId = CAMERA_ID_NOT_SET;
+		selectedCameraId = CAMERA_ID_NOT_SET;
+		
 		heightCamera = 0;
 		heightTree = 0;
 		angle1 = INVALID_ANGLE;
 		angle2 = INVALID_ANGLE;
-
+		
+		
 		//check for camera feature
 		PackageManager pm = getPackageManager();
 		hasCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA);

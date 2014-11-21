@@ -48,19 +48,15 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 
 	@Override
 	public void onCameraViewStarted(int width, int height) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void onCameraViewStopped() {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-		// TODO Auto-generated method stub
 		return inputFrame.rgba();
 	}
 	
