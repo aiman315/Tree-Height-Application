@@ -87,7 +87,8 @@
             android:layout_marginRight="17dp"
             android:layout_marginTop="73dp"
             android:layout_toLeftOf="@+id/buttonReadAngle"
-            android:text="@string/empty" />
+            android:text="@string/empty"
+            android:textColor="#00ff00" />
 
         <TextView
             android:id="@+id/textViewY"
@@ -96,7 +97,8 @@
             android:layout_alignLeft="@+id/textViewX"
             android:layout_below="@+id/textViewX"
             android:layout_marginTop="19dp"
-            android:text="@string/empty" />
+            android:text="@string/empty"
+            android:textColor="#00ff00" />
 
         <TextView
             android:id="@+id/textViewZ"
@@ -105,7 +107,8 @@
             android:layout_alignLeft="@+id/textViewY"
             android:layout_below="@+id/textViewY"
             android:layout_marginTop="23dp"
-            android:text="@string/empty" />
+            android:text="@string/empty"
+            android:textColor="#00ff00" />
 
         <TextView
             android:id="@+id/textViewAngle"
@@ -114,7 +117,8 @@
             android:layout_alignBottom="@+id/vertical_cross"
             android:layout_marginBottom="54dp"
             android:layout_toRightOf="@+id/buttonReadAngle"
-            android:text="@string/empty" />
+            android:text="@string/empty"
+            android:textColor="#00ff00" />
 
         <TextView
             android:id="@+id/textViewCameraHeight"
@@ -123,7 +127,8 @@
             android:layout_alignParentTop="true"
             android:layout_marginTop="17dp"
             android:layout_toLeftOf="@+id/textViewX"
-            android:text="@string/empty" />
+            android:text="@string/empty"
+            android:textColor="#00ff00" />
 
         <TextView
             android:id="@+id/textViewTotalHeight"
@@ -131,7 +136,35 @@
             android:layout_height="wrap_content"
             android:layout_alignBottom="@+id/textViewAngle"
             android:layout_alignRight="@+id/textViewZ"
-            android:text="@string/empty" />
+            android:text="@string/empty"
+            android:textColor="#00ff00" />
+
+        <TextView
+            android:id="@+id/firstAngle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignRight="@+id/textViewAngle"
+            android:layout_alignTop="@+id/textViewCameraHeight"
+            android:text="@string/empty"
+            android:textColor="#00ff00" />
+
+        <TextView
+            android:id="@+id/secondAngle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/textViewCameraHeight"
+            android:layout_alignLeft="@+id/firstAngle"
+            android:text="@string/empty"
+            android:textColor="#00ff00" />
+
+        <TextView
+            android:id="@+id/formula"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/textViewY"
+            android:layout_toRightOf="@+id/vertical_cross"
+            android:text="@string/empty"
+            android:textColor="#00ff00" />
 
     </RelativeLayout>
 

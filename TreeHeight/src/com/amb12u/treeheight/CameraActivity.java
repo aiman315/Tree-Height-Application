@@ -77,6 +77,11 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			
 			Button buttonUndoAngle = (Button) findViewById(R.id.buttonUndoAngle);
 			buttonUndoAngle.setEnabled(true);
+			
+			//TODO:remove later
+			TextView angleFirst = (TextView) findViewById(R.id.firstAngle);
+			angleFirst.setText("angle 1 = "+angle1);
+			
 		} else {
 			angle2 = (int) tempAngle;
 			Toast.makeText(this, String.format("2nd angle reading: %dº", angle2), Toast.LENGTH_SHORT).show();
@@ -86,6 +91,10 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			 
 			Button buttonCalculateHeight = (Button) findViewById(R.id.buttonCalculateHeight);
 			buttonCalculateHeight.setEnabled(true);
+			
+			//TODO:remove later
+			TextView angleSecond = (TextView) findViewById(R.id.secondAngle);
+			angleSecond.setText("angle 2 = "+angle2);
 		}	
 	}
 	
@@ -284,7 +293,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		textX.setText(Float.toString(valueX));
 		textY.setText(Float.toString(valueY));
 		textZ.setText(Float.toString(valueZ));
-		textAngle.setText(Double.toString(tempAngle));
+		textAngle.setText(String.format("%.2f",tempAngle));
 
 	}
 
@@ -344,10 +353,10 @@ public class CameraActivity extends Activity implements SensorEventListener {
 							
 							if (heightCamera > 0) {
 								heightDialog.dismiss();
+								
 								//Display Height
 								TextView textViewCameraHeight = (TextView) findViewById(R.id.textViewCameraHeight);
-								textViewCameraHeight.setText(String.format(
-										"Camera Height: %f", heightCamera));
+								textViewCameraHeight.setText(String.format("Camera Height: %f", heightCamera));
 								//Enable interface
 								Button buttonReadAngle = (Button) findViewById(R.id.buttonReadAngle);
 								buttonReadAngle.setEnabled(true);
@@ -375,8 +384,19 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		TextView textViewTreeHeight = (TextView) findViewById(R.id.textViewTotalHeight);
 		
 		if (angle1 < angle2) {
-			heightTree = heightCamera*((Math.tan(Math.toRadians(angle2))/Math.tan(Math.toRadians(angle1)))+ 1);	
+			TextView formula = (TextView) findViewById(R.id.formula);
+			formula.setText(String.format("%.2f*((%d/%d)+1)",heightCamera, angle2, angle1));
+			
+			angle1 = Math.abs(angle1);
+			angle2 = Math.abs(angle2);
+			heightTree = heightCamera*((Math.tan(Math.toRadians(angle2))/Math.tan(Math.toRadians(angle1)))+ 1);
+			
 		} else {
+			TextView formula = (TextView) findViewById(R.id.formula);
+			formula.setText(String.format("%.2f*((%d/%d)+1)",heightCamera, angle1, angle2));
+			
+			angle1 = Math.abs(angle1);
+			angle2 = Math.abs(angle2);
 			heightTree = heightCamera*((Math.tan(Math.toRadians(angle1))/Math.tan(Math.toRadians(angle2)))+ 1);
 		}
 		
