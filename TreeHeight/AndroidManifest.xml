@@ -39,7 +39,10 @@
         </activity>
         <activity
             android:name=".ImageProcessingActivity"
-            android:label="@string/title_activity_image_processing" >
+            android:label="@string/title_activity_image_processing" 
+            android:screenOrientation="landscape"
+			android:configChanges="keyboardHidden|orientation">
+            
         </activity>
     </application>
 
