@@ -14,115 +14,107 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
 public class ImageProcessingActivity extends Activity implements CvCameraViewListener2{
 
+
 	private final String TAG = "ImageProcessingActivity";
 	private CameraBridgeViewBase mOpenCvCameraView;
-    private boolean              mIsJavaCamera = true;
-    private MenuItem             mItemSwitchCamera = null;
 
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
-                    Log.i(TAG, "OpenCV loaded successfully");
-                    mOpenCvCameraView.enableView();
-                } break;
-                default:
-                {
-                    super.onManagerConnected(status);
-                } break;
-            }
-        }
-    };
-	
-	
-    
-//	---------------- CvCameraViewListener2 Interface Methods ---------------- //    
+	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+		@Override
+		public void onManagerConnected(int status) {
+			switch (status) {
+			case LoaderCallbackInterface.SUCCESS:
+				Log.i(TAG, "OpenCV loaded successfully");
+				mOpenCvCameraView.enableView();
+				break;
+			default:
+				super.onManagerConnected(status);
+				break;
+			}
+		}
+	};
+
+	public void onClickCaptureImage(View v) {
+		Log.d(TAG, "onClickCaptureImage");
+		//TODO:
+	}
+
+	public void onClickResetCapture(View v) {
+		Log.d(TAG, "onClickResetCapture");
+		//TODO:
+	}
+
+	public void onClickCalculateHeight(View v) {
+		Log.d(TAG, "onClickCalculateHeight");
+		//TODO:
+	}
+
+	//	---------------- CvCameraViewListener2 Interface Methods ---------------- //    
 
 	@Override
 	public void onCameraViewStarted(int width, int height) {
-		
+		Log.d(TAG, "onCameraViewStarted");
 	}
 
 	@Override
 	public void onCameraViewStopped() {
+		Log.d(TAG, "onCameraViewStopped");
 	}
 
 	@Override
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+		Log.d(TAG, "onCameraFrame");
 		return inputFrame.rgba();
 	}
-	
-//	---------------- Activity Methods ---------------- //
-	
+
+	//	---------------- Activity Methods ---------------- //
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		Log.d(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_image_processing);
-		
+
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		setContentView(R.layout.activity_image_processing);
 
-        setContentView(R.layout.activity_image_processing);
-
-        if (mIsJavaCamera) {
-        	mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.surface_view_java);
-        } else {
-        	mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.surface_view_native);	
-        }
-
-        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-
-        mOpenCvCameraView.setCvCameraViewListener(this);
+		mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+		mOpenCvCameraView.setCvCameraViewListener(this);
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
+		Log.d(TAG, "onCreateOptionsMenu");
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.image_processing, menu);
-		mItemSwitchCamera = menu.add("Toggle Native/Java camera");
 		return true;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		String toastMesage = new String();
-        Log.i(TAG, "onOptionsItemSelected");
-
-        //FIXME: Native camera isn't working and CRASHES
-        if (item == mItemSwitchCamera) {
-            mOpenCvCameraView.setVisibility(SurfaceView.GONE);
-            mIsJavaCamera = !mIsJavaCamera;
-
-            if (mIsJavaCamera) {
-                mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.surface_view_java);
-                toastMesage = "Java Camera";
-            } else {
-                mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.surface_view_native);
-                toastMesage = "Native Camera";
-            }
-
-            mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-            mOpenCvCameraView.setCvCameraViewListener(this);
-            mOpenCvCameraView.enableView();
-            Toast toast = Toast.makeText(this, toastMesage, Toast.LENGTH_LONG);
-            toast.show();
-        }
-        return super.onOptionsItemSelected(item);
+		Log.d(TAG, "onOptionsItemSelected");
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
+		if (id == R.id.action_settings) {
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
 	}
-	
+
 	@Override
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroy");
 		super.onDestroy();
-		
+
 		if (mOpenCvCameraView != null) {
 			mOpenCvCameraView.disableView();	
 		}
@@ -132,9 +124,9 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	protected void onPause() {
 		Log.d(TAG, "onPause");
 		super.onPause();
-		
+
 		if (mOpenCvCameraView != null) {
-            mOpenCvCameraView.disableView();
+			mOpenCvCameraView.disableView();
 		}
 	}
 
@@ -142,10 +134,10 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	protected void onResume() {
 		Log.d(TAG, "onResume");
 		super.onResume();
-		
+
 		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
 	}
-	
+
 	@Override
 	protected void onStart() {
 		Log.d(TAG, "onStart");
