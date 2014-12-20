@@ -22,20 +22,6 @@
         opencv:show_fps="true" />
 
     <Button
-        android:id="@+id/buttonResetCapture"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignTop="@+id/buttonCaptureImage"
-        android:layout_toStartOf="@+id/buttonCaptureImage"
-        android:enabled="false"
-        android:onClick="onClickResetCapture"
-        android:text="@string/reset"
-        android:textSize="14sp" />
-
-    <Button
         android:id="@+id/buttonCaptureImage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -43,20 +29,6 @@
         android:layout_centerHorizontal="true"
         android:onClick="onClickCaptureImage"
         android:text="@string/button_capture_image"
-        android:textSize="14sp" />
-    
-
-    <Button
-        android:id="@+id/buttonCalculateHeight"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignTop="@+id/buttonCaptureImage"
-        android:layout_toEndOf="@+id/buttonCaptureImage"
-        android:enabled="false"
-        android:onClick="onClickCalculateHeight"
-        android:text="@string/button_calculate_height"
         android:textSize="14sp" />
 
 </RelativeLayout>

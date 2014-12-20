@@ -1,14 +1,19 @@
 package com.amb12u.treeheight;
 
+import java.io.ByteArrayOutputStream;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -23,6 +28,7 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 
 	private final String TAG = "ImageProcessingActivity";
 	private CameraBridgeViewBase mOpenCvCameraView;
+	private Mat currentFrameMat;
 
 	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 		@Override
@@ -41,17 +47,21 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 
 	public void onClickCaptureImage(View v) {
 		Log.d(TAG, "onClickCaptureImage");
-		//TODO:
-	}
-
-	public void onClickResetCapture(View v) {
-		Log.d(TAG, "onClickResetCapture");
-		//TODO:
-	}
-
-	public void onClickCalculateHeight(View v) {
-		Log.d(TAG, "onClickCalculateHeight");
-		//TODO:
+		
+		if (currentFrameMat != null) {
+			Bitmap image = Bitmap.createBitmap(currentFrameMat.cols(), currentFrameMat.rows(), Bitmap.Config.ARGB_8888);
+			Utils.matToBitmap(currentFrameMat, image);
+			
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		    image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+		    
+			
+			Intent intent = new Intent(this, StillImageProcessingActivity.class);
+			Bundle bundle = new Bundle();
+			bundle.putByteArray("CapturedImage", stream.toByteArray());
+			intent.putExtras(bundle);
+			startActivity(intent);	
+		}
 	}
 
 	//	---------------- CvCameraViewListener2 Interface Methods ---------------- //    
@@ -69,6 +79,7 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	@Override
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 		Log.d(TAG, "onCameraFrame");
+		currentFrameMat = inputFrame.gray();
 		return inputFrame.rgba();
 	}
 
@@ -78,12 +89,12 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
+		
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_image_processing);
-
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		setContentView(R.layout.activity_image_processing);
-
+	
+		mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.surface_view_java);
 		mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
 		mOpenCvCameraView.setCvCameraViewListener(this);
 	}
