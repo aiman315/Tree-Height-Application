@@ -28,10 +28,14 @@
     <string name="button_calculate_height">Find Height</string>
     <string name="action_camera_height">Set Height</string>
     <string name="action_camera_swap">Swap Cameras</string>
-    
+
     <!-- Image Processing Activity -->
     <string name="title_activity_image_processing">Image Processing</string>
     <string name="button_capture_image">Capture</string>
+    <string name="title_activity_still_image_processing">StillImageProcessingActivity</string>
 
-
+    <!-- Still Image Processing Activity -->
+    <string name="button_detect_tree">Detect Tree</string>
+    <string name="button_detect_reference">Detect Reference Object</string>
+    
 </resources>
