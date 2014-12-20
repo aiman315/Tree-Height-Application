@@ -45,17 +45,22 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 		}
 	};
 
+	/**
+	 * Capture current frame, and launches a new activity with the image
+	 * @param v: The view that invoked the method
+	 */
 	public void onClickCaptureImage(View v) {
 		Log.d(TAG, "onClickCaptureImage");
+		//FIXME: Error "FAILED BINDER TRANSACTION" sometimes
 		
 		if (currentFrameMat != null) {
+			// Converting bitmap
 			Bitmap image = Bitmap.createBitmap(currentFrameMat.cols(), currentFrameMat.rows(), Bitmap.Config.ARGB_8888);
 			Utils.matToBitmap(currentFrameMat, image);
-			
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		    image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 		    
-			
+			// Pass bytes array and start the activity 
 			Intent intent = new Intent(this, StillImageProcessingActivity.class);
 			Bundle bundle = new Bundle();
 			bundle.putByteArray("CapturedImage", stream.toByteArray());
