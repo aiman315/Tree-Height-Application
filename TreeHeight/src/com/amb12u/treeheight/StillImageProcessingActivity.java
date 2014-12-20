@@ -74,8 +74,7 @@ public class StillImageProcessingActivity extends Activity {
 
 		//FIXME: currently detects edges
 		Imgproc.Canny(imageMat, outputMat, 300, 600, 5, true);
-		Bitmap image = Bitmap.createBitmap(outputMat.cols(), outputMat.rows(), Bitmap.Config.ARGB_8888);
-		Utils.matToBitmap(outputMat, image);
+		Bitmap image = mat2bitmap(outputMat);
 
 		ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
 		imageView.setImageBitmap(image);
@@ -87,6 +86,53 @@ public class StillImageProcessingActivity extends Activity {
 	 */
 	private void detectReference() {
 		Mat outputMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC4);
+		drawLine();
+	}
+	
+	
+	/**
+	 * Draw line on a matrix
+	 */
+	private void drawLine() {
+		//Mat outputMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC4);
+		Mat outputMat = imageMat.clone();
+		Imgproc.cvtColor(outputMat, outputMat, Imgproc.COLOR_BGR2GRAY);
+		
+		for (int r = 0 ; r < outputMat.rows(); r++) {
+			outputMat.put(r, 13, 255);
+			outputMat.put(r, 14, 255);
+			outputMat.put(r, 15, 255);
+			outputMat.put(r, 16, 255);
+		}
+		Bitmap image = mat2bitmap(outputMat);
+
+		ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
+		imageView.setImageBitmap(image);
+		
+		
+	}
+	
+	
+	/**
+	 * Converts matrix to bitmap
+	 * @param mat
+	 * @return bitmap
+	 */
+	private Bitmap mat2bitmap(Mat mat) {
+		Bitmap image = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
+		Utils.matToBitmap(mat, image);
+		return image;
+	}
+	
+	/**
+	 * Converts bitmap to matrix
+	 * @param bitmap
+	 * @return matrix
+	 */
+	private Mat bitmap2mat(Bitmap bitmap) {
+		Mat mat = new Mat(bitmap.getHeight(), bitmap.getWidth(), CvType.CV_8UC1);
+		Utils.bitmapToMat(bitmap, mat);
+		return mat;
 	}
 	
 	
@@ -121,8 +167,7 @@ public class StillImageProcessingActivity extends Activity {
 			imageView.setImageBitmap(loadedImage);
 
 			//create a matrix of the selected image for processing
-			imageMat = new Mat(loadedImage.getHeight(), loadedImage.getWidth(), CvType.CV_8UC4);
-			Utils.bitmapToMat(loadedImage, imageMat);
+			imageMat = bitmap2mat(loadedImage);
 			
 		// Handle exceptions
 		} catch (FileNotFoundException e) {
