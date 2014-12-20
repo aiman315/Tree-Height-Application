@@ -17,11 +17,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 public class StillImageProcessingActivity extends Activity {
 
 	private final String TAG = "StillImageProcessingActivity";
+	private boolean detectedTree, detectedReference;
 	private Mat imageMat;
 
 	public void onClickCalculateHeight(View v) {
@@ -29,62 +32,108 @@ public class StillImageProcessingActivity extends Activity {
 		//TODO:
 	}
 
+	/**
+	 * If the matrix is initialized and the reference object is not yet detected, 
+	 * calls the method to detect reference object
+	 * @param v: The view that invoked the method
+	 */
 	public void onClickDetectReference(View v) {
 		Log.d(TAG, "onClickDetectReference");
-		//TODO:
-	}
-
-	public void onClickDetectTree(View v) {
-		Log.d(TAG, "onClickDetectTree");
-		//TODO: Currently detecting edges
-		if (imageMat != null) {
-			Mat outputMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC4);
-
-			Imgproc.Canny(imageMat, outputMat, 300, 600, 5, true);
-			Bitmap image = Bitmap.createBitmap(outputMat.cols(), outputMat.rows(), Bitmap.Config.ARGB_8888);
-			Utils.matToBitmap(outputMat, image);
-
-			ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
-			imageView.setImageBitmap(image);
+		if (imageMat != null && !detectedReference) {
+			detectReference();
+			
+			//disable button once pressed
+			Button button = (Button)v;
+			button.setEnabled(false);
 		}
 	}
 
+	/**
+	 * If the matrix is initialized and a the tree is not yet detected, 
+	 * calls the method to detect trees
+	 * @param v: The view that invoked the method
+	 */
+	public void onClickDetectTree(View v) {
+		Log.d(TAG, "onClickDetectTree");
+		//TODO: Currently detecting edges
+		if (imageMat != null && !detectedTree) {
+			detectTrees();
+			
+			//disable button once pressed			
+			Button button = (Button)v;
+			button.setEnabled(false);
+		}
+	}
+
+	/**
+	 * Runs the algorithm to detect trees
+	 * TODO: Explain how the algorithm works
+	 */
+	private void detectTrees() {
+		Mat outputMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC4);
+
+		//FIXME: currently detects edges
+		Imgproc.Canny(imageMat, outputMat, 300, 600, 5, true);
+		Bitmap image = Bitmap.createBitmap(outputMat.cols(), outputMat.rows(), Bitmap.Config.ARGB_8888);
+		Utils.matToBitmap(outputMat, image);
+
+		ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
+		imageView.setImageBitmap(image);
+	}
+	
+	/**
+	 * Runs the algorithm to detect trees
+	 * TODO: Explain how the algorithm works
+	 */
+	private void detectReference() {
+		Mat outputMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC4);
+	}
+	
+	
+	//	---------------- Activity Methods ---------------- //
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_still_image_processing);
+		
+		//initializations
+		detectedReference = false;
+		detectedTree = false;
 
 		byte[] imageArray = getIntent().getByteArrayExtra("CapturedImage");
 		Uri imgUri = getIntent().getExtras().getParcelable("ImgUri");
+		Bitmap loadedImage;
 
-		if (imageArray != null) { 		
-			Bitmap capturedImage = BitmapFactory.decodeByteArray(imageArray, 0, imageArray.length);
+		try {
+			//Case1: Activity is launched via frame capture 
+			if (imageArray != null) { 		
+				loadedImage = BitmapFactory.decodeByteArray(imageArray, 0, imageArray.length);
 
-			ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
-			imageView.setImageBitmap(capturedImage);
-
-			imageMat = new Mat(capturedImage.getHeight(), capturedImage.getWidth(), CvType.CV_8UC4);
-			Utils.bitmapToMat(capturedImage, imageMat);
-
-		} else {
-			try {
+			//Case2: Activity is launched via gallery image selection
+			} else {
 				InputStream image_stream = getContentResolver().openInputStream(imgUri);
-				Bitmap loadedImage = BitmapFactory.decodeStream(image_stream );
-
-				ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
-				imageView.setImageBitmap(loadedImage);
-
-				imageMat = new Mat(loadedImage.getHeight(), loadedImage.getWidth(), CvType.CV_8UC4);
-				Utils.bitmapToMat(loadedImage, imageMat);
-
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-				finish();
+				loadedImage = BitmapFactory.decodeStream(image_stream );
 			}
-		}
+			//load image in image view 
+			ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
+			imageView.setImageBitmap(loadedImage);
 
+			//create a matrix of the selected image for processing
+			imageMat = new Mat(loadedImage.getHeight(), loadedImage.getWidth(), CvType.CV_8UC4);
+			Utils.bitmapToMat(loadedImage, imageMat);
+			
+		// Handle exceptions
+		} catch (FileNotFoundException e) {
+			Toast.makeText(this, "Error locating the file path", Toast.LENGTH_SHORT).show();
+			Log.e(TAG, e.getMessage());
+			finish();
+		} catch (Exception e) {
+			Toast.makeText(this, "Error!!", Toast.LENGTH_SHORT).show();
+			Log.e(TAG, e.getMessage());
+			finish();
+		}
 	}
 
 
