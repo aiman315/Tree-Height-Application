@@ -37,5 +37,6 @@
     <!-- Still Image Processing Activity -->
     <string name="button_detect_tree">Detect Tree</string>
     <string name="button_detect_reference">Detect Reference Object</string>
+    <string name="action_gallery_img">Image from Gallery</string>
     
 </resources>

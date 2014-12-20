@@ -14,6 +14,7 @@ import org.opencv.core.Mat;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -27,6 +28,7 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 
 
 	private final String TAG = "ImageProcessingActivity";
+	private static final int SELECT_PICTURE = 999;
 	private CameraBridgeViewBase mOpenCvCameraView;
 	private Mat currentFrameMat;
 
@@ -59,6 +61,7 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 			Utils.matToBitmap(currentFrameMat, image);
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		    image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+		    
 		    
 			// Pass bytes array and start the activity 
 			Intent intent = new Intent(this, StillImageProcessingActivity.class);
@@ -121,9 +124,27 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 		int id = item.getItemId();
 		if (id == R.id.action_settings) {
 			return true;
+		} else if (id == R.id.action_galleryImg) {
+			Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent,"Select Picture"), SELECT_PICTURE);
 		}
 		return super.onOptionsItemSelected(item);
 	}
+	
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            if (requestCode == SELECT_PICTURE) {
+                Uri selectedImageUri = data.getData();
+               
+                // Pass bytes array and start the activity 
+    			Intent intent = new Intent(this, StillImageProcessingActivity.class);
+    			intent.putExtra("ImgUri", selectedImageUri);
+    			startActivity(intent);	
+            }
+        }
+    }
 
 	@Override
 	protected void onDestroy() {
@@ -149,7 +170,6 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	protected void onResume() {
 		Log.d(TAG, "onResume");
 		super.onResume();
-
 		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
 	}
 
