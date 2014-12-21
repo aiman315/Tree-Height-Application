@@ -96,7 +96,6 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
 		setContentView(R.layout.activity_image_processing);
