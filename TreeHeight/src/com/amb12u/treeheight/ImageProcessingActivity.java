@@ -19,7 +19,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -97,15 +96,16 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
-		
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.activity_image_processing);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
+		setContentView(R.layout.activity_image_processing);
 	
 		mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.surface_view_java);
-		mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
 		mOpenCvCameraView.setCvCameraViewListener(this);
+		
 	}
+
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -150,7 +150,6 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroy");
 		super.onDestroy();
-
 		if (mOpenCvCameraView != null) {
 			mOpenCvCameraView.disableView();	
 		}
@@ -160,7 +159,6 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	protected void onPause() {
 		Log.d(TAG, "onPause");
 		super.onPause();
-
 		if (mOpenCvCameraView != null) {
 			mOpenCvCameraView.disableView();
 		}
@@ -170,7 +168,7 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	protected void onResume() {
 		Log.d(TAG, "onResume");
 		super.onResume();
-		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
+		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
 	}
 
 	@Override
