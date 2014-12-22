@@ -11,13 +11,15 @@ import org.opencv.imgproc.Imgproc;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -27,7 +29,7 @@ public class StillImageProcessingActivity extends Activity {
 	private boolean detectedTree, detectedReference;
 	private Mat imageMat;
 
-	public void onClickCalculateHeight(View v) {
+	private void calculateHeight() {
 		Log.d(TAG, "onClickCalculateHeight");
 		//TODO:
 	}
@@ -35,33 +37,23 @@ public class StillImageProcessingActivity extends Activity {
 	/**
 	 * If the matrix is initialized and the reference object is not yet detected, 
 	 * calls the method to detect reference object
-	 * @param v: The view that invoked the method
 	 */
-	public void onClickDetectReference(View v) {
+	private void detectReference() {
 		Log.d(TAG, "onClickDetectReference");
 		if (imageMat != null && !detectedReference) {
-			detectReference();
-			
-			//disable button once pressed
-			Button button = (Button)v;
-			button.setEnabled(false);
+			detectReferenceAlgorithm();
 		}
 	}
 
 	/**
 	 * If the matrix is initialized and a the tree is not yet detected, 
 	 * calls the method to detect trees
-	 * @param v: The view that invoked the method
 	 */
-	public void onClickDetectTree(View v) {
+	public void detectTree() {
 		Log.d(TAG, "onClickDetectTree");
 		//TODO: Currently detecting edges
 		if (imageMat != null && !detectedTree) {
 			detectTrees();
-			
-			//disable button once pressed			
-			Button button = (Button)v;
-			button.setEnabled(false);
 		}
 	}
 
@@ -84,7 +76,7 @@ public class StillImageProcessingActivity extends Activity {
 	 * Runs the algorithm to detect trees
 	 * TODO: Explain how the algorithm works
 	 */
-	private void detectReference() {
+	private void detectReferenceAlgorithm() {
 		Mat outputMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC4);
 		drawLine();
 	}
@@ -110,6 +102,30 @@ public class StillImageProcessingActivity extends Activity {
 		imageView.setImageBitmap(image);
 		
 		
+	}
+	
+	private void markTouch(View v, MotionEvent event) {
+
+		ImageView imageView = (ImageView)v;
+		int[] viewCoords = new int[2];
+		imageView.getLocationOnScreen(viewCoords);
+		
+		int touchX = (int) event.getX();
+		int touchY = (int) event.getY();
+
+		int imageX = touchX - viewCoords[0]; // viewCoords[0] is the X coordinate
+		int imageY = touchY;// - viewCoords[1]; // viewCoords[1] is the y coordinate
+		
+		Bitmap image = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
+		Mat imageMat = bitmap2mat(image);
+		Imgproc.cvtColor(imageMat, imageMat, Imgproc.COLOR_BGR2GRAY);
+		
+		
+		imageMat.put(imageY, imageX, 255);
+		
+		
+		image = mat2bitmap(imageMat);
+		imageView.setImageBitmap(image);
 	}
 	
 	
@@ -142,6 +158,7 @@ public class StillImageProcessingActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
+		setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
 		setContentView(R.layout.activity_still_image_processing);
 		
 		//initializations
@@ -162,9 +179,23 @@ public class StillImageProcessingActivity extends Activity {
 				InputStream image_stream = getContentResolver().openInputStream(imgUri);
 				loadedImage = BitmapFactory.decodeStream(image_stream );
 			}
+			//rotate image
+			Matrix matrix = new Matrix();
+			matrix.postRotate(90);
+			loadedImage = Bitmap.createBitmap(loadedImage , 0, 0, loadedImage .getWidth(), loadedImage .getHeight(), matrix, true);
+			
 			//load image in image view 
 			ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
 			imageView.setImageBitmap(loadedImage);
+			
+			imageView.setOnTouchListener(new View.OnTouchListener() {
+				
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+					markTouch(v,event);
+					return false;
+				}
+			});
 
 			//create a matrix of the selected image for processing
 			imageMat = bitmap2mat(loadedImage);
@@ -186,7 +217,7 @@ public class StillImageProcessingActivity extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.math, menu);
+		getMenuInflater().inflate(R.menu.still_image_processing, menu);
 		return true;
 	}
 
@@ -196,7 +227,17 @@ public class StillImageProcessingActivity extends Activity {
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
-		if (id == R.id.action_settings) {
+		switch(id){
+		case R.id.actionDetectReference:
+			detectReference();
+			return true;
+		case R.id.actionDetectTree:
+			detectTree();
+			return true;
+		case R.id.actionTreeHeight:
+			calculateHeight();
+			return true;
+		case R.id.action_settings:
 			return true;
 		}
 		return super.onOptionsItemSelected(item);

@@ -35,8 +35,9 @@
     <string name="title_activity_still_image_processing">StillImageProcessingActivity</string>
 
     <!-- Still Image Processing Activity -->
-    <string name="button_detect_tree">Detect Tree</string>
-    <string name="button_detect_reference">Detect Reference Object</string>
     <string name="action_gallery_img">Image from Gallery</string>
+    <string name="action_detect_tree">Detect Tree</string>
+    <string name="action_detect_reference">Detect Reference</string>
+    <string name="action_tree_height">Find Height</string>
     
 </resources>
