@@ -7,6 +7,7 @@ import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -55,8 +56,8 @@ public class StillImageProcessingActivity extends Activity {
 		Log.d(TAG, "onClickDetectTree");
 		if (imageMat != null && !detectedTree) {
 			//TODO: Activate
-			//detectTreeAlgorithm();
-			//drawLine();
+			int treeTopRow = detectTopPosition();
+			drawLine(treeTopRow);
 		}
 	}
 
@@ -97,9 +98,9 @@ public class StillImageProcessingActivity extends Activity {
 	private Mat detectColor() {
 		Mat imageMatHSV = new Mat();
 		// Yellow: new Scalar(25, 20, 20), new Scalar(32, 255, 255)
-		// Red: new Scalar(0, 190, 190), new Scalar(10, 255, 255)
+		// Red: new Scalar(0, 100, 100), new Scalar(10, 255, 255)
 		Imgproc.cvtColor(imageMat, imageMatHSV, Imgproc.COLOR_RGB2HSV, 0);
-		Core.inRange(imageMatHSV, new Scalar(0, 190, 190), new Scalar(10, 255, 255), imageMatHSV);
+		Core.inRange(imageMatHSV, new Scalar(0, 100, 100), new Scalar(10, 255, 255), imageMatHSV);
 		return imageMatHSV;
 	}
 
@@ -121,16 +122,17 @@ public class StillImageProcessingActivity extends Activity {
 	/**
 	 * Draw line on a matrix
 	 */
-	private void drawLine() {
+	private void drawLine(int row) {
 		//Mat outputMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC4);
 		Mat outputMat = imageMat.clone();
 		Imgproc.cvtColor(outputMat, outputMat, Imgproc.COLOR_BGR2GRAY);
 
-		for (int r = 0 ; r < outputMat.rows(); r++) {
-			outputMat.put(r, 13, 255);
-			outputMat.put(r, 14, 255);
-			outputMat.put(r, 15, 255);
-			outputMat.put(r, 16, 255);
+		for (int c = 0 ; c < outputMat.cols(); c++) {
+			outputMat.put(row-2, c, 0);
+			outputMat.put(row-1, c, 0);
+			outputMat.put(row, c, 0);
+			outputMat.put(row+1, c, 0);
+			outputMat.put(row+2, c, 0);
 		}
 		Bitmap image = mat2bitmap(outputMat);
 
@@ -139,6 +141,38 @@ public class StillImageProcessingActivity extends Activity {
 
 
 	}
+
+
+	/**
+	 * Detects high intensity variation for every row
+	 * @return the row number at which the treetop is detected
+	 */
+	private int detectTopPosition() {
+		//TODO: method documentation
+		//TODO: what are the limits (minStd, patch size, column increment)
+		
+		Mat referenceMat = imageMat;
+		int minStd = 20;
+		Mat patch;
+
+		int windowHeight = 5;
+		int windowWidth = 5;
+
+		for (int r = 0 ; r < referenceMat.rows()/4 ; r ++) {
+			for (int c = 0 ; c < referenceMat.cols()-windowWidth ; c += windowWidth) {
+				patch = referenceMat.submat(r, r+windowHeight, c, c+windowWidth);
+				MatOfDouble stdMat = new MatOfDouble();
+				Core.meanStdDev(patch, new MatOfDouble(), stdMat);
+				int stDeviation = (int) stdMat.toArray()[0];
+				if (minStd < stDeviation) {
+					return r;
+				}
+			}
+		}
+		//TODO: return a false value? -999 <--- add to private final int
+		return 0;
+	}
+
 
 	private void markTouch(View v, MotionEvent event) {
 
