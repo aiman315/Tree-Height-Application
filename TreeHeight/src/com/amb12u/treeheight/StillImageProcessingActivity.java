@@ -12,7 +12,9 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -20,11 +22,14 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -275,6 +280,66 @@ public class StillImageProcessingActivity extends Activity {
 		
 
 	}
+	
+	
+	/**
+	 * Creates a dialog to input reference object height
+	 * The value of reference object height is positive double, and can't be zero
+	 * The unit for reference object height is cm
+	 */
+	private void setupReferenceObjHeight() {
+		// EditText to allow user input
+		final EditText input = new EditText(this);
+		input.setHint(R.string.height_dialog_text);
+		input.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+
+		//camera height input-dialog setup
+		final AlertDialog heightDialog = new AlertDialog.Builder(this)
+		.setView(input)
+		.setTitle(R.string.height_dialog_title)
+		.setPositiveButton(android.R.string.ok, null)
+		.create();
+
+		heightDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+
+			@Override
+			public void onShow(DialogInterface dialog) {
+
+				Button buttonOk = heightDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+				buttonOk.setOnClickListener(new View.OnClickListener() {
+
+					@Override
+					public void onClick(View view) {
+						//verify correct input
+						try {
+							referenceObjHeight = Double.parseDouble(input.getText().toString());
+							
+							if (referenceObjHeight > 0) {
+								heightDialog.dismiss();
+							} else {
+								Toast.makeText(StillImageProcessingActivity.this, "Input Must be greater than zero", Toast.LENGTH_SHORT).show();
+							}
+						} catch (NumberFormatException e) {
+							Toast.makeText(StillImageProcessingActivity.this, "Invalid Input", Toast.LENGTH_SHORT).show();
+							Log.e(TAG, "exception", e);
+						}
+					}
+				});
+			}
+		});
+		heightDialog.setCanceledOnTouchOutside(false);
+		heightDialog.show();
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	//	---------------- Activity Methods ---------------- //
 
 	@Override
@@ -305,6 +370,7 @@ public class StillImageProcessingActivity extends Activity {
 			ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
 			imageView.setImageBitmap(loadedImage);
 
+			//TODO: delete?
 			imageView.setOnTouchListener(new View.OnTouchListener() {
 
 				@Override
@@ -317,6 +383,7 @@ public class StillImageProcessingActivity extends Activity {
 			//create a matrix of the selected image for processing
 			imageMat = bitmap2mat(loadedImage);
 
+			setupReferenceObjHeight();
 			// Handle exceptions
 		} catch (FileNotFoundException e) {
 			Toast.makeText(this, "Error locating the file path", Toast.LENGTH_SHORT).show();
