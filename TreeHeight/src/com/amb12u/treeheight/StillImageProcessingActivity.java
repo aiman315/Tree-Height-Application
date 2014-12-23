@@ -12,11 +12,13 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -56,8 +58,7 @@ public class StillImageProcessingActivity extends Activity {
 		Log.d(TAG, "onClickDetectTree");
 		if (imageMat != null && !detectedTree) {
 			//TODO: Activate
-			int treeTopRow = detectTopPosition();
-			drawLine(treeTopRow);
+			new TaskDetectTreetop().execute();
 		}
 	}
 
@@ -221,7 +222,55 @@ public class StillImageProcessingActivity extends Activity {
 		return mat;
 	}
 
+	private class TaskDetectTreetop extends AsyncTask<Void, Void, Integer> {
 
+		private ProgressDialog pdia;
+		
+		@Override
+		protected Integer doInBackground(Void... params) {
+			
+			Mat referenceMat = imageMat;
+			int minStd = 20;
+			Mat patch;
+
+			int windowHeight = 5;
+			int windowWidth = 5;
+			
+			for (int r = 0 ; r < referenceMat.rows()/4 ; r ++) {
+				for (int c = 0 ; c < referenceMat.cols()-windowWidth ; c += windowWidth) {
+					patch = referenceMat.submat(r, r+windowHeight, c, c+windowWidth);
+					MatOfDouble stdMat = new MatOfDouble();
+					Core.meanStdDev(patch, new MatOfDouble(), stdMat);
+					int stDeviation = (int) stdMat.toArray()[0];
+					if (minStd < stDeviation) {
+						return r;
+					}
+				}
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+	        pdia = new ProgressDialog(StillImageProcessingActivity.this);
+	        pdia.setMessage("Detecting Treetop...");
+	        pdia.show(); 
+		}
+		
+		@Override
+		protected void onProgressUpdate(Void... values) {
+			super.onProgressUpdate(values);
+		}
+
+		@Override
+		protected void onPostExecute(Integer treetopRow) {
+			pdia.dismiss();
+			drawLine(treetopRow);
+		}
+		
+
+	}
 	//	---------------- Activity Methods ---------------- //
 
 	@Override
