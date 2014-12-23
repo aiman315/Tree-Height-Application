@@ -1,6 +1,12 @@
 package com.amb12u.treeheight;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -16,11 +22,13 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 public class ImageProcessingActivity extends Activity implements CvCameraViewListener2{
 
@@ -29,6 +37,8 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	private static final int SELECT_PICTURE = 999;
 	private CameraBridgeViewBase mOpenCvCameraView;
 	private Mat currentFrameMat;
+
+
 
 	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 		@Override
@@ -46,28 +56,91 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	};
 
 	/**
-	 * Capture current frame, and launches a new activity with the image
+	 * Capture current frame, saves it to application directory, and launches a new activity with the image
 	 * @param v: The view that invoked the method
 	 */
 	public void onClickCaptureImage(View v) {
 		Log.d(TAG, "onClickCaptureImage");
-		//FIXME: Error "FAILED BINDER TRANSACTION" sometimes
-		
+
 		if (currentFrameMat != null) {
-			// Converting bitmap
-			Bitmap image = Bitmap.createBitmap(currentFrameMat.cols(), currentFrameMat.rows(), Bitmap.Config.ARGB_8888);
-			Utils.matToBitmap(currentFrameMat, image);
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-		    image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-		    
-		    
-			// Pass bytes array and start the activity 
+			Uri selectedImageUri = generatedTimeStamp();		
+			
+			if (selectedImageUri != null) {	
+
+				// Convert Mat to Bitmap
+				Bitmap image = Bitmap.createBitmap(currentFrameMat.cols(), currentFrameMat.rows(), Bitmap.Config.ARGB_8888);
+				Utils.matToBitmap(currentFrameMat, image);
+				ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+
+				// Save Bitmap to application photo directory
+				FileOutputStream outputStream = null;
+				try {
+					outputStream = new FileOutputStream(selectedImageUri.getPath());
+					image.compress(Bitmap.CompressFormat.PNG, 100, outputStream); 
+				} catch (Exception e) {
+					Log.e(TAG, e.getMessage());
+				} finally {
+					try {
+						if (outputStream != null) {
+							outputStream.close();
+						}
+					} catch (IOException e) {
+						Log.e(TAG, e.getMessage());
+					}
+				}
+			}
+
+			// Pass image uri and start the activity 
 			Intent intent = new Intent(this, StillImageProcessingActivity.class);
-			Bundle bundle = new Bundle();
-			bundle.putByteArray("CapturedImage", stream.toByteArray());
-			intent.putExtras(bundle);
-			startActivity(intent);	
+			intent.putExtra("ImgUri", selectedImageUri);
+			startActivity(intent);		
 		}
+	}
+
+	/**
+	 * Generate a filename in the format: IMG_dd_MM-yyyy_HH-mm-ss.png
+	 * @return Uri holding the full name and path
+	 */
+	private Uri generatedTimeStamp() {
+		Log.d(TAG, "generatedTimeStamp");
+
+		Uri photoUri = null;
+		File outputDir = getPhotoDirectory();
+
+		if (outputDir != null) {
+			String timeStamp = 	new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss", Locale.UK).format(new Date()); 
+			String photoFileName = "IMG_" + timeStamp + ".png";
+
+			File photoFile = new File (outputDir, photoFileName);		
+			photoUri = Uri.fromFile(photoFile);	
+		}
+		return photoUri;
+	}
+
+	/**
+	 * Retrieves the application photo directory
+	 * @return directory file
+	 */
+	private File getPhotoDirectory() {		
+		Log.d(TAG, "getPhotoDirectory");		
+
+		File outputDir = null;		
+		String externalStorageState = Environment.getExternalStorageState();
+		
+		if (externalStorageState.equals(Environment.MEDIA_MOUNTED)) {		
+			File pictureDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);		
+			outputDir = new File (pictureDir, "TreeHeightApp");
+			
+			//Creates directory if doesn't already exist
+			if (!outputDir.exists()) {		
+				if (!outputDir.mkdirs()) {		
+					Toast.makeText(this,  "failed to create directory: " + outputDir.getAbsolutePath(), Toast.LENGTH_LONG).show();		
+					outputDir = null;		
+				}		
+			}		
+		}		
+		return outputDir;		
 	}
 
 	//	---------------- CvCameraViewListener2 Interface Methods ---------------- //    
@@ -85,7 +158,7 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 	@Override
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 		Log.d(TAG, "onCameraFrame");
-		currentFrameMat = inputFrame.gray();
+		currentFrameMat = inputFrame.rgba();
 		return inputFrame.rgba();
 	}
 
@@ -98,10 +171,10 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
 		setContentView(R.layout.activity_image_processing);
-	
+
 		mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.surface_view_java);
 		mOpenCvCameraView.setCvCameraViewListener(this);
-		
+
 	}
 
 
@@ -124,25 +197,25 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
 			return true;
 		} else if (id == R.id.action_galleryImg) {
 			Intent intent = new Intent();
-            intent.setType("image/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent,"Select Picture"), SELECT_PICTURE);
+			intent.setType("image/*");
+			intent.setAction(Intent.ACTION_GET_CONTENT);
+			startActivityForResult(Intent.createChooser(intent,"Select Picture"), SELECT_PICTURE);
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
+
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK) {
-            if (requestCode == SELECT_PICTURE) {
-                Uri selectedImageUri = data.getData();
-               
-                // Pass image uri and start the activity 
-    			Intent intent = new Intent(this, StillImageProcessingActivity.class);
-    			intent.putExtra("ImgUri", selectedImageUri);
-    			startActivity(intent);	
-            }
-        }
-    }
+		if (resultCode == RESULT_OK) {
+			if (requestCode == SELECT_PICTURE) {
+				Uri selectedImageUri = data.getData();
+
+				// Pass image uri and start the activity 
+				Intent intent = new Intent(this, StillImageProcessingActivity.class);
+				intent.putExtra("ImgUri", selectedImageUri);
+				startActivity(intent);	
+			}
+		}
+	}
 
 	@Override
 	protected void onDestroy() {

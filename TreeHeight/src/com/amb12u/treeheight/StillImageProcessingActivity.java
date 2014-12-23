@@ -8,7 +8,6 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
@@ -202,21 +201,14 @@ public class StillImageProcessingActivity extends Activity {
 		detectedReference = false;
 		detectedTree = false;
 
-
-		byte[] imageArray = getIntent().getByteArrayExtra("CapturedImage");
 		Uri imgUri = getIntent().getExtras().getParcelable("ImgUri");
 		Bitmap loadedImage;
 
 		try {
-			//Case1: Activity is launched via frame capture 
-			if (imageArray != null) { 		
-				loadedImage = BitmapFactory.decodeByteArray(imageArray, 0, imageArray.length);
+			//retrieve image from storage
+			InputStream image_stream = getContentResolver().openInputStream(imgUri);
+			loadedImage = BitmapFactory.decodeStream(image_stream );
 
-				//Case2: Activity is launched via gallery image selection
-			} else {
-				InputStream image_stream = getContentResolver().openInputStream(imgUri);
-				loadedImage = BitmapFactory.decodeStream(image_stream );
-			}
 			//rotate image
 			Matrix matrix = new Matrix();
 			matrix.postRotate(90);
