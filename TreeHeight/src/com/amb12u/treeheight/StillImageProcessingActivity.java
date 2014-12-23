@@ -32,6 +32,7 @@ public class StillImageProcessingActivity extends Activity {
 
 	private final String TAG = "StillImageProcessingActivity";
 	private boolean detectedTree, detectedReference;
+	private double referenceObjHeight;
 	private Mat imageMat;
 
 	private void calculateHeight() {
@@ -46,6 +47,8 @@ public class StillImageProcessingActivity extends Activity {
 	private void detectReference() {
 		Log.d(TAG, "onClickDetectReference");
 		if (imageMat != null && !detectedReference) {
+			detectedTree = true;
+			//TODO: change to AsyncTask
 			detectReferenceAlgorithm();
 		}
 	}
@@ -54,10 +57,11 @@ public class StillImageProcessingActivity extends Activity {
 	 * If the matrix is initialized and a the tree is not yet detected, 
 	 * calls the method to detect trees
 	 */
-	public void detectTree() {
+	private void detectTree() {
 		Log.d(TAG, "onClickDetectTree");
 		if (imageMat != null && !detectedTree) {
 			//TODO: Activate
+			detectedTree = true;
 			new TaskDetectTreetop().execute();
 		}
 	}
@@ -106,7 +110,7 @@ public class StillImageProcessingActivity extends Activity {
 	}
 
 	/**
-	 * Runs the algorithm to detect trees
+	 * Runs the algorithm to detect reference object
 	 * TODO: Explain how the algorithm works
 	 */
 	private void detectReferenceAlgorithm() {
