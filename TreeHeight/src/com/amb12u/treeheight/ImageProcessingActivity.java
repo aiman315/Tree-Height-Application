@@ -136,7 +136,7 @@ public class ImageProcessingActivity extends Activity implements CvCameraViewLis
             if (requestCode == SELECT_PICTURE) {
                 Uri selectedImageUri = data.getData();
                
-                // Pass bytes array and start the activity 
+                // Pass image uri and start the activity 
     			Intent intent = new Intent(this, StillImageProcessingActivity.class);
     			intent.putExtra("ImgUri", selectedImageUri);
     			startActivity(intent);	

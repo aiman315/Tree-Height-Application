@@ -4,8 +4,11 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
@@ -51,9 +54,10 @@ public class StillImageProcessingActivity extends Activity {
 	 */
 	public void detectTree() {
 		Log.d(TAG, "onClickDetectTree");
-		//TODO: Currently detecting edges
 		if (imageMat != null && !detectedTree) {
-			detectTrees();
+			//TODO: Activate
+			//detectTreeAlgorithm();
+			//drawLine();
 		}
 	}
 
@@ -61,27 +65,60 @@ public class StillImageProcessingActivity extends Activity {
 	 * Runs the algorithm to detect trees
 	 * TODO: Explain how the algorithm works
 	 */
-	private void detectTrees() {
-		Mat outputMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC4);
-
-		//FIXME: currently detects edges
-		Imgproc.Canny(imageMat, outputMat, 300, 600, 5, true);
-		Bitmap image = mat2bitmap(outputMat);
-
-		ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
-		imageView.setImageBitmap(image);
+	private void detectTreeAlgorithm() {
+		//TODO: implementation
 	}
-	
+
+	/**
+	 * Detect a selected color in the displayed image
+	 * @param selectedColorHSV: HSV color value
+	 * <br /><b>HSV in OpenCV</b><br />
+	 * Hue Range: [0-180]<br />
+	 * Saturation Range: [0-255]<br />
+	 * Value Range: [0-255]<br />
+	 * Normally, the ranges for Hue, Saturation and Value are: [0-360], [0-100] and [0-100] respectively<br />
+	 * To convert to OpenCV ranges:<br />
+	 * <table>
+  <tr>
+    <th ></th><th "></th><th >Normal Value</th><th "></th><th >OpenCV Value</th>
+  </tr>
+  <tr>
+    <td >Hue</td>
+    <td "></td><td >X</td><td "></td><td >X / 2</td>
+  </tr>
+  <tr>
+    <td >Saturation</td>
+    <td "></td><td >X</td><td "></td><td >X * 255 / 100</td>
+  </tr>
+  <tr>
+    <td >Value</td><td "></td><td >X</td><td "></td><td >X * 255 / 100</td>
+  </tr>
+</table>
+	 */
+	private Mat detectColor() {
+		Mat imageMatHSV = new Mat();
+		// Yellow: new Scalar(25, 20, 20), new Scalar(32, 255, 255)
+		// Red: new Scalar(0, 190, 190), new Scalar(10, 255, 255)
+		Imgproc.cvtColor(imageMat, imageMatHSV, Imgproc.COLOR_RGB2HSV, 0);
+		Core.inRange(imageMatHSV, new Scalar(0, 190, 190), new Scalar(10, 255, 255), imageMatHSV);
+		return imageMatHSV;
+	}
+
 	/**
 	 * Runs the algorithm to detect trees
 	 * TODO: Explain how the algorithm works
 	 */
 	private void detectReferenceAlgorithm() {
-		Mat outputMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC4);
-		drawLine();
+		Mat outputMat = detectColor();
+		//TODO: Further processing
+
+
+		Bitmap image = mat2bitmap(outputMat);
+		ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
+		imageView.setImageBitmap(image);
 	}
-	
-	
+
+
 	/**
 	 * Draw line on a matrix
 	 */
@@ -89,7 +126,7 @@ public class StillImageProcessingActivity extends Activity {
 		//Mat outputMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC4);
 		Mat outputMat = imageMat.clone();
 		Imgproc.cvtColor(outputMat, outputMat, Imgproc.COLOR_BGR2GRAY);
-		
+
 		for (int r = 0 ; r < outputMat.rows(); r++) {
 			outputMat.put(r, 13, 255);
 			outputMat.put(r, 14, 255);
@@ -100,35 +137,35 @@ public class StillImageProcessingActivity extends Activity {
 
 		ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
 		imageView.setImageBitmap(image);
-		
-		
+
+
 	}
-	
+
 	private void markTouch(View v, MotionEvent event) {
 
 		ImageView imageView = (ImageView)v;
 		int[] viewCoords = new int[2];
 		imageView.getLocationOnScreen(viewCoords);
-		
+
 		int touchX = (int) event.getX();
 		int touchY = (int) event.getY();
 
 		int imageX = touchX - viewCoords[0]; // viewCoords[0] is the X coordinate
 		int imageY = touchY;// - viewCoords[1]; // viewCoords[1] is the y coordinate
-		
+
 		Bitmap image = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
 		Mat imageMat = bitmap2mat(image);
 		Imgproc.cvtColor(imageMat, imageMat, Imgproc.COLOR_BGR2GRAY);
-		
-		
+
+
 		imageMat.put(imageY, imageX, 255);
-		
-		
+
+
 		image = mat2bitmap(imageMat);
 		imageView.setImageBitmap(image);
 	}
-	
-	
+
+
 	/**
 	 * Converts matrix to bitmap
 	 * @param mat
@@ -139,7 +176,7 @@ public class StillImageProcessingActivity extends Activity {
 		Utils.matToBitmap(mat, image);
 		return image;
 	}
-	
+
 	/**
 	 * Converts bitmap to matrix
 	 * @param bitmap
@@ -150,8 +187,8 @@ public class StillImageProcessingActivity extends Activity {
 		Utils.bitmapToMat(bitmap, mat);
 		return mat;
 	}
-	
-	
+
+
 	//	---------------- Activity Methods ---------------- //
 
 	@Override
@@ -160,10 +197,11 @@ public class StillImageProcessingActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
 		setContentView(R.layout.activity_still_image_processing);
-		
+
 		//initializations
 		detectedReference = false;
 		detectedTree = false;
+
 
 		byte[] imageArray = getIntent().getByteArrayExtra("CapturedImage");
 		Uri imgUri = getIntent().getExtras().getParcelable("ImgUri");
@@ -174,7 +212,7 @@ public class StillImageProcessingActivity extends Activity {
 			if (imageArray != null) { 		
 				loadedImage = BitmapFactory.decodeByteArray(imageArray, 0, imageArray.length);
 
-			//Case2: Activity is launched via gallery image selection
+				//Case2: Activity is launched via gallery image selection
 			} else {
 				InputStream image_stream = getContentResolver().openInputStream(imgUri);
 				loadedImage = BitmapFactory.decodeStream(image_stream );
@@ -183,13 +221,13 @@ public class StillImageProcessingActivity extends Activity {
 			Matrix matrix = new Matrix();
 			matrix.postRotate(90);
 			loadedImage = Bitmap.createBitmap(loadedImage , 0, 0, loadedImage .getWidth(), loadedImage .getHeight(), matrix, true);
-			
+
 			//load image in image view 
 			ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
 			imageView.setImageBitmap(loadedImage);
-			
+
 			imageView.setOnTouchListener(new View.OnTouchListener() {
-				
+
 				@Override
 				public boolean onTouch(View v, MotionEvent event) {
 					markTouch(v,event);
@@ -199,8 +237,8 @@ public class StillImageProcessingActivity extends Activity {
 
 			//create a matrix of the selected image for processing
 			imageMat = bitmap2mat(loadedImage);
-			
-		// Handle exceptions
+
+			// Handle exceptions
 		} catch (FileNotFoundException e) {
 			Toast.makeText(this, "Error locating the file path", Toast.LENGTH_SHORT).show();
 			Log.e(TAG, e.getMessage());
