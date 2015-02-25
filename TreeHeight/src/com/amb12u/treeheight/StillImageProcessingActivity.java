@@ -18,7 +18,6 @@ import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -36,13 +35,30 @@ import android.widget.Toast;
 public class StillImageProcessingActivity extends Activity {
 
 	private final String TAG = "StillImageProcessingActivity";
+	private final double [] RGB_VAL_BLACK = {0,0,0,0};
+	private final double [] RGB_VAL_WHITE = {255,255,255,255};
 	private boolean detectedTree, detectedReference;
-	private double referenceObjHeight;
+	private double treeHeight, referenceObjHeight;
+	private int treetopRow, treeBottomRow;
+	private int referenceObjBottomRow, referenceObjectTopRow;
 	private Mat imageMat;
 
+	/**
+	 * Calculate tree height by finding the ratio of reference object to  the tree 
+	 */
 	private void calculateHeight() {
 		Log.d(TAG, "onClickCalculateHeight");
-		//TODO:
+		if (detectedTree && detectedReference) {
+			treeBottomRow = referenceObjBottomRow;
+			double treePixelHeight = treeBottomRow-treetopRow;
+			double referenceObjPixelHeight = referenceObjBottomRow-referenceObjectTopRow;
+
+			treeHeight = (treePixelHeight*referenceObjHeight)/referenceObjPixelHeight;
+
+			Toast.makeText(this, String.format("Tree Height = ( %d * %d ) / %d = %d", (int)treePixelHeight, (int)referenceObjHeight, (int)referenceObjPixelHeight, (int)treeHeight), Toast.LENGTH_LONG).show();
+		} else {
+			Toast.makeText(this, "Error: Run detections first", Toast.LENGTH_LONG).show();
+		}
 	}
 
 	/**
@@ -52,7 +68,7 @@ public class StillImageProcessingActivity extends Activity {
 	private void detectReference() {
 		Log.d(TAG, "onClickDetectReference");
 		if (imageMat != null && !detectedReference) {
-			detectedTree = true;
+			detectedReference = true;
 			//TODO: change to AsyncTask
 			detectReferenceAlgorithm();
 		}
@@ -69,14 +85,6 @@ public class StillImageProcessingActivity extends Activity {
 			detectedTree = true;
 			new TaskDetectTreetop().execute();
 		}
-	}
-
-	/**
-	 * Runs the algorithm to detect trees
-	 * TODO: Explain how the algorithm works
-	 */
-	private void detectTreeAlgorithm() {
-		//TODO: implementation
 	}
 
 	/**
@@ -120,92 +128,46 @@ public class StillImageProcessingActivity extends Activity {
 	 */
 	private void detectReferenceAlgorithm() {
 		Mat outputMat = detectColor();
+		for (int r = 50 ; r < outputMat.rows()-50 ; r++) {
+			if (referenceObjectTopRow == 0 && Core.sumElems(outputMat.row(r)).val[0] > 5000) { 
+				referenceObjectTopRow = r;
+			}
+			if (Core.sumElems(outputMat.row(r)).val[0] > 5000) {
+				referenceObjBottomRow = r;
+			}
+		}
+		
 		//TODO: Further processing
 
-
-		Bitmap image = mat2bitmap(outputMat);
-		ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
-		imageView.setImageBitmap(image);
+		drawLine(referenceObjBottomRow, RGB_VAL_WHITE);
+		drawLine(referenceObjectTopRow,RGB_VAL_WHITE);
 	}
 
 
 	/**
 	 * Draw line on a matrix
 	 */
-	private void drawLine(int row) {
-		//Mat outputMat = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC4);
-		Mat outputMat = imageMat.clone();
-		Imgproc.cvtColor(outputMat, outputMat, Imgproc.COLOR_BGR2GRAY);
-
-		for (int c = 0 ; c < outputMat.cols(); c++) {
-			outputMat.put(row-2, c, 0);
-			outputMat.put(row-1, c, 0);
-			outputMat.put(row, c, 0);
-			outputMat.put(row+1, c, 0);
-			outputMat.put(row+2, c, 0);
-		}
-		Bitmap image = mat2bitmap(outputMat);
-
-		ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
-		imageView.setImageBitmap(image);
-
-
+	private void drawLine(int row, double [] rgbVal) {
+		for (int c = 0 ; c < imageMat.cols(); c++) {
+			imageMat.put(row, c, rgbVal);
+		}		
+		updateImage();
 	}
-
-
-	/**
-	 * Detects high intensity variation for every row
-	 * @return the row number at which the treetop is detected
-	 */
-	private int detectTopPosition() {
-		//TODO: method documentation
-		//TODO: what are the limits (minStd, patch size, column increment)
-		
-		Mat referenceMat = imageMat;
-		int minStd = 20;
-		Mat patch;
-
-		int windowHeight = 5;
-		int windowWidth = 5;
-
-		for (int r = 0 ; r < referenceMat.rows()/4 ; r ++) {
-			for (int c = 0 ; c < referenceMat.cols()-windowWidth ; c += windowWidth) {
-				patch = referenceMat.submat(r, r+windowHeight, c, c+windowWidth);
-				MatOfDouble stdMat = new MatOfDouble();
-				Core.meanStdDev(patch, new MatOfDouble(), stdMat);
-				int stDeviation = (int) stdMat.toArray()[0];
-				if (minStd < stDeviation) {
-					return r;
-				}
-			}
-		}
-		//TODO: return a false value? -999 <--- add to private final int
-		return 0;
-	}
-
 
 	private void markTouch(View v, MotionEvent event) {
 
+		int[] coordinates = new int[2];
 		ImageView imageView = (ImageView)v;
-		int[] viewCoords = new int[2];
-		imageView.getLocationOnScreen(viewCoords);
-
+		imageView.getLocationOnScreen(coordinates);
+		
 		int touchX = (int) event.getX();
 		int touchY = (int) event.getY();
 
-		int imageX = touchX - viewCoords[0]; // viewCoords[0] is the X coordinate
-		int imageY = touchY;// - viewCoords[1]; // viewCoords[1] is the y coordinate
+		int imageX = touchX - coordinates[0]; // viewCoords[0] is the X coordinate
+		int imageY = touchY - coordinates[1]; // viewCoords[1] is the y coordinate
 
-		Bitmap image = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
-		Mat imageMat = bitmap2mat(image);
-		Imgproc.cvtColor(imageMat, imageMat, Imgproc.COLOR_BGR2GRAY);
-
-
-		imageMat.put(imageY, imageX, 255);
-
-
-		image = mat2bitmap(imageMat);
-		imageView.setImageBitmap(image);
+		imageMat.put(imageY, imageX, RGB_VAL_BLACK);
+		updateImage();
 	}
 
 
@@ -234,17 +196,17 @@ public class StillImageProcessingActivity extends Activity {
 	private class TaskDetectTreetop extends AsyncTask<Void, Void, Integer> {
 
 		private ProgressDialog pdia;
-		
+
 		@Override
 		protected Integer doInBackground(Void... params) {
-			
+
 			Mat referenceMat = imageMat;
 			int minStd = 20;
 			Mat patch;
 
 			int windowHeight = 5;
 			int windowWidth = 5;
-			
+
 			for (int r = 0 ; r < referenceMat.rows()/4 ; r ++) {
 				for (int c = 0 ; c < referenceMat.cols()-windowWidth ; c += windowWidth) {
 					patch = referenceMat.submat(r, r+windowHeight, c, c+windowWidth);
@@ -252,36 +214,37 @@ public class StillImageProcessingActivity extends Activity {
 					Core.meanStdDev(patch, new MatOfDouble(), stdMat);
 					int stDeviation = (int) stdMat.toArray()[0];
 					if (minStd < stDeviation) {
+						treetopRow = r;
 						return r;
 					}
 				}
 			}
 			return null;
 		}
-		
+
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-	        pdia = new ProgressDialog(StillImageProcessingActivity.this);
-	        pdia.setMessage("Detecting Treetop...");
-	        pdia.show(); 
+			pdia = new ProgressDialog(StillImageProcessingActivity.this);
+			pdia.setMessage("Detecting Treetop...");
+			pdia.show(); 
 		}
-		
+
 		@Override
 		protected void onProgressUpdate(Void... values) {
 			super.onProgressUpdate(values);
 		}
 
 		@Override
-		protected void onPostExecute(Integer treetopRow) {
+		protected void onPostExecute(Integer result) {
 			pdia.dismiss();
-			drawLine(treetopRow);
+			drawLine(result, RGB_VAL_BLACK);
 		}
-		
+
 
 	}
-	
-	
+
+
 	/**
 	 * Creates a dialog to input reference object height
 	 * The value of reference object height is positive double, and can't be zero
@@ -293,7 +256,7 @@ public class StillImageProcessingActivity extends Activity {
 		input.setHint(R.string.height_dialog_text);
 		input.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
 
-		//camera height input-dialog setup
+		//reference object height input-dialog setup
 		final AlertDialog heightDialog = new AlertDialog.Builder(this)
 		.setView(input)
 		.setTitle(R.string.height_dialog_title)
@@ -313,7 +276,7 @@ public class StillImageProcessingActivity extends Activity {
 						//verify correct input
 						try {
 							referenceObjHeight = Double.parseDouble(input.getText().toString());
-							
+
 							if (referenceObjHeight > 0) {
 								heightDialog.dismiss();
 							} else {
@@ -330,16 +293,19 @@ public class StillImageProcessingActivity extends Activity {
 		heightDialog.setCanceledOnTouchOutside(false);
 		heightDialog.show();
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+	private void updateImage() {
+		ImageView image = (ImageView) findViewById(R.id.imageViewCapturedImage);
+		image.setImageBitmap(mat2bitmap(imageMat));
+	}
+
+
+
+
+
+
+
+
 	//	---------------- Activity Methods ---------------- //
 
 	@Override
@@ -352,6 +318,11 @@ public class StillImageProcessingActivity extends Activity {
 		//initializations
 		detectedReference = false;
 		detectedTree = false;
+		treeHeight = 0;
+		treetopRow = 0;
+		treeBottomRow = 0;
+		referenceObjectTopRow = 0;
+		referenceObjBottomRow = 0;
 
 		Uri imgUri = getIntent().getExtras().getParcelable("ImgUri");
 		Bitmap loadedImage;
