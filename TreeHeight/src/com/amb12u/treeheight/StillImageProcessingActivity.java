@@ -7,7 +7,7 @@ import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDouble;
+import org.opencv.core.Range;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -196,20 +196,38 @@ public class StillImageProcessingActivity extends Activity {
 	private class TaskDetectTreetop extends AsyncTask<Void, Void, Integer> {
 
 		private ProgressDialog pdia;
-
+		private Mat referenceMat ;
+		
 		@Override
 		protected Integer doInBackground(Void... params) {
 
-			Mat referenceMat = imageMat;
+			referenceMat = imageMat.submat(new Range(0,imageMat.rows()/3), Range.all());
+
+			//Detection using Sobel Filter
+			Mat temp1 = referenceMat;
+			
+			Imgproc.Sobel(referenceMat, temp1, referenceMat.depth(), 1, 0);
+			Imgproc.Sobel(referenceMat, referenceMat, referenceMat.depth(), 0, 1);
+			Core.addWeighted(temp1, 0.5, referenceMat, 0.5, 0, referenceMat);
+			
+			//TODO: locate treetop
+			//FIXME: below code doesn't work
+			/*for (int r = 0 ; r < referenceMat.rows() ; r++) {
+				Log.i("***", ":\t-"+r+"-\t"+Core.sumElems(referenceMat.row(r)).val[0]);
+				if (Core.sumElems(referenceMat.row(r)).val[0] > 0) {
+					treetopRow = r;
+					return r;
+					
+				}
+			}*/
+			
+			/*
+			//Detection using Standard Deviation
 			int minStd = 20;
 			Mat patch;
 
-			int windowHeight = 5;
-			int windowWidth = 5;
-
-			for (int r = 0 ; r < referenceMat.rows()/4 ; r ++) {
-				for (int c = 0 ; c < referenceMat.cols()-windowWidth ; c += windowWidth) {
-					patch = referenceMat.submat(r, r+windowHeight, c, c+windowWidth);
+			for (int r = 0 ; r < referenceMat.rows()/3 ; r ++) {
+					patch = referenceMat.row(r);
 					MatOfDouble stdMat = new MatOfDouble();
 					Core.meanStdDev(patch, new MatOfDouble(), stdMat);
 					int stDeviation = (int) stdMat.toArray()[0];
@@ -217,8 +235,11 @@ public class StillImageProcessingActivity extends Activity {
 						treetopRow = r;
 						return r;
 					}
-				}
 			}
+			*/			
+			
+			
+			
 			return null;
 		}
 
@@ -238,10 +259,10 @@ public class StillImageProcessingActivity extends Activity {
 		@Override
 		protected void onPostExecute(Integer result) {
 			pdia.dismiss();
-			drawLine(result, RGB_VAL_BLACK);
+			if (result != null) {
+				drawLine(result, RGB_VAL_BLACK);
+			}
 		}
-
-
 	}
 
 
