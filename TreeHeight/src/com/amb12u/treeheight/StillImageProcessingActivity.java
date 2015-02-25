@@ -18,14 +18,17 @@ import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -136,7 +139,7 @@ public class StillImageProcessingActivity extends Activity {
 				referenceObjBottomRow = r;
 			}
 		}
-		
+
 		//TODO: Further processing
 
 		drawLine(referenceObjBottomRow, RGB_VAL_WHITE);
@@ -158,15 +161,52 @@ public class StillImageProcessingActivity extends Activity {
 
 		int[] coordinates = new int[2];
 		ImageView imageView = (ImageView)v;
+
 		imageView.getLocationOnScreen(coordinates);
-		
+		Log.i("XXXXXX", "Screen Location of view:\ty-"+coordinates[0]+"-x-"+coordinates[1]);
+
 		int touchX = (int) event.getX();
 		int touchY = (int) event.getY();
 
-		int imageX = touchX - coordinates[0]; // viewCoords[0] is the X coordinate
-		int imageY = touchY - coordinates[1]; // viewCoords[1] is the y coordinate
+		Log.i("XXXXXX", "Location of touch:\ty-"+touchY+"-x-"+touchX);
 
-		imageMat.put(imageY, imageX, RGB_VAL_BLACK);
+		//Calculate offset
+		Display display = getWindowManager().getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+
+
+		int screenWid = 0, screenHei = 0;
+		
+		
+		switch (getWindowManager().getDefaultDisplay().getRotation()) {
+		case Surface.ROTATION_0:
+		case Surface.ROTATION_180:
+			screenWid = size.x;
+			screenHei = size.y;
+			break;
+			
+			//FIXME: incorrect offset
+		case Surface.ROTATION_90:
+		case Surface.ROTATION_270:
+			screenWid = size.y;
+			screenHei = size.x;
+			break;
+		default:
+
+			break;
+		}
+
+		int imgWid = imageMat.cols();
+		int imgHei = imageMat.rows();
+
+		int diffWid = screenWid - imgWid;
+		int diffHei = screenHei - imgHei;
+
+		int offsetW = diffWid/2;
+		int offsetH = diffHei/2;
+
+		imageMat.put(touchY-offsetH, touchX-offsetW, RGB_VAL_BLACK);
 		updateImage();
 	}
 
@@ -197,7 +237,7 @@ public class StillImageProcessingActivity extends Activity {
 
 		private ProgressDialog pdia;
 		private Mat referenceMat ;
-		
+
 		@Override
 		protected Integer doInBackground(Void... params) {
 
@@ -205,11 +245,11 @@ public class StillImageProcessingActivity extends Activity {
 
 			//Detection using Sobel Filter
 			Mat temp1 = referenceMat;
-			
+
 			Imgproc.Sobel(referenceMat, temp1, referenceMat.depth(), 1, 0);
 			Imgproc.Sobel(referenceMat, referenceMat, referenceMat.depth(), 0, 1);
 			Core.addWeighted(temp1, 0.5, referenceMat, 0.5, 0, referenceMat);
-			
+
 			//TODO: locate treetop
 			//FIXME: below code doesn't work
 			/*for (int r = 0 ; r < referenceMat.rows() ; r++) {
@@ -217,10 +257,10 @@ public class StillImageProcessingActivity extends Activity {
 				if (Core.sumElems(referenceMat.row(r)).val[0] > 0) {
 					treetopRow = r;
 					return r;
-					
+
 				}
 			}*/
-			
+
 			/*
 			//Detection using Standard Deviation
 			int minStd = 20;
@@ -236,10 +276,10 @@ public class StillImageProcessingActivity extends Activity {
 						return r;
 					}
 			}
-			*/			
-			
-			
-			
+			 */			
+
+
+
 			return null;
 		}
 
