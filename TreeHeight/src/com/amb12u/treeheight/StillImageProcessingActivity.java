@@ -253,13 +253,13 @@ public class StillImageProcessingActivity extends Activity {
 	private void setupReferenceObjHeight() {
 		// EditText to allow user input
 		final EditText input = new EditText(this);
-		input.setHint(R.string.height_dialog_text);
+		input.setHint(R.string.ref_height_dialog_text);
 		input.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
 
 		//reference object height input-dialog setup
 		final AlertDialog heightDialog = new AlertDialog.Builder(this)
 		.setView(input)
-		.setTitle(R.string.height_dialog_title)
+		.setTitle(R.string.ref_height_dialog_title)
 		.setPositiveButton(android.R.string.ok, null)
 		.create();
 
