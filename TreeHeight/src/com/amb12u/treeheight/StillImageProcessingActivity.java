@@ -7,6 +7,7 @@ import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.Range;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
@@ -28,7 +29,6 @@ import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -45,6 +45,7 @@ public class StillImageProcessingActivity extends Activity {
 	private int treetopRow, treeBottomRow;
 	private int referenceObjBottomRow, referenceObjectTopRow;
 	private Mat imageMat;
+	private int [] offset;
 
 	/**
 	 * Calculate tree height by finding the ratio of reference object to  the tree 
@@ -158,55 +159,16 @@ public class StillImageProcessingActivity extends Activity {
 	}
 
 	private void markTouch(View v, MotionEvent event) {
-
-		int[] coordinates = new int[2];
-		ImageView imageView = (ImageView)v;
-
-		imageView.getLocationOnScreen(coordinates);
-		Log.i("XXXXXX", "Screen Location of view:\ty-"+coordinates[0]+"-x-"+coordinates[1]);
-
 		int touchX = (int) event.getX();
 		int touchY = (int) event.getY();
 
 		Log.i("XXXXXX", "Location of touch:\ty-"+touchY+"-x-"+touchX);
-
-		//Calculate offset
-		Display display = getWindowManager().getDefaultDisplay();
-		Point size = new Point();
-		display.getSize(size);
-
-
-		int screenWid = 0, screenHei = 0;
 		
+		int offsetH = offset[0];
+		int offsetW = offset[1];
 		
-		switch (getWindowManager().getDefaultDisplay().getRotation()) {
-		case Surface.ROTATION_0:
-		case Surface.ROTATION_180:
-			screenWid = size.x;
-			screenHei = size.y;
-			break;
-			
-			//FIXME: incorrect offset
-		case Surface.ROTATION_90:
-		case Surface.ROTATION_270:
-			screenWid = size.y;
-			screenHei = size.x;
-			break;
-		default:
-
-			break;
-		}
-
-		int imgWid = imageMat.cols();
-		int imgHei = imageMat.rows();
-
-		int diffWid = screenWid - imgWid;
-		int diffHei = screenHei - imgHei;
-
-		int offsetW = diffWid/2;
-		int offsetH = diffHei/2;
-
-		imageMat.put(touchY-offsetH, touchX-offsetW, RGB_VAL_BLACK);
+//		Log.i("XXXXXX", "Offset Location of touch:\ty-"+(touchY-offsetH)+"-x-"+(touchX-offsetW));
+		imageMat.put(touchY, touchX-offsetW, RGB_VAL_BLACK);
 		updateImage();
 	}
 
@@ -233,6 +195,35 @@ public class StillImageProcessingActivity extends Activity {
 		return mat;
 	}
 
+	private int [] calculateImageOffset() {
+		int screenWid, screenHei;
+		int imgWid, imgHei;
+		int diffWid, diffHei;
+		int offsetW, offsetH;
+		
+		//Calculate offset
+		Display display = getWindowManager().getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+
+		screenWid = size.x;
+		screenHei = size.y;
+
+		imgWid = imageMat.cols();
+		imgHei = imageMat.rows();
+		
+		Log.i("XXXX", "img hei: "+imgHei+"\timg wid: "+imgWid);
+		Log.i("XXXX", "screen hei: "+screenHei+"\tscreen wid: "+screenWid);
+		
+		imgWid = screenHei * imgWid / imgHei;
+		imgHei = screenHei;
+		diffWid = screenWid - imgWid;
+		offsetW = diffWid/2;	
+		offsetH = 0;
+		int [] imgOffset = {offsetH, offsetW};
+		return imgOffset;
+	}
+
 	private class TaskDetectTreetop extends AsyncTask<Void, Void, Integer> {
 
 		private ProgressDialog pdia;
@@ -243,6 +234,14 @@ public class StillImageProcessingActivity extends Activity {
 
 			referenceMat = imageMat.submat(new Range(0,imageMat.rows()/3), Range.all());
 
+			
+			
+			
+			
+			/*
+			
+			
+			
 			//Detection using Sobel Filter
 			Mat temp1 = referenceMat;
 
@@ -260,13 +259,22 @@ public class StillImageProcessingActivity extends Activity {
 
 				}
 			}*/
+			
+			
+			
+			
+			
+			
+			
+			
+			
 
-			/*
+			
 			//Detection using Standard Deviation
 			int minStd = 20;
 			Mat patch;
 
-			for (int r = 0 ; r < referenceMat.rows()/3 ; r ++) {
+			for (int r = 0 ; r < referenceMat.rows() ; r ++) {
 					patch = referenceMat.row(r);
 					MatOfDouble stdMat = new MatOfDouble();
 					Core.meanStdDev(patch, new MatOfDouble(), stdMat);
@@ -276,7 +284,7 @@ public class StillImageProcessingActivity extends Activity {
 						return r;
 					}
 			}
-			 */			
+			 		
 
 
 
@@ -301,6 +309,9 @@ public class StillImageProcessingActivity extends Activity {
 			pdia.dismiss();
 			if (result != null) {
 				drawLine(result, RGB_VAL_BLACK);
+			} else {
+				Toast.makeText(getApplicationContext(), "No Tree Detected", Toast.LENGTH_SHORT).show();
+				detectedTree = false;
 			}
 		}
 	}
@@ -414,6 +425,9 @@ public class StillImageProcessingActivity extends Activity {
 
 			//create a matrix of the selected image for processing
 			imageMat = bitmap2mat(loadedImage);
+			
+			//setup image offset
+			offset = calculateImageOffset();
 
 			setupReferenceObjHeight();
 			// Handle exceptions

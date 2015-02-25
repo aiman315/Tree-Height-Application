@@ -59,11 +59,12 @@
             android:name=".ImageProcessingActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/title_activity_image_processing"
-            android:screenOrientation="landscape" >
+			android:screenOrientation="landscape" >
         </activity>
         <activity
             android:name=".StillImageProcessingActivity"
-            android:label="@string/title_activity_still_image_processing" >
+            android:label="@string/title_activity_still_image_processing" 
+            android:screenOrientation="portrait" >
         </activity>
     </application>
 
