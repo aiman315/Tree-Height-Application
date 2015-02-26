@@ -7,7 +7,6 @@ import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDouble;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -131,6 +130,7 @@ public class StillImageProcessingActivity extends Activity {
 
 		drawLine(referenceObjBottomRow, RGB_VAL_WHITE);
 		drawLine(referenceObjectTopRow,RGB_VAL_WHITE);
+		updateImage();
 	}
 
 
@@ -141,7 +141,6 @@ public class StillImageProcessingActivity extends Activity {
 		for (int c = 0 ; c < imageMat.cols(); c++) {
 			imageMat.put(row, c, rgbVal);
 		}		
-		updateImage();
 	}
 
 	private void markTouch(View v, MotionEvent event) {
@@ -154,7 +153,7 @@ public class StillImageProcessingActivity extends Activity {
 		int offsetW = offset[1];
 		
 //		Log.i("XXXXXX", "Offset Location of touch:\ty-"+(touchY-offsetH)+"-x-"+(touchX-offsetW));
-		imageMat.put(touchY, touchX-offsetW, RGB_VAL_BLACK);
+//		imageMat.put(touchY, touchX-offsetW, RGB_VAL_BLACK);
 		
 		touchX = touchX-offsetW;
 		
@@ -229,41 +228,58 @@ public class StillImageProcessingActivity extends Activity {
 		}
 		
 		public TaskDetectTreetop(int yPos, int xPos) {
-			int raduis = 10;
-			minRow = yPos-raduis;
-			maxRow = yPos+raduis;
-			minCol = xPos-raduis;
-			maxCol = xPos+raduis;
+			int rowRaduis = 10;
+			int colRaduis = 10;
+			minRow = yPos-rowRaduis;
+			maxRow = yPos+rowRaduis;
+			minCol = xPos-colRaduis;
+			maxCol = xPos+colRaduis;
+			Log.i("XXXXX", "" +
+					"["+minRow+","+minCol+"] [*******] ["+minCol+","+maxCol+"]" +
+					"\n[*******] ["+yPos+","+xPos+"] [*******]" +
+					"\n["+maxRow+","+minCol+"] [*******] ["+maxRow+","+maxCol+"]" +
+							"");
 		}
 
 		@Override
 		protected Integer doInBackground(Void... params) {
-
-			
-
-			/*
-			
-			
 			
 			//Detection using Sobel Filter
-			Mat temp1 = referenceMat;
+			Mat temp1 = imageMat.clone();
+			Mat temp2 = imageMat.clone();
 
-			Imgproc.Sobel(referenceMat, temp1, referenceMat.depth(), 1, 0);
-			Imgproc.Sobel(referenceMat, referenceMat, referenceMat.depth(), 0, 1);
-			Core.addWeighted(temp1, 0.5, referenceMat, 0.5, 0, referenceMat);
+			Imgproc.Sobel(temp1, temp1, temp1.depth(), 1, 0); //detect in x direction
+			Imgproc.Sobel(temp2, temp2, temp2.depth(), 0, 1); //detect in y direction
+			Core.addWeighted(temp1, 0.5, temp2, 0.5, 0, temp1);
 
-			//TODO: locate treetop
-			//FIXME: below code doesn't work
-			/*for (int r = 0 ; r < referenceMat.rows() ; r++) {
-				Log.i("***", ":\t-"+r+"-\t"+Core.sumElems(referenceMat.row(r)).val[0]);
-				if (Core.sumElems(referenceMat.row(r)).val[0] > 0) {
-					treetopRow = r;
+			Imgproc.threshold(temp1, temp1, 128, 255, Imgproc.THRESH_BINARY);
+			imageMat.submat(minRow, maxRow, minCol, maxCol).setTo(new Scalar(255,0,0));
+			
+			Log.i("XXXXX", "imageMat:\t["+imageMat.rows()+", "+imageMat.cols()+"]");
+			Log.i("XXXXX", "temp1:\t["+temp1.rows()+", "+temp1.cols()+"]");
+			
+			for (int r = minRow ; r < maxRow-1 ; r ++) {
+				double sum = Core.sumElems(temp1.submat(r,  r+1, minCol, maxCol)).val[0];
+				if (sum > 1) {
 					return r;
-
 				}
+			}
+			
+			
+			/*List<MatOfPoint> contours = new Vector<MatOfPoint>();
+			Mat hierarchy = new Mat();
+			
+			Imgproc.findContours(temp1, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+			*/
+		
+			/*if (!contours.isEmpty()) {
+				MatOfPoint points = new MatOfPoint(contours.get(0));
+				List<org.opencv.core.Point> list = points.toList();
+				return (int) list.get(0).y;
 			}*/
-	
-			Log.i("XXXX", "["+minRow+","+maxRow+"]");
+		
+			
+			/*
 			//Detection using Standard Deviation
 			double tempStd = 0;
 			
@@ -271,12 +287,13 @@ public class StillImageProcessingActivity extends Activity {
 				MatOfDouble stdMat = new MatOfDouble();
 				Core.meanStdDev(imageMat.submat(r,  r+1, minCol, maxCol), new MatOfDouble(), stdMat);
 				double stDeviation = stdMat.toArray()[0];
-				Log.i("XXXX", r+"\t["+stDeviation+"]");
 				if (stDeviation-tempStd > 0) {
 					treetopRow = r;
 					return r;
 				}
 			}
+			
+			*/
 
 			return null;
 		}
@@ -302,6 +319,7 @@ public class StillImageProcessingActivity extends Activity {
 			} else {
 				Toast.makeText(getApplicationContext(), "No Tree Detected", Toast.LENGTH_SHORT).show();
 			}
+			updateImage();
 		}
 	}
 
@@ -373,7 +391,7 @@ public class StillImageProcessingActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
-		setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
+		//setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
 		setContentView(R.layout.activity_still_image_processing);
 
 		//initializations
@@ -407,9 +425,11 @@ public class StillImageProcessingActivity extends Activity {
 			
 			//setup image offset
 			offset = calculateImageOffset();
-
+			
+			//setup for reference object
 			setupReferenceObjHeight();
 			// Handle exceptions
+			
 		} catch (FileNotFoundException e) {
 			Toast.makeText(this, "Error locating the file path", Toast.LENGTH_SHORT).show();
 			Log.e(TAG, e.getMessage());
@@ -455,6 +475,7 @@ public class StillImageProcessingActivity extends Activity {
 						return false;
 					}
 				});
+				Toast.makeText(getApplicationContext(), "Touch input enabled", Toast.LENGTH_SHORT).show();
 			}
 			return true;
 		case R.id.actionTreeHeight:
