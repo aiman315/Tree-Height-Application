@@ -7,6 +7,7 @@ import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Range;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -139,9 +140,7 @@ public class StillImageProcessingActivity extends Activity {
 	 * Draw line on a matrix
 	 */
 	private void drawLine(int row, double [] rgbVal) {
-		for (int c = 0 ; c < imageMat.cols(); c++) {
-			imageMat.put(row, c, rgbVal);
-		}		
+		imageMat.submat(new Range(row, row+1), Range.all()).setTo(new Scalar(255,0,0));		
 	}
 
 	private void markTouch(View v, MotionEvent event) {
@@ -274,8 +273,7 @@ public class StillImageProcessingActivity extends Activity {
 			Imgproc.Sobel(temp2, temp2, temp2.depth(), 0, 1); //detect in y direction
 			Core.addWeighted(temp1, 0.5, temp2, 0.5, 0, temp1);
 
-			Imgproc.threshold(temp1, temp1, 128, 255, Imgproc.THRESH_BINARY);
-			imageMat.submat(minRow, maxRow, minCol, maxCol).setTo(new Scalar(255,0,0));
+			Imgproc.threshold(temp1, temp1, 50, 255, Imgproc.THRESH_BINARY);
 			
 			for (int r = minRow ; r < maxRow-1 ; r ++) {
 				double sum = Core.sumElems(temp1.submat(r,  r+1, minCol, maxCol)).val[0];
