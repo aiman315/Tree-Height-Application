@@ -8,6 +8,7 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
@@ -155,8 +156,8 @@ public class StillImageProcessingActivity extends Activity {
 //		Log.i("XXXXXX", "Offset Location of touch:\ty-"+(touchY-offsetH)+"-x-"+(touchX-offsetW));
 //		imageMat.put(touchY, touchX-offsetW, RGB_VAL_BLACK);
 		
-		touchX = touchX-offsetW;
-		
+//		touchY = touchX-offsetH;
+//		touchX = touchX-offsetW;
 		new TaskDetectTreetop(touchY, touchX).execute();
 	}
 
@@ -204,10 +205,20 @@ public class StillImageProcessingActivity extends Activity {
 		
 		imgWid = screenHei * imgWid / imgHei;
 		imgHei = screenHei;
+		
 		diffWid = screenWid - imgWid;
+		diffHei = screenHei - imgHei;
+		
 		offsetW = diffWid/2;	
-		offsetH = 0;
+		offsetH = diffHei/2;
 		int [] imgOffset = {offsetH, offsetW};
+		
+		Imgproc.resize(imageMat, imageMat, new Size(screenWid, screenHei));
+		updateImage();
+		
+		Log.i("XXXX", "NEW img hei: "+imgHei+"\timg wid: "+imgWid);
+		Log.i("XXXX", "screen hei: "+screenHei+"\tscreen wid: "+screenWid);
+		
 		return imgOffset;
 	}
 
