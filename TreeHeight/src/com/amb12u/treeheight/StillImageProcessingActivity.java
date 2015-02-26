@@ -8,7 +8,6 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
-import org.opencv.core.Range;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -75,19 +74,6 @@ public class StillImageProcessingActivity extends Activity {
 			detectedReference = true;
 			//TODO: change to AsyncTask
 			detectReferenceAlgorithm();
-		}
-	}
-
-	/**
-	 * If the matrix is initialized and a the tree is not yet detected, 
-	 * calls the method to detect trees
-	 */
-	private void detectTree() {
-		Log.d(TAG, "onClickDetectTree");
-		if (imageMat != null && !detectedTree) {
-			//TODO: Activate
-			detectedTree = true;
-			new TaskDetectTreetop().execute();
 		}
 	}
 
@@ -169,9 +155,11 @@ public class StillImageProcessingActivity extends Activity {
 		
 //		Log.i("XXXXXX", "Offset Location of touch:\ty-"+(touchY-offsetH)+"-x-"+(touchX-offsetW));
 		imageMat.put(touchY, touchX-offsetW, RGB_VAL_BLACK);
-		updateImage();
+		
+		touchX = touchX-offsetW;
+		
+		new TaskDetectTreetop(touchY, touchX).execute();
 	}
-
 
 	/**
 	 * Converts matrix to bitmap
@@ -226,18 +214,33 @@ public class StillImageProcessingActivity extends Activity {
 
 	private class TaskDetectTreetop extends AsyncTask<Void, Void, Integer> {
 
-		private ProgressDialog pdia;
-		private Mat referenceMat ;
+		private ProgressDialog progressDialog;
+		private int minRow;
+		private int maxRow;
+		private int minCol;
+		private int maxCol;
+		
+		
+		public TaskDetectTreetop() {
+			minRow = 0;
+			maxRow = imageMat.rows()/3;
+			minCol = 0;
+			maxCol = imageMat.cols();
+		}
+		
+		public TaskDetectTreetop(int yPos, int xPos) {
+			int raduis = 10;
+			minRow = yPos-raduis;
+			maxRow = yPos+raduis;
+			minCol = xPos-raduis;
+			maxCol = xPos+raduis;
+		}
 
 		@Override
 		protected Integer doInBackground(Void... params) {
 
-			referenceMat = imageMat.submat(new Range(0,imageMat.rows()/3), Range.all());
+			
 
-			
-			
-			
-			
 			/*
 			
 			
@@ -259,34 +262,21 @@ public class StillImageProcessingActivity extends Activity {
 
 				}
 			}*/
-			
-			
-			
-			
-			
-			
-			
-			
-			
-
-			
+	
+			Log.i("XXXX", "["+minRow+","+maxRow+"]");
 			//Detection using Standard Deviation
-			int minStd = 20;
-			Mat patch;
-
-			for (int r = 0 ; r < referenceMat.rows() ; r ++) {
-					patch = referenceMat.row(r);
-					MatOfDouble stdMat = new MatOfDouble();
-					Core.meanStdDev(patch, new MatOfDouble(), stdMat);
-					int stDeviation = (int) stdMat.toArray()[0];
-					if (minStd < stDeviation) {
-						treetopRow = r;
-						return r;
-					}
+			double tempStd = 0;
+			
+			for (int r = minRow ; r < maxRow-1 ; r ++) {
+				MatOfDouble stdMat = new MatOfDouble();
+				Core.meanStdDev(imageMat.submat(r,  r+1, minCol, maxCol), new MatOfDouble(), stdMat);
+				double stDeviation = stdMat.toArray()[0];
+				Log.i("XXXX", r+"\t["+stDeviation+"]");
+				if (stDeviation-tempStd > 0) {
+					treetopRow = r;
+					return r;
+				}
 			}
-			 		
-
-
 
 			return null;
 		}
@@ -294,9 +284,9 @@ public class StillImageProcessingActivity extends Activity {
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			pdia = new ProgressDialog(StillImageProcessingActivity.this);
-			pdia.setMessage("Detecting Treetop...");
-			pdia.show(); 
+			progressDialog = new ProgressDialog(StillImageProcessingActivity.this);
+			progressDialog.setMessage("Detecting Treetop...");
+			progressDialog.show(); 
 		}
 
 		@Override
@@ -306,12 +296,11 @@ public class StillImageProcessingActivity extends Activity {
 
 		@Override
 		protected void onPostExecute(Integer result) {
-			pdia.dismiss();
+			progressDialog.dismiss();
 			if (result != null) {
 				drawLine(result, RGB_VAL_BLACK);
 			} else {
 				Toast.makeText(getApplicationContext(), "No Tree Detected", Toast.LENGTH_SHORT).show();
-				detectedTree = false;
 			}
 		}
 	}
@@ -413,16 +402,6 @@ public class StillImageProcessingActivity extends Activity {
 			ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
 			imageView.setImageBitmap(loadedImage);
 
-			//TODO: delete?
-			imageView.setOnTouchListener(new View.OnTouchListener() {
-
-				@Override
-				public boolean onTouch(View v, MotionEvent event) {
-					markTouch(v,event);
-					return false;
-				}
-			});
-
 			//create a matrix of the selected image for processing
 			imageMat = bitmap2mat(loadedImage);
 			
@@ -462,7 +441,21 @@ public class StillImageProcessingActivity extends Activity {
 			detectReference();
 			return true;
 		case R.id.actionDetectTree:
-			detectTree();
+			if (!detectedTree && imageMat != null) {
+				item.setTitle("Incorrect Detection?");
+				detectedTree = true;
+				new TaskDetectTreetop().execute();	
+			} else if (detectedTree) {
+				ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
+				imageView.setOnTouchListener(new View.OnTouchListener() {
+
+					@Override
+					public boolean onTouch(View v, MotionEvent event) {
+						markTouch(v,event);
+						return false;
+					}
+				});
+			}
 			return true;
 		case R.id.actionTreeHeight:
 			calculateHeight();
