@@ -239,17 +239,28 @@ public class StillImageProcessingActivity extends Activity {
 		}
 		
 		public TaskDetectTreetop(int yPos, int xPos) {
-			int rowRaduis = 10;
-			int colRaduis = 10;
+			int rowRaduis = 50;
+			int colRaduis = 50;
 			minRow = yPos-rowRaduis;
 			maxRow = yPos+rowRaduis;
 			minCol = xPos-colRaduis;
 			maxCol = xPos+colRaduis;
-			Log.i("XXXXX", "" +
-					"["+minRow+","+minCol+"] [*******] ["+minCol+","+maxCol+"]" +
-					"\n[*******] ["+yPos+","+xPos+"] [*******]" +
-					"\n["+maxRow+","+minCol+"] [*******] ["+maxRow+","+maxCol+"]" +
-							"");
+			
+			if (minRow < 0) {
+				minRow = 0;
+			}
+			
+			if (minCol < 0) {
+				minCol = 0;
+			}
+			
+			if (maxRow > imageMat.rows()-1) {
+				maxRow = imageMat.rows()-1;
+			}
+			
+			if (maxCol > imageMat.cols()-1) {
+				maxCol = imageMat.cols()-1;
+			}
 		}
 
 		@Override
@@ -265,9 +276,6 @@ public class StillImageProcessingActivity extends Activity {
 
 			Imgproc.threshold(temp1, temp1, 128, 255, Imgproc.THRESH_BINARY);
 			imageMat.submat(minRow, maxRow, minCol, maxCol).setTo(new Scalar(255,0,0));
-			
-			Log.i("XXXXX", "imageMat:\t["+imageMat.rows()+", "+imageMat.cols()+"]");
-			Log.i("XXXXX", "temp1:\t["+temp1.rows()+", "+temp1.cols()+"]");
 			
 			for (int r = minRow ; r < maxRow-1 ; r ++) {
 				double sum = Core.sumElems(temp1.submat(r,  r+1, minCol, maxCol)).val[0];
