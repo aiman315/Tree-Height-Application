@@ -42,6 +42,9 @@ public class StillImageProcessingActivity extends Activity {
 
 	private static final int TREETOP_DETECTION = 0;
 	private static final int REFERENCE_DETECTION = 1;
+	private static final int COLOR_RED = 0;
+	private static final int COLOR_YELLOW = 1;
+	private static final int COLOR_WHITE = 2;
 	private final String TAG = "StillImageProcessingActivity";
 	private final double [] RGB_VAL_BLACK = {0,0,0,0};
 	private final double [] RGB_VAL_WHITE = {255,255,255,255};
@@ -49,6 +52,7 @@ public class StillImageProcessingActivity extends Activity {
 	private double treeHeight, referenceObjHeight;
 	private int treetopRow, treeBottomRow;
 	private int referenceObjBottomRow, referenceObjectTopRow;
+	private int selectedColor;
 	private Mat imageMat;
 	private int [] offset;
 
@@ -69,10 +73,10 @@ public class StillImageProcessingActivity extends Activity {
 			Toast.makeText(this, "Error: Run detections first", Toast.LENGTH_LONG).show();
 		}
 	}
-	
+
 	private void detectTreetop() {
 		Log.d(TAG, "detectTreetop");
-		
+
 		if (!detectedTree && imageMat != null) {
 			new TaskDetectTreetop().execute();	
 		} else if (detectedTree) {
@@ -95,7 +99,7 @@ public class StillImageProcessingActivity extends Activity {
 	 */
 	private void detectReference() {
 		Log.d(TAG, "detectReference");
-		
+
 		if (!detectedReference && imageMat != null) {
 			new TaskDetectReference().execute();
 		} else if (detectedReference) {
@@ -138,8 +142,30 @@ public class StillImageProcessingActivity extends Activity {
   </tr>
 </table>
 	 */
-	private Mat detectColor() {
+	private Mat detectColor(int color) {
+		
 		Mat imageMatHSV = new Mat();
+		Scalar colorUpLimit;
+		Scalar colorLowLimit;
+		
+		switch(color) {
+		case COLOR_RED:
+			colorUpLimit = new Scalar(10, 255, 255);
+			colorLowLimit = new Scalar(0, 100, 100);
+			break;
+		case COLOR_YELLOW:
+			colorUpLimit = new Scalar(0, 100, 100);
+			colorLowLimit = new Scalar(32, 255, 255);
+			break;
+		case COLOR_WHITE:
+			colorUpLimit = new Scalar(0, 0, 255);
+			colorLowLimit = new Scalar(0, 0, 0);
+			break;
+		default:
+			Log.e(TAG, "Error in colour selection");
+			break;
+
+		}
 		// Yellow: new Scalar(25, 20, 20), new Scalar(32, 255, 255)
 		// Red: new Scalar(0, 100, 100), new Scalar(10, 255, 255)
 		// White: new Scalar(0, 0, 0), new Scalar(0, 0, 255)
@@ -175,6 +201,9 @@ public class StillImageProcessingActivity extends Activity {
 			break;
 		case REFERENCE_DETECTION:
 			new TaskDetectReference(touchY, touchX).execute();
+			break;
+		default:
+			Log.e(TAG, "Error in detection selection");
 			break;
 		}
 	}
@@ -354,7 +383,7 @@ public class StillImageProcessingActivity extends Activity {
 			updateImage();
 		}
 	}
-	
+
 	private class TaskDetectReference extends AsyncTask<Void, Void, Integer []> {
 
 		private ProgressDialog progressDialog;
@@ -399,13 +428,13 @@ public class StillImageProcessingActivity extends Activity {
 		@Override
 		protected Integer [] doInBackground(Void... params) {
 			Integer boundaries [] = new Integer[2];
-			
+
 			//TODO: add options for color detection
-			Mat outputMat = detectColor();
+			Mat outputMat = detectColor(selectedColor);
 
 			List<MatOfPoint> contours = new ArrayList<MatOfPoint>();  
 			Mat hierarchy = new Mat();
-			
+
 			/// Find contours
 			Imgproc.findContours(outputMat, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
@@ -413,11 +442,11 @@ public class StillImageProcessingActivity extends Activity {
 			Mat drawing = Mat.zeros( outputMat.size(), CvType.CV_8UC3 );
 			Scalar color = new Scalar(255,255,255);
 			for( int i = 0; i< contours.size(); i++ ) {
-				Imgproc.drawContours(imageMat, contours, i, color, 10);
+				Imgproc.drawContours(imageMat, contours, i, color, 5);
 			}
 
 
-	/*
+			/*
 
 			for (int r = 50 ; r < outputMat.rows()-50 ; r++) {
 				if (referenceObjectTopRow == 0 && Core.sumElems(outputMat.row(r)).val[0] > 5000) { 
@@ -432,12 +461,12 @@ public class StillImageProcessingActivity extends Activity {
 
 			//drawLine(referenceObjBottomRow, RGB_VAL_WHITE);
 			//drawLine(referenceObjectTopRow,RGB_VAL_WHITE);
-			
+
 			if (false) {
-				
+
 				return boundaries;
 			}
-			
+
 			return null;
 		}
 
@@ -550,6 +579,7 @@ public class StillImageProcessingActivity extends Activity {
 		treeBottomRow = 0;
 		referenceObjectTopRow = 0;
 		referenceObjBottomRow = 0;
+		selectedColor = COLOR_RED;
 
 		Uri imgUri = getIntent().getExtras().getParcelable("ImgUri");
 		Bitmap loadedImage;
@@ -607,7 +637,7 @@ public class StillImageProcessingActivity extends Activity {
 		switch(id){
 		case R.id.actionDetectReference:
 			detectReference();
-			item.setTitle("Incorrect Treetop Detection?");
+			item.setTitle("Incorrect Reference Detection?");
 			return true;
 		case R.id.actionDetectTree:
 			detectTreetop();
