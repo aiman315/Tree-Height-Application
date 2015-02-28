@@ -143,11 +143,11 @@ public class StillImageProcessingActivity extends Activity {
 </table>
 	 */
 	private Mat detectColor(int color) {
-		
+
 		Mat imageMatHSV = new Mat();
-		Scalar colorUpLimit;
-		Scalar colorLowLimit;
-		
+		Scalar colorUpLimit = null;
+		Scalar colorLowLimit = null;
+
 		switch(color) {
 		case COLOR_RED:
 			colorUpLimit = new Scalar(10, 255, 255);
@@ -163,14 +163,13 @@ public class StillImageProcessingActivity extends Activity {
 			break;
 		default:
 			Log.e(TAG, "Error in colour selection");
+			colorUpLimit = new Scalar(0, 0, 0);
+			colorLowLimit = new Scalar(0, 0, 0);
 			break;
 
 		}
-		// Yellow: new Scalar(25, 20, 20), new Scalar(32, 255, 255)
-		// Red: new Scalar(0, 100, 100), new Scalar(10, 255, 255)
-		// White: new Scalar(0, 0, 0), new Scalar(0, 0, 255)
 		Imgproc.cvtColor(imageMat, imageMatHSV, Imgproc.COLOR_RGB2HSV, 0);
-		Core.inRange(imageMatHSV, new Scalar(0, 0, 0), new Scalar(0, 0, 255), imageMatHSV);
+		Core.inRange(imageMatHSV, colorLowLimit, colorUpLimit, imageMatHSV);
 		return imageMatHSV;
 	}
 
@@ -373,7 +372,7 @@ public class StillImageProcessingActivity extends Activity {
 		protected void onPostExecute(Integer result) {
 			progressDialog.dismiss();
 			if (result != null) {
-				Toast.makeText(getApplicationContext(), "Treetop Detected (Row: "+result, Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), "Treetop Detected (Row: "+result+")", Toast.LENGTH_SHORT).show();
 				detectedTree = true;
 				treetopRow = result;
 				drawLine(result, RGB_VAL_BLACK);
@@ -440,10 +439,28 @@ public class StillImageProcessingActivity extends Activity {
 
 			/// Draw contours
 			Mat drawing = Mat.zeros( outputMat.size(), CvType.CV_8UC3 );
-			Scalar color = new Scalar(255,255,255);
-			for( int i = 0; i< contours.size(); i++ ) {
-				Imgproc.drawContours(imageMat, contours, i, color, 5);
+			Scalar colorScalar = new Scalar(255,255,255);
+
+			if (!contours.isEmpty()) {
+				// Find largest contour
+				double largestContourArea = 0;
+				int largestContourIndex = 0;
+				for( int i = 1; i < contours.size(); i++ ) {
+					double contourArea = Imgproc.contourArea(contours.get(i),false); 
+					if(contourArea > largestContourArea){
+						largestContourArea = contourArea;
+						largestContourIndex = i;
+					}
+				}
+				boundaries[0] = Imgproc.boundingRect(contours.get(largestContourIndex)).y;
+				boundaries[1] = Imgproc.boundingRect(contours.get(largestContourIndex)).y + Imgproc.boundingRect(contours.get(largestContourIndex)).height;
+				Imgproc.drawContours(imageMat, contours, largestContourIndex, colorScalar, 5);
+				
+				return boundaries;
 			}
+
+
+
 
 
 			/*
@@ -461,11 +478,6 @@ public class StillImageProcessingActivity extends Activity {
 
 			//drawLine(referenceObjBottomRow, RGB_VAL_WHITE);
 			//drawLine(referenceObjectTopRow,RGB_VAL_WHITE);
-
-			if (false) {
-
-				return boundaries;
-			}
 
 			return null;
 		}
@@ -486,9 +498,9 @@ public class StillImageProcessingActivity extends Activity {
 		@Override
 		protected void onPostExecute(Integer [] result) {
 			progressDialog.dismiss();
+			detectedReference = true;
 			if (result != null) {
-				Toast.makeText(getApplicationContext(), "Reference Object Detected (Row: "+result, Toast.LENGTH_SHORT).show();
-				detectedReference = true;
+				Toast.makeText(getApplicationContext(), "Reference Object Detected (Row: "+result[0]+"-"+result[1]+")", Toast.LENGTH_SHORT).show();
 				referenceObjectTopRow = result[0];
 				referenceObjBottomRow = result[1];
 				drawLine(result[0], RGB_VAL_BLACK);
@@ -568,7 +580,6 @@ public class StillImageProcessingActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
-		//setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
 		setContentView(R.layout.activity_still_image_processing);
 
 		//initializations
