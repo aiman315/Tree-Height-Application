@@ -40,6 +40,8 @@ import android.widget.Toast;
 
 public class StillImageProcessingActivity extends Activity {
 
+	private static final int TREETOP_DETECTION = 0;
+	private static final int REFERENCE_DETECTION = 1;
 	private final String TAG = "StillImageProcessingActivity";
 	private final double [] RGB_VAL_BLACK = {0,0,0,0};
 	private final double [] RGB_VAL_WHITE = {255,255,255,255};
@@ -67,17 +69,46 @@ public class StillImageProcessingActivity extends Activity {
 			Toast.makeText(this, "Error: Run detections first", Toast.LENGTH_LONG).show();
 		}
 	}
+	
+	private void detectTreetop() {
+		Log.d(TAG, "detectTreetop");
+		
+		if (!detectedTree && imageMat != null) {
+			new TaskDetectTreetop().execute();	
+		} else if (detectedTree) {
+			ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
+			imageView.setOnTouchListener(new View.OnTouchListener() {
+
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+					markTouch(v,event, TREETOP_DETECTION);
+					return false;
+				}
+			});
+			Toast.makeText(getApplicationContext(), "Touch input enabled", Toast.LENGTH_SHORT).show();
+		}
+	}
 
 	/**
 	 * If the matrix is initialized and the reference object is not yet detected, 
 	 * calls the method to detect reference object
 	 */
 	private void detectReference() {
-		Log.d(TAG, "onClickDetectReference");
-		if (imageMat != null && !detectedReference) {
-			detectedReference = true;
-			//TODO: change to AsyncTask
-			detectReferenceAlgorithm();
+		Log.d(TAG, "detectReference");
+		
+		if (!detectedReference && imageMat != null) {
+			new TaskDetectReference().execute();
+		} else if (detectedReference) {
+			ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
+			imageView.setOnTouchListener(new View.OnTouchListener() {
+
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+					markTouch(v,event, REFERENCE_DETECTION);
+					return false;
+				}
+			});
+			Toast.makeText(getApplicationContext(), "Touch input enabled", Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -118,53 +149,13 @@ public class StillImageProcessingActivity extends Activity {
 	}
 
 	/**
-	 * Runs the algorithm to detect reference object
-	 * TODO: Explain how the algorithm works
-	 */
-	private void detectReferenceAlgorithm() {
-		Mat outputMat = detectColor();
-
-		List<MatOfPoint> contours = new ArrayList<MatOfPoint>();  
-		Mat hierarchy = new Mat();
-		
-		/// Find contours
-		Imgproc.findContours(outputMat, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-
-		/// Draw contours
-		Mat drawing = Mat.zeros( outputMat.size(), CvType.CV_8UC3 );
-		Scalar color = new Scalar(255,255,255);
-		for( int i = 0; i< contours.size(); i++ ) {
-			Imgproc.drawContours(imageMat, contours, i, color, 10);
-		}
-
-
-/*
-
-		for (int r = 50 ; r < outputMat.rows()-50 ; r++) {
-			if (referenceObjectTopRow == 0 && Core.sumElems(outputMat.row(r)).val[0] > 5000) { 
-				referenceObjectTopRow = r;
-			}
-			if (Core.sumElems(outputMat.row(r)).val[0] > 5000) {
-				referenceObjBottomRow = r;
-			}
-		}*/
-
-		//TODO: Further processing
-
-		//drawLine(referenceObjBottomRow, RGB_VAL_WHITE);
-		//drawLine(referenceObjectTopRow,RGB_VAL_WHITE);
-		updateImage();
-	}
-
-
-	/**
 	 * Draw line on a matrix
 	 */
 	private void drawLine(int row, double [] rgbVal) {
 		imageMat.submat(new Range(row, row+1), Range.all()).setTo(new Scalar(255,0,0));		
 	}
 
-	private void markTouch(View v, MotionEvent event) {
+	private void markTouch(View v, MotionEvent event, int currentDetection) {
 		int touchX = (int) event.getX();
 		int touchY = (int) event.getY();
 
@@ -178,7 +169,14 @@ public class StillImageProcessingActivity extends Activity {
 
 		//		touchY = touchX-offsetH;
 		//		touchX = touchX-offsetW;
-		new TaskDetectTreetop(touchY, touchX).execute();
+		switch(currentDetection) {
+		case TREETOP_DETECTION:
+			new TaskDetectTreetop(touchY, touchX).execute();
+			break;
+		case REFERENCE_DETECTION:
+			new TaskDetectReference(touchY, touchX).execute();
+			break;
+		}
 	}
 
 	/**
@@ -249,7 +247,6 @@ public class StillImageProcessingActivity extends Activity {
 		private int maxRow;
 		private int minCol;
 		private int maxCol;
-
 
 		public TaskDetectTreetop() {
 			minRow = 0;
@@ -344,11 +341,6 @@ public class StillImageProcessingActivity extends Activity {
 		}
 
 		@Override
-		protected void onProgressUpdate(Void... values) {
-			super.onProgressUpdate(values);
-		}
-
-		@Override
 		protected void onPostExecute(Integer result) {
 			progressDialog.dismiss();
 			if (result != null) {
@@ -358,6 +350,122 @@ public class StillImageProcessingActivity extends Activity {
 				drawLine(result, RGB_VAL_BLACK);
 			} else {
 				Toast.makeText(getApplicationContext(), "No Tree Detected", Toast.LENGTH_SHORT).show();
+			}
+			updateImage();
+		}
+	}
+	
+	private class TaskDetectReference extends AsyncTask<Void, Void, Integer []> {
+
+		private ProgressDialog progressDialog;
+		private int minRow;
+		private int maxRow;
+		private int minCol;
+		private int maxCol;
+
+
+		public TaskDetectReference() {
+			minRow = 0;
+			maxRow = imageMat.rows();
+			minCol = 0;
+			maxCol = imageMat.cols();
+		}
+
+		public TaskDetectReference(int yPos, int xPos) {
+			int rowRaduis = 50;
+			int colRaduis = 50;
+			minRow = yPos-rowRaduis;
+			maxRow = yPos+rowRaduis;
+			minCol = xPos-colRaduis;
+			maxCol = xPos+colRaduis;
+
+			if (minRow < 0) {
+				minRow = 0;
+			}
+
+			if (minCol < 0) {
+				minCol = 0;
+			}
+
+			if (maxRow > imageMat.rows()-1) {
+				maxRow = imageMat.rows()-1;
+			}
+
+			if (maxCol > imageMat.cols()-1) {
+				maxCol = imageMat.cols()-1;
+			}
+		}
+
+		@Override
+		protected Integer [] doInBackground(Void... params) {
+			Integer boundaries [] = new Integer[2];
+			
+			//TODO: add options for color detection
+			Mat outputMat = detectColor();
+
+			List<MatOfPoint> contours = new ArrayList<MatOfPoint>();  
+			Mat hierarchy = new Mat();
+			
+			/// Find contours
+			Imgproc.findContours(outputMat, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+
+			/// Draw contours
+			Mat drawing = Mat.zeros( outputMat.size(), CvType.CV_8UC3 );
+			Scalar color = new Scalar(255,255,255);
+			for( int i = 0; i< contours.size(); i++ ) {
+				Imgproc.drawContours(imageMat, contours, i, color, 10);
+			}
+
+
+	/*
+
+			for (int r = 50 ; r < outputMat.rows()-50 ; r++) {
+				if (referenceObjectTopRow == 0 && Core.sumElems(outputMat.row(r)).val[0] > 5000) { 
+					referenceObjectTopRow = r;
+				}
+				if (Core.sumElems(outputMat.row(r)).val[0] > 5000) {
+					referenceObjBottomRow = r;
+				}
+			}*/
+
+			//TODO: Further processing
+
+			//drawLine(referenceObjBottomRow, RGB_VAL_WHITE);
+			//drawLine(referenceObjectTopRow,RGB_VAL_WHITE);
+			
+			if (false) {
+				
+				return boundaries;
+			}
+			
+			return null;
+		}
+
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			progressDialog = new ProgressDialog(StillImageProcessingActivity.this);
+			progressDialog.setMessage("Detecting Reference Object...");
+			progressDialog.show(); 
+		}
+
+		@Override
+		protected void onProgressUpdate(Void... values) {
+			super.onProgressUpdate(values);
+		}
+
+		@Override
+		protected void onPostExecute(Integer [] result) {
+			progressDialog.dismiss();
+			if (result != null) {
+				Toast.makeText(getApplicationContext(), "Reference Object Detected (Row: "+result, Toast.LENGTH_SHORT).show();
+				detectedReference = true;
+				referenceObjectTopRow = result[0];
+				referenceObjBottomRow = result[1];
+				drawLine(result[0], RGB_VAL_BLACK);
+				drawLine(result[1], RGB_VAL_BLACK);
+			} else {
+				Toast.makeText(getApplicationContext(), "No Reference Object Detected", Toast.LENGTH_SHORT).show();
 			}
 			updateImage();
 		}
@@ -499,23 +607,11 @@ public class StillImageProcessingActivity extends Activity {
 		switch(id){
 		case R.id.actionDetectReference:
 			detectReference();
+			item.setTitle("Incorrect Treetop Detection?");
 			return true;
 		case R.id.actionDetectTree:
-			if (!detectedTree && imageMat != null) {
-				item.setTitle("Incorrect Detection?");
-				new TaskDetectTreetop().execute();	
-			} else if (detectedTree) {
-				ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
-				imageView.setOnTouchListener(new View.OnTouchListener() {
-
-					@Override
-					public boolean onTouch(View v, MotionEvent event) {
-						markTouch(v,event);
-						return false;
-					}
-				});
-				Toast.makeText(getApplicationContext(), "Touch input enabled", Toast.LENGTH_SHORT).show();
-			}
+			detectTreetop();
+			item.setTitle("Incorrect Treetop Detection?");
 			return true;
 		case R.id.actionTreeHeight:
 			calculateHeight();
@@ -525,7 +621,6 @@ public class StillImageProcessingActivity extends Activity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-
 
 	@Override
 	protected void onDestroy() {
