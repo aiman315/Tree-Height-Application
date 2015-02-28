@@ -2,11 +2,14 @@ package com.amb12u.treeheight;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Range;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -108,8 +111,9 @@ public class StillImageProcessingActivity extends Activity {
 		Mat imageMatHSV = new Mat();
 		// Yellow: new Scalar(25, 20, 20), new Scalar(32, 255, 255)
 		// Red: new Scalar(0, 100, 100), new Scalar(10, 255, 255)
+		// White: new Scalar(0, 0, 0), new Scalar(0, 0, 255)
 		Imgproc.cvtColor(imageMat, imageMatHSV, Imgproc.COLOR_RGB2HSV, 0);
-		Core.inRange(imageMatHSV, new Scalar(0, 100, 100), new Scalar(10, 255, 255), imageMatHSV);
+		Core.inRange(imageMatHSV, new Scalar(0, 0, 0), new Scalar(0, 0, 255), imageMatHSV);
 		return imageMatHSV;
 	}
 
@@ -119,6 +123,23 @@ public class StillImageProcessingActivity extends Activity {
 	 */
 	private void detectReferenceAlgorithm() {
 		Mat outputMat = detectColor();
+
+		List<MatOfPoint> contours = new ArrayList<MatOfPoint>();  
+		Mat hierarchy = new Mat();
+		
+		/// Find contours
+		Imgproc.findContours(outputMat, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+
+		/// Draw contours
+		Mat drawing = Mat.zeros( outputMat.size(), CvType.CV_8UC3 );
+		Scalar color = new Scalar(255,255,255);
+		for( int i = 0; i< contours.size(); i++ ) {
+			Imgproc.drawContours(imageMat, contours, i, color, 10);
+		}
+
+
+/*
+
 		for (int r = 50 ; r < outputMat.rows()-50 ; r++) {
 			if (referenceObjectTopRow == 0 && Core.sumElems(outputMat.row(r)).val[0] > 5000) { 
 				referenceObjectTopRow = r;
@@ -126,12 +147,12 @@ public class StillImageProcessingActivity extends Activity {
 			if (Core.sumElems(outputMat.row(r)).val[0] > 5000) {
 				referenceObjBottomRow = r;
 			}
-		}
+		}*/
 
 		//TODO: Further processing
 
-		drawLine(referenceObjBottomRow, RGB_VAL_WHITE);
-		drawLine(referenceObjectTopRow,RGB_VAL_WHITE);
+		//drawLine(referenceObjBottomRow, RGB_VAL_WHITE);
+		//drawLine(referenceObjectTopRow,RGB_VAL_WHITE);
 		updateImage();
 	}
 
@@ -148,15 +169,15 @@ public class StillImageProcessingActivity extends Activity {
 		int touchY = (int) event.getY();
 
 		Log.i("XXXXXX", "Location of touch:\ty-"+touchY+"-x-"+touchX);
-		
+
 		int offsetH = offset[0];
 		int offsetW = offset[1];
-		
-//		Log.i("XXXXXX", "Offset Location of touch:\ty-"+(touchY-offsetH)+"-x-"+(touchX-offsetW));
-//		imageMat.put(touchY, touchX-offsetW, RGB_VAL_BLACK);
-		
-//		touchY = touchX-offsetH;
-//		touchX = touchX-offsetW;
+
+		//		Log.i("XXXXXX", "Offset Location of touch:\ty-"+(touchY-offsetH)+"-x-"+(touchX-offsetW));
+		//		imageMat.put(touchY, touchX-offsetW, RGB_VAL_BLACK);
+
+		//		touchY = touchX-offsetH;
+		//		touchX = touchX-offsetW;
 		new TaskDetectTreetop(touchY, touchX).execute();
 	}
 
@@ -187,7 +208,7 @@ public class StillImageProcessingActivity extends Activity {
 		int imgWid, imgHei;
 		int diffWid, diffHei;
 		int offsetW, offsetH;
-		
+
 		//Calculate offset
 		Display display = getWindowManager().getDefaultDisplay();
 		Point size = new Point();
@@ -198,26 +219,26 @@ public class StillImageProcessingActivity extends Activity {
 
 		imgWid = imageMat.cols();
 		imgHei = imageMat.rows();
-		
+
 		Log.i("XXXX", "img hei: "+imgHei+"\timg wid: "+imgWid);
 		Log.i("XXXX", "screen hei: "+screenHei+"\tscreen wid: "+screenWid);
-		
+
 		imgWid = screenHei * imgWid / imgHei;
 		imgHei = screenHei;
-		
+
 		diffWid = screenWid - imgWid;
 		diffHei = screenHei - imgHei;
-		
+
 		offsetW = diffWid/2;	
 		offsetH = diffHei/2;
 		int [] imgOffset = {offsetH, offsetW};
-		
+
 		Imgproc.resize(imageMat, imageMat, new Size(screenWid, screenHei));
 		updateImage();
-		
+
 		Log.i("XXXX", "NEW img hei: "+imgHei+"\timg wid: "+imgWid);
 		Log.i("XXXX", "screen hei: "+screenHei+"\tscreen wid: "+screenWid);
-		
+
 		return imgOffset;
 	}
 
@@ -228,15 +249,15 @@ public class StillImageProcessingActivity extends Activity {
 		private int maxRow;
 		private int minCol;
 		private int maxCol;
-		
-		
+
+
 		public TaskDetectTreetop() {
 			minRow = 0;
 			maxRow = imageMat.rows()/3;
 			minCol = 0;
 			maxCol = imageMat.cols();
 		}
-		
+
 		public TaskDetectTreetop(int yPos, int xPos) {
 			int rowRaduis = 50;
 			int colRaduis = 50;
@@ -244,19 +265,19 @@ public class StillImageProcessingActivity extends Activity {
 			maxRow = yPos+rowRaduis;
 			minCol = xPos-colRaduis;
 			maxCol = xPos+colRaduis;
-			
+
 			if (minRow < 0) {
 				minRow = 0;
 			}
-			
+
 			if (minCol < 0) {
 				minCol = 0;
 			}
-			
+
 			if (maxRow > imageMat.rows()-1) {
 				maxRow = imageMat.rows()-1;
 			}
-			
+
 			if (maxCol > imageMat.cols()-1) {
 				maxCol = imageMat.cols()-1;
 			}
@@ -264,7 +285,7 @@ public class StillImageProcessingActivity extends Activity {
 
 		@Override
 		protected Integer doInBackground(Void... params) {
-			
+
 			//Detection using Sobel Filter
 			Mat temp1 = imageMat.clone();
 			Mat temp2 = imageMat.clone();
@@ -274,43 +295,42 @@ public class StillImageProcessingActivity extends Activity {
 			Core.addWeighted(temp1, 0.5, temp2, 0.5, 0, temp1);
 
 			Imgproc.threshold(temp1, temp1, 50, 255, Imgproc.THRESH_BINARY);
-			
+
 			for (int r = minRow ; r < maxRow-1 ; r ++) {
 				double sum = Core.sumElems(temp1.submat(r,  r+1, minCol, maxCol)).val[0];
 				if (sum > 1) {
 					return r;
 				}
 			}
-			
-			
+
+
 			/*List<MatOfPoint> contours = new Vector<MatOfPoint>();
 			Mat hierarchy = new Mat();
-			
+
 			Imgproc.findContours(temp1, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-			*/
-		
+			 */
+
 			/*if (!contours.isEmpty()) {
 				MatOfPoint points = new MatOfPoint(contours.get(0));
 				List<org.opencv.core.Point> list = points.toList();
 				return (int) list.get(0).y;
 			}*/
-		
-			
+
+
 			/*
 			//Detection using Standard Deviation
 			double tempStd = 0;
-			
+
 			for (int r = minRow ; r < maxRow-1 ; r ++) {
 				MatOfDouble stdMat = new MatOfDouble();
 				Core.meanStdDev(imageMat.submat(r,  r+1, minCol, maxCol), new MatOfDouble(), stdMat);
 				double stDeviation = stdMat.toArray()[0];
 				if (stDeviation-tempStd > 0) {
-					treetopRow = r;
 					return r;
 				}
 			}
-			
-			*/
+
+			 */
 
 			return null;
 		}
@@ -332,6 +352,9 @@ public class StillImageProcessingActivity extends Activity {
 		protected void onPostExecute(Integer result) {
 			progressDialog.dismiss();
 			if (result != null) {
+				Toast.makeText(getApplicationContext(), "Treetop Detected (Row: "+result, Toast.LENGTH_SHORT).show();
+				detectedTree = true;
+				treetopRow = result;
 				drawLine(result, RGB_VAL_BLACK);
 			} else {
 				Toast.makeText(getApplicationContext(), "No Tree Detected", Toast.LENGTH_SHORT).show();
@@ -439,14 +462,14 @@ public class StillImageProcessingActivity extends Activity {
 
 			//create a matrix of the selected image for processing
 			imageMat = bitmap2mat(loadedImage);
-			
+
 			//setup image offset
 			offset = calculateImageOffset();
-			
+
 			//setup for reference object
 			setupReferenceObjHeight();
 			// Handle exceptions
-			
+
 		} catch (FileNotFoundException e) {
 			Toast.makeText(this, "Error locating the file path", Toast.LENGTH_SHORT).show();
 			Log.e(TAG, e.getMessage());
@@ -480,7 +503,6 @@ public class StillImageProcessingActivity extends Activity {
 		case R.id.actionDetectTree:
 			if (!detectedTree && imageMat != null) {
 				item.setTitle("Incorrect Detection?");
-				detectedTree = true;
 				new TaskDetectTreetop().execute();	
 			} else if (detectedTree) {
 				ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
