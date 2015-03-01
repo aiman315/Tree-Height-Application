@@ -21,18 +21,24 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Point;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.view.MotionEventCompat;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Display;
+import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -40,11 +46,11 @@ import android.widget.Toast;
 
 public class StillImageProcessingActivity extends Activity {
 
-	private static final int TREETOP_DETECTION = 0;
-	private static final int REFERENCE_DETECTION = 1;
 	private static final int COLOR_RED = 0;
 	private static final int COLOR_YELLOW = 1;
 	private static final int COLOR_WHITE = 2;
+	private static final int DETECT_TYPE_TREETOP = 0;
+	private static final int DETECT_TYPE_REFERENCE = 1;
 	private final String TAG = "StillImageProcessingActivity";
 	private final double [] RGB_VAL_BLACK = {0,0,0,0};
 	private final double [] RGB_VAL_WHITE = {255,255,255,255};
@@ -54,7 +60,6 @@ public class StillImageProcessingActivity extends Activity {
 	private int referenceObjBottomRow, referenceObjectTopRow;
 	private int selectedColor;
 	private Mat imageMat;
-	private int [] offset;
 
 	/**
 	 * Calculate tree height by finding the ratio of reference object to  the tree 
@@ -85,7 +90,7 @@ public class StillImageProcessingActivity extends Activity {
 
 				@Override
 				public boolean onTouch(View v, MotionEvent event) {
-					markTouch(v,event, TREETOP_DETECTION);
+					markTouch(v,event, DETECT_TYPE_TREETOP);
 					return false;
 				}
 			});
@@ -108,14 +113,15 @@ public class StillImageProcessingActivity extends Activity {
 
 				@Override
 				public boolean onTouch(View v, MotionEvent event) {
-					markTouch(v,event, REFERENCE_DETECTION);
-					return false;
+					markTouch(v,event, DETECT_TYPE_REFERENCE);
+					return true;
 				}
 			});
 			Toast.makeText(getApplicationContext(), "Touch input enabled", Toast.LENGTH_SHORT).show();
 		}
 	}
 
+	
 	/**
 	 * Detect a selected color in the displayed image
 	 * @param selectedColorHSV: HSV color value
@@ -180,29 +186,25 @@ public class StillImageProcessingActivity extends Activity {
 		imageMat.submat(new Range(row, row+1), Range.all()).setTo(new Scalar(255,0,0));		
 	}
 
-	private void markTouch(View v, MotionEvent event, int currentDetection) {
-		int touchX = (int) event.getX();
-		int touchY = (int) event.getY();
+	private void markTouch(View v, MotionEvent event, int detectionType) {
 
-		Log.i("XXXXXX", "Location of touch:\ty-"+touchY+"-x-"+touchX);
-
-		int offsetH = offset[0];
-		int offsetW = offset[1];
-
-		//		Log.i("XXXXXX", "Offset Location of touch:\ty-"+(touchY-offsetH)+"-x-"+(touchX-offsetW));
-		//		imageMat.put(touchY, touchX-offsetW, RGB_VAL_BLACK);
-
-		//		touchY = touchX-offsetH;
-		//		touchX = touchX-offsetW;
-		switch(currentDetection) {
-		case TREETOP_DETECTION:
-			new TaskDetectTreetop(touchY, touchX).execute();
+		switch(detectionType) {
+		case DETECT_TYPE_TREETOP:
+			int posX = (int) event.getX();
+			int posY = (int) event.getY();
+			new TaskDetectTreetop(posY, posX).execute();
 			break;
-		case REFERENCE_DETECTION:
-			new TaskDetectReference(touchY, touchX).execute();
-			break;
-		default:
-			Log.e(TAG, "Error in detection selection");
+		case DETECT_TYPE_REFERENCE:
+			if(MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_POINTER_DOWN) {
+				if (MotionEventCompat.getPointerCount(event) == 2) { 
+					new TaskDetectReference(
+							(int) MotionEventCompat.getY(event, 0), 
+							(int) MotionEventCompat.getX(event, 0), 
+							(int) MotionEventCompat.getY(event, 1), 
+							(int) MotionEventCompat.getX(event, 1)
+							).execute();
+				}
+			}
 			break;
 		}
 	}
@@ -399,13 +401,13 @@ public class StillImageProcessingActivity extends Activity {
 			maxCol = imageMat.cols();
 		}
 
-		public TaskDetectReference(int yPos, int xPos) {
+		public TaskDetectReference(int yPosInitial, int xPosInitial, int yPosFinal, int xPosFinal) {
 			int rowRaduis = 50;
 			int colRaduis = 50;
-			minRow = yPos-rowRaduis;
-			maxRow = yPos+rowRaduis;
-			minCol = xPos-colRaduis;
-			maxCol = xPos+colRaduis;
+			minRow = yPosInitial-rowRaduis;
+			maxRow = yPosInitial+rowRaduis;
+			minCol = xPosFinal-colRaduis;
+			maxCol = xPosFinal+colRaduis;
 
 			if (minRow < 0) {
 				minRow = 0;
@@ -422,6 +424,8 @@ public class StillImageProcessingActivity extends Activity {
 			if (maxCol > imageMat.cols()-1) {
 				maxCol = imageMat.cols()-1;
 			}
+			
+			Log.i("XXXXXX", minRow+" "+maxRow+" "+minCol+" "+maxCol);
 		}
 
 		@Override
@@ -430,6 +434,7 @@ public class StillImageProcessingActivity extends Activity {
 
 			//TODO: add options for color detection
 			Mat outputMat = detectColor(selectedColor);
+			outputMat = outputMat.submat(minRow, maxRow, minCol, maxCol);
 
 			List<MatOfPoint> contours = new ArrayList<MatOfPoint>();  
 			Mat hierarchy = new Mat();
@@ -446,6 +451,7 @@ public class StillImageProcessingActivity extends Activity {
 				double largestContourArea = 0;
 				int largestContourIndex = 0;
 				for( int i = 1; i < contours.size(); i++ ) {
+					Imgproc.drawContours(imageMat, contours, i, colorScalar, 5);
 					double contourArea = Imgproc.contourArea(contours.get(i),false); 
 					if(contourArea > largestContourArea){
 						largestContourArea = contourArea;
@@ -454,8 +460,8 @@ public class StillImageProcessingActivity extends Activity {
 				}
 				boundaries[0] = Imgproc.boundingRect(contours.get(largestContourIndex)).y;
 				boundaries[1] = Imgproc.boundingRect(contours.get(largestContourIndex)).y + Imgproc.boundingRect(contours.get(largestContourIndex)).height;
-				Imgproc.drawContours(imageMat, contours, largestContourIndex, colorScalar, 5);
-				
+				//Imgproc.drawContours(imageMat, contours, largestContourIndex, colorScalar, 5);
+
 				return boundaries;
 			}
 
@@ -611,9 +617,6 @@ public class StillImageProcessingActivity extends Activity {
 
 			//create a matrix of the selected image for processing
 			imageMat = bitmap2mat(loadedImage);
-
-			//setup image offset
-			offset = calculateImageOffset();
 
 			//setup for reference object
 			setupReferenceObjHeight();
