@@ -2,6 +2,7 @@ package com.amb12u.treeheight;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -13,6 +14,7 @@ import android.widget.Toast;
 public class DescActivity extends Activity {
 
 	private final String TAG = "DescActivity";
+	private final int SELECT_PICTURE = 999;
 	private final int INVALID_METHOD_SELECTION = -999;
 	private final int MATH_METHOD_SELECTION = 1;
 	private final int IMAGE_PROCESSING_METHOD_SELECTION = 2;
@@ -118,13 +120,27 @@ public class DescActivity extends Activity {
 			break;
 		}
 		case IMAGE_PROCESSING_METHOD_SELECTION: {
-			Intent cameraIntent = new Intent(this, ImageProcessingActivity.class);
-			startActivity(cameraIntent);
+			Intent intent = new Intent();
+			intent.setType("image/*");
+			intent.setAction(Intent.ACTION_GET_CONTENT);
+			startActivityForResult(Intent.createChooser(intent,"Select Picture"), SELECT_PICTURE);
 			break;
 		}	
 		default:
 			Toast.makeText(this, "Invalid method selection", Toast.LENGTH_SHORT).show();
 			break;
+		}
+	}
+	
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode == RESULT_OK) {
+			if (requestCode == SELECT_PICTURE) {
+				Uri selectedImageUri = data.getData();
+				// Pass image uri and start the activity 
+				Intent intent = new Intent(this, ImageProcessingActivity.class);
+				intent.putExtra("ImgUri", selectedImageUri);
+				startActivity(intent);	
+			}
 		}
 	}
 }

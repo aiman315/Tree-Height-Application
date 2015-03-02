@@ -20,7 +20,7 @@
     <string name="button_try_me">Try Me!</string>
 
     <!-- CameraActivity -->
-    <string name="title_activity_camera">CameraActivity</string>
+    <string name="title_activity_camera">Camera Activity</string>
     <string name="instruction_text">Instruction Text</string>
     <string name="button_read_angle">Read Angle</string>
     <string name="height_dialog_title">Camera Height (cm):</string>
@@ -30,11 +30,7 @@
     <string name="action_camera_swap">Swap Cameras</string>
 
     <!-- Image Processing Activity -->
-    <string name="title_activity_image_processing">Image Processing</string>
-    <string name="button_capture_image">Capture</string>
-    <string name="title_activity_still_image_processing">StillImageProcessingActivity</string>
-
-    <!-- Still Image Processing Activity -->
+    <string name="title_activity_ip">Image Processing Activity</string>
     <string name="action_gallery_img">Image from Gallery</string>
     <string name="action_detect_tree">Detect Tree</string>
     <string name="action_detect_reference">Detect Reference</string>
