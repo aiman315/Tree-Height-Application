@@ -1,9 +1,18 @@
 package com.amb12u.treeheight;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,7 +23,9 @@ import android.widget.Toast;
 public class DescActivity extends Activity {
 
 	private final String TAG = "DescActivity";
-	private final int SELECT_PICTURE = 999;
+
+	private final int REQUEST_CODE_GALLERY = 999;
+	private final int REQUEST_CODE_CAMERA = 1000;
 	private final int INVALID_METHOD_SELECTION = -999;
 	private final int MATH_METHOD_SELECTION = 1;
 	private final int IMAGE_PROCESSING_METHOD_SELECTION = 2;
@@ -66,9 +77,6 @@ public class DescActivity extends Activity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
 		if (id == R.id.action_settings) {
 			return true;
@@ -120,27 +128,54 @@ public class DescActivity extends Activity {
 			break;
 		}
 		case IMAGE_PROCESSING_METHOD_SELECTION: {
-			Intent intent = new Intent();
-			intent.setType("image/*");
-			intent.setAction(Intent.ACTION_GET_CONTENT);
-			startActivityForResult(Intent.createChooser(intent,"Select Picture"), SELECT_PICTURE);
-			break;
+
+			AlertDialog.Builder photoSourceDialog = new AlertDialog.Builder(this);
+			photoSourceDialog.setMessage("Select Photo source");
+			photoSourceDialog.setPositiveButton("Gallery", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface arg0, int arg1) {
+					Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT, null);
+					galleryIntent.setType("image/*");
+					galleryIntent.putExtra("return-data", true);
+					startActivityForResult(galleryIntent,REQUEST_CODE_GALLERY);
+				}
+			});
+
+			photoSourceDialog.setNegativeButton("Camera", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface arg0, int arg1) {
+					Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+					startActivityForResult(cameraIntent,REQUEST_CODE_CAMERA);
+				}
+			});
+			photoSourceDialog.show();
 		}	
 		default:
 			Toast.makeText(this, "Invalid method selection", Toast.LENGTH_SHORT).show();
 			break;
 		}
 	}
-	
+
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (resultCode == RESULT_OK) {
-			if (requestCode == SELECT_PICTURE) {
+		Log.d(TAG, "onActivityResult");
+		Log.d(TAG, String.format("requestCode: %d | resultCode: %d", requestCode, resultCode));
+
+		switch (requestCode) {
+		case REQUEST_CODE_CAMERA:
+		case REQUEST_CODE_GALLERY:
+
+			if (resultCode == RESULT_CANCELED) {
+				Toast.makeText(this, "User Canceled", Toast.LENGTH_SHORT).show();
+				return;
+			} else {
+
 				Uri selectedImageUri = data.getData();
 				// Pass image uri and start the activity 
 				Intent intent = new Intent(this, ImageProcessingActivity.class);
 				intent.putExtra("ImgUri", selectedImageUri);
 				startActivity(intent);	
 			}
+			break;
+		default:
+			Toast.makeText(this, "Invalid request code", Toast.LENGTH_SHORT).show();
 		}
 	}
 }
