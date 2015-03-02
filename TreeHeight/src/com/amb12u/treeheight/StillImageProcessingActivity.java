@@ -21,11 +21,8 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Point;
-import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -33,12 +30,10 @@ import android.support.v4.view.MotionEventCompat;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Display;
-import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnLongClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -52,14 +47,14 @@ public class StillImageProcessingActivity extends Activity {
 	private static final int DETECT_TYPE_TREETOP = 0;
 	private static final int DETECT_TYPE_REFERENCE = 1;
 	private final String TAG = "StillImageProcessingActivity";
-	private final double [] RGB_VAL_BLACK = {0,0,0,0};
-	private final double [] RGB_VAL_WHITE = {255,255,255,255};
 	private boolean detectedTree, detectedReference;
 	private double treeHeight, referenceObjHeight;
+	private double heightRatio, widthRatio;
 	private int treetopRow, treeBottomRow;
 	private int referenceObjBottomRow, referenceObjectTopRow;
 	private int selectedColor;
 	private Mat imageMat;
+	
 
 	/**
 	 * Calculate tree height by finding the ratio of reference object to  the tree 
@@ -148,13 +143,12 @@ public class StillImageProcessingActivity extends Activity {
   </tr>
 </table>
 	 */
-	private Mat detectColor(int color) {
-
-		Mat imageMatHSV = new Mat();
+	private void detectColor(Mat mat) {
+		
 		Scalar colorUpLimit = null;
 		Scalar colorLowLimit = null;
 
-		switch(color) {
+		switch(selectedColor) {
 		case COLOR_RED:
 			colorUpLimit = new Scalar(10, 255, 255);
 			colorLowLimit = new Scalar(0, 100, 100);
@@ -174,34 +168,36 @@ public class StillImageProcessingActivity extends Activity {
 			break;
 
 		}
-		Imgproc.cvtColor(imageMat, imageMatHSV, Imgproc.COLOR_RGB2HSV, 0);
-		Core.inRange(imageMatHSV, colorLowLimit, colorUpLimit, imageMatHSV);
-		return imageMatHSV;
+		
+		Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2HSV, 0);
+		Core.inRange(mat, colorLowLimit, colorUpLimit, mat);
 	}
 
 	/**
 	 * Draw line on a matrix
 	 */
-	private void drawLine(int row, double [] rgbVal) {
-		imageMat.submat(new Range(row, row+1), Range.all()).setTo(new Scalar(255,0,0));		
+	private void drawLine(int row) {
+		imageMat.submat(new Range(row, row+1), Range.all()).setTo(new Scalar(255,255,0));		
 	}
 
 	private void markTouch(View v, MotionEvent event, int detectionType) {
 
 		switch(detectionType) {
 		case DETECT_TYPE_TREETOP:
-			int posX = (int) event.getX();
-			int posY = (int) event.getY();
+			int posY = (int) (event.getY() *heightRatio);
+			int posX = (int) (event.getX() *widthRatio);			
 			new TaskDetectTreetop(posY, posX).execute();
 			break;
 		case DETECT_TYPE_REFERENCE:
+			
 			if(MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_POINTER_DOWN) {
-				if (MotionEventCompat.getPointerCount(event) == 2) { 
+				if (MotionEventCompat.getPointerCount(event) == 2) {
+					//Log.i("XXXXX", "["+(event.getY()*heightRatio)+", "+(event.getX()*widthRatio)+"]");
 					new TaskDetectReference(
-							(int) MotionEventCompat.getY(event, 0), 
-							(int) MotionEventCompat.getX(event, 0), 
-							(int) MotionEventCompat.getY(event, 1), 
-							(int) MotionEventCompat.getX(event, 1)
+							(int) (MotionEventCompat.getY(event, 0) *heightRatio), 
+							(int) (MotionEventCompat.getX(event, 0) *widthRatio), 
+							(int) (MotionEventCompat.getY(event, 1) *heightRatio), 
+							(int) (MotionEventCompat.getX(event, 1) *widthRatio)
 							).execute();
 				}
 			}
@@ -268,6 +264,25 @@ public class StillImageProcessingActivity extends Activity {
 		Log.i("XXXX", "screen hei: "+screenHei+"\tscreen wid: "+screenWid);
 
 		return imgOffset;
+	}
+	
+	private double [] calculateImage2ScreenRatio() {
+		double [] ratio = null;
+		Display display = getWindowManager().getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+
+		int screenWid = size.x;
+		int screenHei = size.y;
+		
+		if (imageMat != null) {
+			ratio = new double[2];
+			Log.i("XXXX", "screen hei: "+screenHei+"\tscreen wid: "+screenWid);
+			Log.i("XXXX", "img hei: "+imageMat.rows()+"\timg wid: "+imageMat.cols());
+			ratio[0] = imageMat.rows()/(double)screenHei;
+			ratio[1] = imageMat.cols()/(double)screenWid;
+		}
+		return ratio; 
 	}
 
 	private class TaskDetectTreetop extends AsyncTask<Void, Void, Integer> {
@@ -377,7 +392,7 @@ public class StillImageProcessingActivity extends Activity {
 				Toast.makeText(getApplicationContext(), "Treetop Detected (Row: "+result+")", Toast.LENGTH_SHORT).show();
 				detectedTree = true;
 				treetopRow = result;
-				drawLine(result, RGB_VAL_BLACK);
+				drawLine(result);
 			} else {
 				Toast.makeText(getApplicationContext(), "No Tree Detected", Toast.LENGTH_SHORT).show();
 			}
@@ -401,13 +416,32 @@ public class StillImageProcessingActivity extends Activity {
 			maxCol = imageMat.cols();
 		}
 
-		public TaskDetectReference(int yPosInitial, int xPosInitial, int yPosFinal, int xPosFinal) {
+		public TaskDetectReference(int posY0, int posX0, int posY1, int posX1) {
 			int rowRaduis = 50;
 			int colRaduis = 50;
-			minRow = yPosInitial-rowRaduis;
-			maxRow = yPosInitial+rowRaduis;
-			minCol = xPosFinal-colRaduis;
-			maxCol = xPosFinal+colRaduis;
+
+			//flip around y axis
+			if ((posY0-posY1)/(posX0-posX1) < 0) {
+				int temp = posX0;
+				posX0 = posX1;
+				posX1 = temp;
+			}
+			
+			//interchange points
+			if (posX0 > posX1) {
+				int temp = posX0;
+				posX0 = posX1;
+				posX1 = temp;
+				
+				temp = posY0;
+				posY0 = posY1;
+				posY1 = temp;
+			}
+			
+			minRow = posY0-rowRaduis;
+			maxRow = posY1+rowRaduis;
+			minCol = posX0-colRaduis;
+			maxCol = posX1+colRaduis;
 
 			if (minRow < 0) {
 				minRow = 0;
@@ -425,66 +459,47 @@ public class StillImageProcessingActivity extends Activity {
 				maxCol = imageMat.cols()-1;
 			}
 			
-			Log.i("XXXXXX", minRow+" "+maxRow+" "+minCol+" "+maxCol);
+			org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
+			org.opencv.core.Point pt2 = new org.opencv.core.Point(maxCol, maxRow);
+			Scalar col = new Scalar(0,255,0);
+			Core.rectangle(imageMat, pt1, pt2, col);	
 		}
 
 		@Override
 		protected Integer [] doInBackground(Void... params) {
-			Integer boundaries [] = new Integer[2];
-
+			
+			Log.i("XXXXX", "[ "+minCol+" , "+minRow+" ] [ "+maxCol+" , "+maxRow+" ]");
+			Mat processingMat = imageMat.submat(minRow, maxRow, minCol, maxCol);
+			
 			//TODO: add options for color detection
-			Mat outputMat = detectColor(selectedColor);
-			outputMat = outputMat.submat(minRow, maxRow, minCol, maxCol);
+			detectColor(processingMat);
 
 			List<MatOfPoint> contours = new ArrayList<MatOfPoint>();  
 			Mat hierarchy = new Mat();
 
 			/// Find contours
-			Imgproc.findContours(outputMat, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-
+			Imgproc.findContours(processingMat, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+			
 			/// Draw contours
-			Mat drawing = Mat.zeros( outputMat.size(), CvType.CV_8UC3 );
-			Scalar colorScalar = new Scalar(255,255,255);
-
 			if (!contours.isEmpty()) {
 				// Find largest contour
 				double largestContourArea = 0;
 				int largestContourIndex = 0;
-				for( int i = 1; i < contours.size(); i++ ) {
-					Imgproc.drawContours(imageMat, contours, i, colorScalar, 5);
+					for( int i = 1; i < contours.size(); i++ ) {
+					//Imgproc.drawContours(imageMat, contours, i, new Scalar(255,255,255, 5);
 					double contourArea = Imgproc.contourArea(contours.get(i),false); 
 					if(contourArea > largestContourArea){
 						largestContourArea = contourArea;
 						largestContourIndex = i;
 					}
 				}
-				boundaries[0] = Imgproc.boundingRect(contours.get(largestContourIndex)).y;
-				boundaries[1] = Imgproc.boundingRect(contours.get(largestContourIndex)).y + Imgproc.boundingRect(contours.get(largestContourIndex)).height;
+				Integer boundaries [] = new Integer[2];
+				boundaries[0] = minRow + Imgproc.boundingRect(contours.get(largestContourIndex)).y;
+				boundaries[1] = minRow + Imgproc.boundingRect(contours.get(largestContourIndex)).y + Imgproc.boundingRect(contours.get(largestContourIndex)).height;
 				//Imgproc.drawContours(imageMat, contours, largestContourIndex, colorScalar, 5);
 
 				return boundaries;
 			}
-
-
-
-
-
-			/*
-
-			for (int r = 50 ; r < outputMat.rows()-50 ; r++) {
-				if (referenceObjectTopRow == 0 && Core.sumElems(outputMat.row(r)).val[0] > 5000) { 
-					referenceObjectTopRow = r;
-				}
-				if (Core.sumElems(outputMat.row(r)).val[0] > 5000) {
-					referenceObjBottomRow = r;
-				}
-			}*/
-
-			//TODO: Further processing
-
-			//drawLine(referenceObjBottomRow, RGB_VAL_WHITE);
-			//drawLine(referenceObjectTopRow,RGB_VAL_WHITE);
-
 			return null;
 		}
 
@@ -509,11 +524,44 @@ public class StillImageProcessingActivity extends Activity {
 				Toast.makeText(getApplicationContext(), "Reference Object Detected (Row: "+result[0]+"-"+result[1]+")", Toast.LENGTH_SHORT).show();
 				referenceObjectTopRow = result[0];
 				referenceObjBottomRow = result[1];
-				drawLine(result[0], RGB_VAL_BLACK);
-				drawLine(result[1], RGB_VAL_BLACK);
+				drawLine(referenceObjectTopRow);
+				drawLine(referenceObjBottomRow);
 			} else {
 				Toast.makeText(getApplicationContext(), "No Reference Object Detected", Toast.LENGTH_SHORT).show();
 			}
+			updateImage();
+		}
+	}
+	
+	private class TaskDraw extends AsyncTask<Void, Void, Integer []> {
+
+		private int yPos;
+		private int xPos;
+
+		public TaskDraw(int yPos, int xPos) {
+			
+			this.yPos = yPos;
+			this.xPos = xPos;
+		}
+
+		@Override
+		protected Integer [] doInBackground(Void... params) {
+			imageMat.submat(new Range(yPos-10, yPos+10), new Range(xPos-10, xPos+10)).setTo(new Scalar(255,0,0));
+			return null;
+		}
+
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+		}
+
+		@Override
+		protected void onProgressUpdate(Void... values) {
+			super.onProgressUpdate(values);
+		}
+
+		@Override
+		protected void onPostExecute(Integer [] result) {
 			updateImage();
 		}
 	}
@@ -597,6 +645,8 @@ public class StillImageProcessingActivity extends Activity {
 		referenceObjectTopRow = 0;
 		referenceObjBottomRow = 0;
 		selectedColor = COLOR_RED;
+		heightRatio = 0;
+		widthRatio = 0;
 
 		Uri imgUri = getIntent().getExtras().getParcelable("ImgUri");
 		Bitmap loadedImage;
@@ -617,6 +667,12 @@ public class StillImageProcessingActivity extends Activity {
 
 			//create a matrix of the selected image for processing
 			imageMat = bitmap2mat(loadedImage);
+			
+			//calculate image to screen ratio
+			double ratio [] = calculateImage2ScreenRatio();
+			heightRatio = ratio[0];
+			widthRatio = ratio[1];
+			Log.i("XXXX", "Ratios ["+ratio[0]+", "+ratio[1]+"]");
 
 			//setup for reference object
 			setupReferenceObjHeight();
