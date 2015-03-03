@@ -14,6 +14,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Range;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -23,6 +24,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -55,14 +57,14 @@ public class ImageProcessingActivity extends Activity {
 	private double treeHeight, referenceObjHeight;
 	private double heightRatio, widthRatio;
 	private int treetopRow, treeBottomRow;
-	private int referenceObjBottomRow, referenceObjectTopRow;
+	private int referenceObjBottomRow, referenceObjTopRow;
 	private int selectedColor;
 	private Uri imgUri;
 	private ImageView imageView;
 	private Mat imageMat;
-	
+
 	private BaseLoaderCallback mLoaderCallback;
-	
+
 
 	/**
 	 * Calculate tree height by finding the ratio of reference object to  the tree 
@@ -72,7 +74,7 @@ public class ImageProcessingActivity extends Activity {
 		if (detectedTree && detectedReference) {
 			treeBottomRow = referenceObjBottomRow;
 			double treePixelHeight = treeBottomRow-treetopRow;
-			double referenceObjPixelHeight = referenceObjBottomRow-referenceObjectTopRow;
+			double referenceObjPixelHeight = referenceObjBottomRow-referenceObjTopRow;
 
 			treeHeight = (treePixelHeight*referenceObjHeight)/referenceObjPixelHeight;
 
@@ -108,8 +110,6 @@ public class ImageProcessingActivity extends Activity {
 		Log.d(TAG, "detectReference");
 
 		if (!detectedReference && imageMat != null) {
-			new TaskDetectReference().execute();
-		} else if (detectedReference) {
 			imageView.setOnTouchListener(new View.OnTouchListener() {
 
 				@Override
@@ -122,7 +122,7 @@ public class ImageProcessingActivity extends Activity {
 		}
 	}
 
-	
+
 	/**
 	 * Detect a selected color in the displayed image
 	 * @param selectedColorHSV: HSV color value
@@ -150,7 +150,7 @@ public class ImageProcessingActivity extends Activity {
 </table>
 	 */
 	private void detectColor(Mat mat) {
-		
+
 		Scalar colorUpLimit = null;
 		Scalar colorLowLimit = null;
 
@@ -174,7 +174,7 @@ public class ImageProcessingActivity extends Activity {
 			break;
 
 		}
-		
+
 		Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2HSV, 0);
 		Core.inRange(mat, colorLowLimit, colorUpLimit, mat);
 	}
@@ -195,7 +195,7 @@ public class ImageProcessingActivity extends Activity {
 			new TaskDetectTreetop(posY, posX).execute();
 			break;
 		case DETECT_TYPE_REFERENCE:
-			
+
 			if(MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_POINTER_DOWN) {
 				if (MotionEventCompat.getPointerCount(event) == 2) {
 					//Log.i("XXXXX", "["+(event.getY()*heightRatio)+", "+(event.getX()*widthRatio)+"]");
@@ -260,7 +260,7 @@ public class ImageProcessingActivity extends Activity {
 
 		return imgOffset;
 	}
-	
+
 	private double [] calculateImage2ScreenRatio() {
 		double [] ratio = null;
 		Display display = getWindowManager().getDefaultDisplay();
@@ -269,7 +269,7 @@ public class ImageProcessingActivity extends Activity {
 
 		int screenWid = size.x;
 		int screenHei = size.y;
-		
+
 		if (imageMat != null) {
 			ratio = new double[2];
 			Log.i("XXXX", "screen hei: "+screenHei+"\tscreen wid: "+screenWid);
@@ -318,6 +318,11 @@ public class ImageProcessingActivity extends Activity {
 			if (maxCol > imageMat.cols()-1) {
 				maxCol = imageMat.cols()-1;
 			}
+			
+			org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
+			org.opencv.core.Point pt2 = new org.opencv.core.Point(maxCol, maxRow);
+			Scalar col = new Scalar(0,255,255);
+			Core.rectangle(imageMat, pt1, pt2, col);	
 		}
 
 		@Override
@@ -341,6 +346,14 @@ public class ImageProcessingActivity extends Activity {
 			}
 
 
+			//TODO:
+			//Local reference only
+			//box around reference
+			//Line color for treetop
+			//visual and animation at description
+			//Repeating reference "how many times" <- animation
+			//make two mats: display, processing
+			
 			/*List<MatOfPoint> contours = new Vector<MatOfPoint>();
 			Mat hierarchy = new Mat();
 
@@ -421,18 +434,18 @@ public class ImageProcessingActivity extends Activity {
 				posX0 = posX1;
 				posX1 = temp;
 			}
-			
+
 			//interchange points
 			if (posX0 > posX1) {
 				int temp = posX0;
 				posX0 = posX1;
 				posX1 = temp;
-				
+
 				temp = posY0;
 				posY0 = posY1;
 				posY1 = temp;
 			}
-			
+
 			minRow = posY0-rowRaduis;
 			maxRow = posY1+rowRaduis;
 			minCol = posX0-colRaduis;
@@ -453,7 +466,7 @@ public class ImageProcessingActivity extends Activity {
 			if (maxCol > imageMat.cols()-1) {
 				maxCol = imageMat.cols()-1;
 			}
-			
+
 			org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
 			org.opencv.core.Point pt2 = new org.opencv.core.Point(maxCol, maxRow);
 			Scalar col = new Scalar(0,255,0);
@@ -462,10 +475,10 @@ public class ImageProcessingActivity extends Activity {
 
 		@Override
 		protected Integer [] doInBackground(Void... params) {
-			
+
 			Log.i("XXXXX", "[ "+minCol+" , "+minRow+" ] [ "+maxCol+" , "+maxRow+" ]");
 			Mat processingMat = imageMat.submat(minRow, maxRow, minCol, maxCol);
-			
+
 			//TODO: add options for color detection
 			detectColor(processingMat);
 
@@ -475,12 +488,11 @@ public class ImageProcessingActivity extends Activity {
 			/// Find contours
 			Imgproc.findContours(processingMat, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 			
-			/// Draw contours
 			if (!contours.isEmpty()) {
 				// Find largest contour
 				double largestContourArea = 0;
 				int largestContourIndex = 0;
-					for( int i = 1; i < contours.size(); i++ ) {
+				for( int i = 1; i < contours.size(); i++ ) {
 					//Imgproc.drawContours(imageMat, contours, i, new Scalar(255,255,255, 5);
 					double contourArea = Imgproc.contourArea(contours.get(i),false); 
 					if(contourArea > largestContourArea){
@@ -488,11 +500,14 @@ public class ImageProcessingActivity extends Activity {
 						largestContourIndex = i;
 					}
 				}
-				Integer boundaries [] = new Integer[2];
-				boundaries[0] = minRow + Imgproc.boundingRect(contours.get(largestContourIndex)).y;
-				boundaries[1] = minRow + Imgproc.boundingRect(contours.get(largestContourIndex)).y + Imgproc.boundingRect(contours.get(largestContourIndex)).height;
-				//Imgproc.drawContours(imageMat, contours, largestContourIndex, colorScalar, 5);
-
+				Rect rect = Imgproc.boundingRect(contours.get(largestContourIndex));
+				Integer boundaries [] = new Integer[4];
+				
+				boundaries[0] = rect.y;
+				boundaries[1] = rect.y + rect.height;
+				boundaries[2] = rect.x;
+				boundaries[3] = rect.x + rect.width;
+				
 				return boundaries;
 			}
 			return null;
@@ -517,24 +532,30 @@ public class ImageProcessingActivity extends Activity {
 			detectedReference = true;
 			if (result != null) {
 				Toast.makeText(getApplicationContext(), "Reference Object Detected (Row: "+result[0]+"-"+result[1]+")", Toast.LENGTH_SHORT).show();
-				referenceObjectTopRow = result[0];
-				referenceObjBottomRow = result[1];
-				drawLine(referenceObjectTopRow);
-				drawLine(referenceObjBottomRow);
+				referenceObjTopRow = minRow + result[0];
+				referenceObjBottomRow = minRow + result[1];
+				int referenceObjectLeftCol = minCol + result[2];
+				int referenceObjRightCol = minCol + result[3];
+				
+
+				org.opencv.core.Point pt1 = new org.opencv.core.Point(referenceObjectLeftCol, referenceObjTopRow);
+				org.opencv.core.Point pt2 = new org.opencv.core.Point(referenceObjRightCol, referenceObjBottomRow);
+				Core.rectangle(imageMat, pt1, pt2, new Scalar(255,128,100), 5);	
+
 			} else {
 				Toast.makeText(getApplicationContext(), "No Reference Object Detected", Toast.LENGTH_SHORT).show();
 			}
 			updateImage();
 		}
 	}
-	
+
 	private class TaskDraw extends AsyncTask<Void, Void, Integer []> {
 
 		private int yPos;
 		private int xPos;
 
 		public TaskDraw(int yPos, int xPos) {
-			
+
 			this.yPos = yPos;
 			this.xPos = xPos;
 		}
@@ -610,17 +631,46 @@ public class ImageProcessingActivity extends Activity {
 		heightDialog.setCanceledOnTouchOutside(false);
 		heightDialog.show();
 	}
-	
+
 	private void loadImage() throws FileNotFoundException {
+
+		Log.i("XXXXXXXXX", "imgUri : "+imgUri);
+		Log.i("XXXXXXXXX", "imgUri.getPath() : "+imgUri.getEncodedPath());
+		
 		
 		//retrieve image from storage
 		InputStream imageStream = getContentResolver().openInputStream(imgUri);
 		Bitmap loadedImage = BitmapFactory.decodeStream(imageStream);
+
+/*
+		
+	    // First decode with inJustDecodeBounds=true to check dimensions
+	    final BitmapFactory.Options options = new BitmapFactory.Options();
+	    options.inJustDecodeBounds = true;
+	    Bitmap loadedImage = BitmapFactory.decodeFile(imgUri.getPath(), options);
+	    if (loadedImage == null) {
+	    	Log.i("XXXXXXXXX", "loaded Image == null");
+	    } else {
+	    	Log.i("XXXXXXXXX", "loaded Image != null");
+	    }
+
+	    // Calculate inSampleSize
+	    options.inSampleSize = calculateInSampleSize(options, 100, 100);
+
+	    // Decode bitmap with inSampleSize set
+	    options.inJustDecodeBounds = false;
+	    loadedImage = BitmapFactory.decodeFile(imgUri.getPath(), options);
+		
+		*/
+		
+		
+		
+		
 		
 		//rotate image
 		Matrix matrix = new Matrix();
 		matrix.postRotate(90);
-		
+
 		getResources().getConfiguration();
 		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
 			matrix.postRotate(90);
@@ -630,11 +680,36 @@ public class ImageProcessingActivity extends Activity {
 		//load image in image view 
 		imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
 		imageView.setImageBitmap(loadedImage);
-		
+
 
 		//create a matrix of the selected image for processing
 		imageMat = new Mat(loadedImage.getHeight(), loadedImage.getWidth(), CvType.CV_8UC1);
 		Utils.bitmapToMat(loadedImage, imageMat);
+	}
+	
+	public static int calculateInSampleSize(
+			BitmapFactory.Options options, int reqWidth, int reqHeight) {
+		// Raw height and width of image
+		final int height = options.outHeight;
+		final int width = options.outWidth;
+		
+		Log.i("XXXXXXXXX", "height = "+height+"\twidth = "+width);
+		int inSampleSize = 1;
+
+		if (height > reqHeight || width > reqWidth) {
+
+			final int halfHeight = height / 2;
+			final int halfWidth = width / 2;
+
+			// Calculate the largest inSampleSize value that is a power of 2 and keeps both
+			// height and width larger than the requested height and width.
+			while ((halfHeight / inSampleSize) > reqHeight
+					&& (halfWidth / inSampleSize) > reqWidth) {
+				inSampleSize *= 2;
+			}
+		}
+
+		return inSampleSize;
 	}
 
 	private void updateImage() {
@@ -663,11 +738,11 @@ public class ImageProcessingActivity extends Activity {
 		treeHeight = 0;
 		treetopRow = 0;
 		treeBottomRow = 0;
-		referenceObjectTopRow = 0;
+		referenceObjTopRow = 0;
 		referenceObjBottomRow = 0;
 		selectedColor = COLOR_WHITE;
 		imgUri = getIntent().getExtras().getParcelable("ImgUri");
-		
+
 		mLoaderCallback = new BaseLoaderCallback(this) {
 			@Override
 			public void onManagerConnected(int status) {
@@ -678,13 +753,16 @@ public class ImageProcessingActivity extends Activity {
 					try {
 						//load image and setup
 						loadImage();
-						
+
 						//calculate image to screen ratio
 						double ratio [] = calculateImage2ScreenRatio();
 						heightRatio = ratio[0];
 						widthRatio = ratio[1];
 						Log.i("XXXX", "Ratios ["+ratio[0]+", "+ratio[1]+"]");
 						
+						//setup for reference object
+						setupReferenceObjHeight();
+
 					} catch (FileNotFoundException e) {
 						Toast.makeText(getApplicationContext(), "Error locating the file path", Toast.LENGTH_SHORT).show();
 						Log.e(TAG, ""+e.getMessage());
@@ -702,8 +780,6 @@ public class ImageProcessingActivity extends Activity {
 			}
 		};
 
-		//setup for reference object
-		setupReferenceObjHeight();
 	}
 
 
@@ -734,6 +810,16 @@ public class ImageProcessingActivity extends Activity {
 			calculateHeight();
 			return true;
 		case R.id.action_settings:
+			switch(selectedColor) {
+			case COLOR_RED:
+				Toast.makeText(getApplicationContext(), "Detecting Color: WHITE", Toast.LENGTH_SHORT).show();
+				selectedColor = COLOR_WHITE;
+				break;
+			case COLOR_WHITE:
+				Toast.makeText(getApplicationContext(), "Detecting Color: RED", Toast.LENGTH_SHORT).show();
+				selectedColor = COLOR_RED;
+				break;
+			}
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
