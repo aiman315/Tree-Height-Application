@@ -57,46 +57,10 @@ public class ImageProcessingActivity extends Activity {
 	private int referenceObjBottomRow, referenceObjectTopRow;
 	private int selectedColor;
 	private Uri imgUri;
-	private Bitmap loadedImage;
+	private ImageView imageView;
 	private Mat imageMat;
 	
-	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-		@Override
-		public void onManagerConnected(int status) {
-			switch (status) {
-			case LoaderCallbackInterface.SUCCESS:
-				Log.i(TAG, "OpenCV loaded successfully");
-
-				//load image and setup
-				try {
-					loadImage();
-
-					//create a matrix of the selected image for processing
-					imageMat = bitmap2mat(loadedImage);
-					
-					//calculate image to screen ratio
-					double ratio [] = calculateImage2ScreenRatio();
-					heightRatio = ratio[0];
-					widthRatio = ratio[1];
-					Log.i("XXXX", "Ratios ["+ratio[0]+", "+ratio[1]+"]");
-					
-				} catch (FileNotFoundException e) {
-					Toast.makeText(getApplicationContext(), "Error locating the file path", Toast.LENGTH_SHORT).show();
-					Log.e(TAG, e.getMessage());
-					finish();
-				} catch (Exception e) {
-					Toast.makeText(getApplicationContext(), "Error!!", Toast.LENGTH_SHORT).show();
-					Log.e(TAG, e.getMessage());
-					finish();
-				}
-
-				break;
-			default:
-				super.onManagerConnected(status);
-				break;
-			}
-		}
-	};
+	private BaseLoaderCallback mLoaderCallback;
 	
 
 	/**
@@ -123,7 +87,6 @@ public class ImageProcessingActivity extends Activity {
 		if (!detectedTree && imageMat != null) {
 			new TaskDetectTreetop().execute();	
 		} else if (detectedTree) {
-			ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
 			imageView.setOnTouchListener(new View.OnTouchListener() {
 
 				@Override
@@ -146,7 +109,6 @@ public class ImageProcessingActivity extends Activity {
 		if (!detectedReference && imageMat != null) {
 			new TaskDetectReference().execute();
 		} else if (detectedReference) {
-			ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
 			imageView.setOnTouchListener(new View.OnTouchListener() {
 
 				@Override
@@ -201,8 +163,8 @@ public class ImageProcessingActivity extends Activity {
 			colorLowLimit = new Scalar(32, 255, 255);
 			break;
 		case COLOR_WHITE:
-			colorUpLimit = new Scalar(0, 0, 255);
-			colorLowLimit = new Scalar(0, 0, 0);
+			colorUpLimit = new Scalar(0, 100, 100);
+			colorLowLimit = new Scalar(360, 20, 90);
 			break;
 		default:
 			Log.e(TAG, "Error in colour selection");
@@ -254,20 +216,9 @@ public class ImageProcessingActivity extends Activity {
 	 * @return bitmap
 	 */
 	private Bitmap mat2bitmap(Mat mat) {
-		Bitmap image = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
+		Bitmap image = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.RGB_565);
 		Utils.matToBitmap(mat, image);
 		return image;
-	}
-
-	/**
-	 * Converts bitmap to matrix
-	 * @param bitmap
-	 * @return matrix
-	 */
-	private Mat bitmap2mat(Bitmap bitmap) {
-		Mat mat = new Mat(bitmap.getHeight(), bitmap.getWidth(), CvType.CV_8UC1);
-		Utils.bitmapToMat(bitmap, mat);
-		return mat;
 	}
 
 	private int [] calculateImageOffset() {
@@ -659,21 +610,25 @@ public class ImageProcessingActivity extends Activity {
 		heightDialog.show();
 	}
 	
-	private Bitmap loadImage() throws FileNotFoundException {
+	private void loadImage() throws FileNotFoundException {
+		
 		//retrieve image from storage
 		InputStream imageStream = getContentResolver().openInputStream(imgUri);
-		loadedImage = BitmapFactory.decodeStream(imageStream);
+		Bitmap loadedImage = BitmapFactory.decodeStream(imageStream);
 
 		//rotate image
 		Matrix matrix = new Matrix();
 		matrix.postRotate(90);
-		loadedImage = Bitmap.createBitmap(loadedImage , 0, 0, loadedImage .getWidth(), loadedImage .getHeight(), matrix, true);
+		loadedImage = Bitmap.createBitmap(loadedImage , 0, 0, loadedImage.getWidth(), loadedImage .getHeight(), matrix, true);
 
 		//load image in image view 
-		ImageView imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
+		imageView = (ImageView) findViewById(R.id.imageViewCapturedImage);
 		imageView.setImageBitmap(loadedImage);
 		
-		return loadedImage;
+
+		//create a matrix of the selected image for processing
+		imageMat = new Mat(loadedImage.getHeight(), loadedImage.getWidth(), CvType.CV_8UC1);
+		Utils.bitmapToMat(loadedImage, imageMat);
 	}
 
 	private void updateImage() {
@@ -704,13 +659,45 @@ public class ImageProcessingActivity extends Activity {
 		treeBottomRow = 0;
 		referenceObjectTopRow = 0;
 		referenceObjBottomRow = 0;
-		selectedColor = COLOR_RED;
+		selectedColor = COLOR_WHITE;
 		imgUri = getIntent().getExtras().getParcelable("ImgUri");
+		
+		mLoaderCallback = new BaseLoaderCallback(this) {
+			@Override
+			public void onManagerConnected(int status) {
+				switch (status) {
+				case LoaderCallbackInterface.SUCCESS:
+					Log.i(TAG, "OpenCV loaded successfully");
+
+					try {
+						//load image and setup
+						loadImage();
+						
+						//calculate image to screen ratio
+						double ratio [] = calculateImage2ScreenRatio();
+						heightRatio = ratio[0];
+						widthRatio = ratio[1];
+						Log.i("XXXX", "Ratios ["+ratio[0]+", "+ratio[1]+"]");
+						
+					} catch (FileNotFoundException e) {
+						Toast.makeText(getApplicationContext(), "Error locating the file path", Toast.LENGTH_SHORT).show();
+						Log.e(TAG, ""+e.getMessage());
+						finish();
+					} catch (Exception e) {
+						Toast.makeText(getApplicationContext(), "Error!!", Toast.LENGTH_SHORT).show();
+						Log.e(TAG, ""+e.getMessage());
+						finish();
+					}
+					break;
+				default:
+					super.onManagerConnected(status);
+					break;
+				}
+			}
+		};
 
 		//setup for reference object
 		setupReferenceObjHeight();
-		// Handle exceptions
-
 	}
 
 

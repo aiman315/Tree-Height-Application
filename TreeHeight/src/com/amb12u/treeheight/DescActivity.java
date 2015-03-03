@@ -1,17 +1,11 @@
 package com.amb12u.treeheight;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
@@ -70,8 +64,6 @@ public class DescActivity extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.math, menu);
 		return true;
 	}
 
@@ -147,6 +139,7 @@ public class DescActivity extends Activity {
 				}
 			});
 			photoSourceDialog.show();
+			break;
 		}	
 		default:
 			Toast.makeText(this, "Invalid method selection", Toast.LENGTH_SHORT).show();
@@ -163,7 +156,7 @@ public class DescActivity extends Activity {
 		case REQUEST_CODE_GALLERY:
 
 			if (resultCode == RESULT_CANCELED) {
-				Toast.makeText(this, "User Canceled", Toast.LENGTH_SHORT).show();
+				Toast.makeText(this, "Canceled", Toast.LENGTH_SHORT).show();
 				return;
 			} else {
 
