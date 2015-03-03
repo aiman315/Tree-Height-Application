@@ -157,6 +157,7 @@ public class DescActivity extends Activity {
 
 			if (resultCode == RESULT_CANCELED) {
 				Toast.makeText(this, "Canceled", Toast.LENGTH_SHORT).show();
+
 				return;
 			} else {
 
@@ -170,5 +171,6 @@ public class DescActivity extends Activity {
 		default:
 			Toast.makeText(this, "Invalid request code", Toast.LENGTH_SHORT).show();
 		}
+
 	}
 }
