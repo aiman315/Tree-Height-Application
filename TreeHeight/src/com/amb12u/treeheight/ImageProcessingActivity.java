@@ -22,6 +22,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -159,12 +160,12 @@ public class ImageProcessingActivity extends Activity {
 			colorLowLimit = new Scalar(0, 100, 100);
 			break;
 		case COLOR_YELLOW:
-			colorUpLimit = new Scalar(0, 100, 100);
-			colorLowLimit = new Scalar(32, 255, 255);
+			colorUpLimit = new Scalar(32, 255, 255);
+			colorLowLimit = new Scalar(0, 100, 100);
 			break;
 		case COLOR_WHITE:
-			colorUpLimit = new Scalar(0, 100, 100);
-			colorLowLimit = new Scalar(360, 20, 90);
+			colorUpLimit = new Scalar(180, 50, 255);
+			colorLowLimit = new Scalar(0, 0, 230);
 			break;
 		default:
 			Log.e(TAG, "Error in colour selection");
@@ -174,7 +175,7 @@ public class ImageProcessingActivity extends Activity {
 
 		}
 		
-		Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2HSV, 0);
+		Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2HSV, 0);
 		Core.inRange(mat, colorLowLimit, colorUpLimit, mat);
 	}
 
@@ -615,10 +616,15 @@ public class ImageProcessingActivity extends Activity {
 		//retrieve image from storage
 		InputStream imageStream = getContentResolver().openInputStream(imgUri);
 		Bitmap loadedImage = BitmapFactory.decodeStream(imageStream);
-
+		
 		//rotate image
 		Matrix matrix = new Matrix();
 		matrix.postRotate(90);
+		
+		getResources().getConfiguration();
+		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+			matrix.postRotate(90);
+		}
 		loadedImage = Bitmap.createBitmap(loadedImage , 0, 0, loadedImage.getWidth(), loadedImage .getHeight(), matrix, true);
 
 		//load image in image view 
