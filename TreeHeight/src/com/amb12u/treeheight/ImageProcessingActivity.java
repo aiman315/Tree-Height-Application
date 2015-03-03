@@ -810,6 +810,7 @@ public class ImageProcessingActivity extends Activity {
 			calculateHeight();
 			return true;
 		case R.id.action_settings:
+			//FIXME: delete later
 			switch(selectedColor) {
 			case COLOR_RED:
 				Toast.makeText(getApplicationContext(), "Detecting Color: WHITE", Toast.LENGTH_SHORT).show();
