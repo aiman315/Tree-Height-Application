@@ -24,7 +24,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -52,16 +51,25 @@ public class ImageProcessingActivity extends Activity {
 	private static final int COLOR_WHITE = 2;
 	private static final int DETECT_TYPE_TREETOP = 0;
 	private static final int DETECT_TYPE_REFERENCE = 1;
+
+	private static final int INDEX_REF_BOTTOM = 0;
+	private static final int INDEX_REF_RIGHT = 1;
+	private static final int INDEX_REF_TOP = 2;
+	private static final int INDEX_REF_LEFT = 3;
+
+	private static final int LINE_THICKNESS = 5;
+
 	private final String TAG = "StillImageProcessingActivity";
 	private boolean detectedTree, detectedReference;
 	private double treeHeight, referenceObjHeight;
 	private double heightRatio, widthRatio;
 	private int treetopRow, treeBottomRow;
-	private int referenceObjBottomRow, referenceObjTopRow;
+	private int [] referenceObjBound;
 	private int selectedColor;
 	private Uri imgUri;
 	private ImageView imageView;
-	private Mat imageMat;
+	private Mat displayMat;
+	private Mat originalMat;
 
 	private BaseLoaderCallback mLoaderCallback;
 
@@ -72,9 +80,9 @@ public class ImageProcessingActivity extends Activity {
 	private void calculateHeight() {
 		Log.d(TAG, "onClickCalculateHeight");
 		if (detectedTree && detectedReference) {
-			treeBottomRow = referenceObjBottomRow;
+			treeBottomRow = referenceObjBound[INDEX_REF_BOTTOM];
 			double treePixelHeight = treeBottomRow-treetopRow;
-			double referenceObjPixelHeight = referenceObjBottomRow-referenceObjTopRow;
+			double referenceObjPixelHeight = referenceObjBound[INDEX_REF_BOTTOM]-referenceObjBound[INDEX_REF_TOP];
 
 			treeHeight = (treePixelHeight*referenceObjHeight)/referenceObjPixelHeight;
 
@@ -87,7 +95,7 @@ public class ImageProcessingActivity extends Activity {
 	private void detectTreetop() {
 		Log.d(TAG, "detectTreetop");
 
-		if (!detectedTree && imageMat != null) {
+		if (!detectedTree && displayMat != null) {
 			new TaskDetectTreetop().execute();	
 		} else if (detectedTree) {
 			imageView.setOnTouchListener(new View.OnTouchListener() {
@@ -109,7 +117,7 @@ public class ImageProcessingActivity extends Activity {
 	private void detectReference() {
 		Log.d(TAG, "detectReference");
 
-		if (!detectedReference && imageMat != null) {
+		if (!detectedReference && displayMat != null) {
 			imageView.setOnTouchListener(new View.OnTouchListener() {
 
 				@Override
@@ -179,13 +187,6 @@ public class ImageProcessingActivity extends Activity {
 		Core.inRange(mat, colorLowLimit, colorUpLimit, mat);
 	}
 
-	/**
-	 * Draw line on a matrix
-	 */
-	private void drawLine(int row) {
-		imageMat.submat(new Range(row, row+1), Range.all()).setTo(new Scalar(255,255,0));		
-	}
-
 	private void markTouch(View v, MotionEvent event, int detectionType) {
 
 		switch(detectionType) {
@@ -211,17 +212,6 @@ public class ImageProcessingActivity extends Activity {
 		}
 	}
 
-	/**
-	 * Converts matrix to bitmap
-	 * @param mat
-	 * @return bitmap
-	 */
-	private Bitmap mat2bitmap(Mat mat) {
-		Bitmap image = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.RGB_565);
-		Utils.matToBitmap(mat, image);
-		return image;
-	}
-
 	private int [] calculateImageOffset() {
 		int screenWid, screenHei;
 		int imgWid, imgHei;
@@ -236,8 +226,8 @@ public class ImageProcessingActivity extends Activity {
 		screenWid = size.x;
 		screenHei = size.y;
 
-		imgWid = imageMat.cols();
-		imgHei = imageMat.rows();
+		imgWid = displayMat.cols();
+		imgHei = displayMat.rows();
 
 		Log.i("XXXX", "img hei: "+imgHei+"\timg wid: "+imgWid);
 		Log.i("XXXX", "screen hei: "+screenHei+"\tscreen wid: "+screenWid);
@@ -252,7 +242,7 @@ public class ImageProcessingActivity extends Activity {
 		offsetH = diffHei/2;
 		int [] imgOffset = {offsetH, offsetW};
 
-		Imgproc.resize(imageMat, imageMat, new Size(screenWid, screenHei));
+		Imgproc.resize(displayMat, displayMat, new Size(screenWid, screenHei));
 		updateImage();
 
 		Log.i("XXXX", "NEW img hei: "+imgHei+"\timg wid: "+imgWid);
@@ -270,12 +260,12 @@ public class ImageProcessingActivity extends Activity {
 		int screenWid = size.x;
 		int screenHei = size.y;
 
-		if (imageMat != null) {
+		if (displayMat != null) {
 			ratio = new double[2];
 			Log.i("XXXX", "screen hei: "+screenHei+"\tscreen wid: "+screenWid);
-			Log.i("XXXX", "img hei: "+imageMat.rows()+"\timg wid: "+imageMat.cols());
-			ratio[0] = imageMat.rows()/(double)screenHei;
-			ratio[1] = imageMat.cols()/(double)screenWid;
+			Log.i("XXXX", "img hei: "+displayMat.rows()+"\timg wid: "+displayMat.cols());
+			ratio[0] = displayMat.rows()/(double)screenHei;
+			ratio[1] = displayMat.cols()/(double)screenWid;
 		}
 		return ratio; 
 	}
@@ -283,21 +273,27 @@ public class ImageProcessingActivity extends Activity {
 	private class TaskDetectTreetop extends AsyncTask<Void, Void, Integer> {
 
 		private ProgressDialog progressDialog;
+		private Mat processingMat;
 		private int minRow;
 		private int maxRow;
 		private int minCol;
 		private int maxCol;
 
 		public TaskDetectTreetop() {
+			displayMat = originalMat.clone();
 			minRow = 0;
-			maxRow = imageMat.rows()/3;
+			maxRow = originalMat.rows()/3;
 			minCol = 0;
-			maxCol = imageMat.cols();
+			maxCol = originalMat.cols();
+			processingMat = originalMat.submat(minRow, maxRow, minCol, maxCol).clone();
 		}
 
 		public TaskDetectTreetop(int yPos, int xPos) {
+			displayMat = originalMat.clone();
+
 			int rowRaduis = 50;
 			int colRaduis = 50;
+
 			minRow = yPos-rowRaduis;
 			maxRow = yPos+rowRaduis;
 			minCol = xPos-colRaduis;
@@ -311,35 +307,64 @@ public class ImageProcessingActivity extends Activity {
 				minCol = 0;
 			}
 
-			if (maxRow > imageMat.rows()-1) {
-				maxRow = imageMat.rows()-1;
+			if (maxRow > originalMat.rows()-1) {
+				maxRow = originalMat.rows()-1;
 			}
 
-			if (maxCol > imageMat.cols()-1) {
-				maxCol = imageMat.cols()-1;
+			if (maxCol > originalMat.cols()-1) {
+				maxCol = originalMat.cols()-1;
 			}
-			
+
+			processingMat = originalMat.submat(minRow, maxRow, minCol, maxCol).clone();
+
+			//Mark area around touch position
 			org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
 			org.opencv.core.Point pt2 = new org.opencv.core.Point(maxCol, maxRow);
 			Scalar col = new Scalar(0,255,255);
-			Core.rectangle(imageMat, pt1, pt2, col);	
+			Core.rectangle(displayMat, pt1, pt2, col);
 		}
 
 		@Override
 		protected Integer doInBackground(Void... params) {
 
+
+
 			//Detection using Sobel Filter
-			Mat temp1 = imageMat.clone();
-			Mat temp2 = imageMat.clone();
+			Mat egdeXmat = new Mat();
+			Mat edgeYmat = new Mat();
 
-			Imgproc.Sobel(temp1, temp1, temp1.depth(), 1, 0); //detect in x direction
-			Imgproc.Sobel(temp2, temp2, temp2.depth(), 0, 1); //detect in y direction
-			Core.addWeighted(temp1, 0.5, temp2, 0.5, 0, temp1);
+			Imgproc.cvtColor(processingMat.clone(), egdeXmat, Imgproc.COLOR_RGB2GRAY);
+			Imgproc.cvtColor(processingMat.clone(), edgeYmat, Imgproc.COLOR_RGB2GRAY);
 
-			Imgproc.threshold(temp1, temp1, 100, 255, Imgproc.THRESH_BINARY);
+			Imgproc.Sobel(egdeXmat, egdeXmat, egdeXmat.depth(), 1, 0); //detect in x direction
+			Imgproc.Sobel(edgeYmat, edgeYmat, edgeYmat.depth(), 0, 1); //detect in y direction
+			Core.addWeighted(egdeXmat, 0.5, edgeYmat, 0.5, 0, processingMat);
+
+			/*
+			Mat learnMat = temp1.submat(0,  100, minCol, maxCol);
+			double sum = Core.sumElems(learnMat).val[0];
+			double mean = sum/100;
+			MatOfDouble stdMat = new MatOfDouble();
+			Core.meanStdDev(learnMat, new MatOfDouble(), stdMat);
+			double stDeviation = stdMat.toArray()[0];
+			Log.i("XXXXX", "Sum = "+sum);
+			Log.i("XXXXX", "Mean = "+mean);
+			Log.i("XXXXX", "std = "+stDeviation);
+			Log.i("XXXXX", "===================================");
 
 			for (int r = minRow ; r < maxRow-1 ; r ++) {
-				double sum = Core.sumElems(temp1.submat(r,  r+1, minCol, maxCol)).val[0];
+				Log.i("XXXXXXXX", ""+Core.sumElems(temp1.submat(r,  r+1, minCol, maxCol)).val[0]);
+				if (Core.sumElems(temp1.submat(r,  r+1, minCol, maxCol)).val[0] > (mean + 2 * stDeviation)) {
+					return r;
+				}
+			}*/
+
+
+
+			Imgproc.threshold(processingMat, processingMat, 100, 255, Imgproc.THRESH_BINARY);
+
+			for (int r = 0 ; r < processingMat.cols() ; r++) {
+				double sum = Core.sumElems(processingMat.submat(r,  r+1, 0, processingMat.cols()-1)).val[0];
 				if (sum > 1) {
 					return r;
 				}
@@ -347,13 +372,10 @@ public class ImageProcessingActivity extends Activity {
 
 
 			//TODO:
-			//Local reference only
-			//box around reference
-			//Line color for treetop
 			//visual and animation at description
 			//Repeating reference "how many times" <- animation
 			//make two mats: display, processing
-			
+
 			/*List<MatOfPoint> contours = new Vector<MatOfPoint>();
 			Mat hierarchy = new Mat();
 
@@ -397,13 +419,16 @@ public class ImageProcessingActivity extends Activity {
 		protected void onPostExecute(Integer result) {
 			progressDialog.dismiss();
 			if (result != null) {
-				Toast.makeText(getApplicationContext(), "Treetop Detected (Row: "+result+")", Toast.LENGTH_SHORT).show();
 				detectedTree = true;
-				treetopRow = result;
-				drawLine(result);
+				treetopRow = minRow + result;
+				Core.rectangle(displayMat, new org.opencv.core.Point(0,treetopRow), new org.opencv.core.Point(displayMat.cols(), treetopRow), new Scalar(255,0,0), LINE_THICKNESS);
+
+				displayMat.submat(new Range(treetopRow, treetopRow+1), Range.all()).setTo(new Scalar(255,0,0));
+				Toast.makeText(getApplicationContext(), "Treetop Detected (Row: "+treetopRow+")", Toast.LENGTH_SHORT).show();
 			} else {
 				Toast.makeText(getApplicationContext(), "No Tree Detected", Toast.LENGTH_SHORT).show();
 			}
+
 			updateImage();
 		}
 	}
@@ -411,22 +436,17 @@ public class ImageProcessingActivity extends Activity {
 	private class TaskDetectReference extends AsyncTask<Void, Void, Integer []> {
 
 		private ProgressDialog progressDialog;
+		private Mat processingMat;
 		private int minRow;
 		private int maxRow;
 		private int minCol;
 		private int maxCol;
 
-
-		public TaskDetectReference() {
-			minRow = 0;
-			maxRow = imageMat.rows();
-			minCol = 0;
-			maxCol = imageMat.cols();
-		}
-
 		public TaskDetectReference(int posY0, int posX0, int posY1, int posX1) {
+
 			int rowRaduis = 50;
 			int colRaduis = 50;
+			displayMat = originalMat.clone();
 
 			//flip around y axis
 			if ((posY0-posY1)/(posX0-posX1) < 0) {
@@ -459,55 +479,56 @@ public class ImageProcessingActivity extends Activity {
 				minCol = 0;
 			}
 
-			if (maxRow > imageMat.rows()-1) {
-				maxRow = imageMat.rows()-1;
+			if (maxRow > originalMat.rows()-1) {
+				maxRow = originalMat.rows()-1;
 			}
 
-			if (maxCol > imageMat.cols()-1) {
-				maxCol = imageMat.cols()-1;
+			if (maxCol > originalMat.cols()-1) {
+				maxCol = originalMat.cols()-1;
 			}
 
-			org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
-			org.opencv.core.Point pt2 = new org.opencv.core.Point(maxCol, maxRow);
-			Scalar col = new Scalar(0,255,0);
-			Core.rectangle(imageMat, pt1, pt2, col);	
+			processingMat = originalMat.submat(minRow, maxRow, minCol, maxCol).clone();
 		}
 
 		@Override
 		protected Integer [] doInBackground(Void... params) {
 
-			Log.i("XXXXX", "[ "+minCol+" , "+minRow+" ] [ "+maxCol+" , "+maxRow+" ]");
-			Mat processingMat = imageMat.submat(minRow, maxRow, minCol, maxCol);
+			// Mark area around touch position
+			org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
+			org.opencv.core.Point pt2 = new org.opencv.core.Point(maxCol, maxRow);
+			Scalar col = new Scalar(0,255,0);
+			Core.rectangle(displayMat, pt1, pt2, col);	
 
 			//TODO: add options for color detection
 			detectColor(processingMat);
 
 			List<MatOfPoint> contours = new ArrayList<MatOfPoint>();  
-			Mat hierarchy = new Mat();
 
 			/// Find contours
-			Imgproc.findContours(processingMat, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-			
+			Imgproc.findContours(processingMat, contours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+
 			if (!contours.isEmpty()) {
 				// Find largest contour
 				double largestContourArea = 0;
 				int largestContourIndex = 0;
 				for( int i = 1; i < contours.size(); i++ ) {
-					//Imgproc.drawContours(imageMat, contours, i, new Scalar(255,255,255, 5);
+					//Imgproc.drawContours(processingMat, contours, i, new Scalar(255,255,255, LINE_THICKNESS);
 					double contourArea = Imgproc.contourArea(contours.get(i),false); 
 					if(contourArea > largestContourArea){
 						largestContourArea = contourArea;
 						largestContourIndex = i;
 					}
 				}
+
+				//store reference object boundaries locations
 				Rect rect = Imgproc.boundingRect(contours.get(largestContourIndex));
 				Integer boundaries [] = new Integer[4];
-				
-				boundaries[0] = rect.y;
-				boundaries[1] = rect.y + rect.height;
-				boundaries[2] = rect.x;
-				boundaries[3] = rect.x + rect.width;
-				
+
+				boundaries[INDEX_REF_TOP] = rect.y;
+				boundaries[INDEX_REF_BOTTOM] = rect.y + rect.height;
+				boundaries[INDEX_REF_LEFT] = rect.x;
+				boundaries[INDEX_REF_RIGHT] = rect.x + rect.width;
+
 				return boundaries;
 			}
 			return null;
@@ -531,17 +552,15 @@ public class ImageProcessingActivity extends Activity {
 			progressDialog.dismiss();
 			detectedReference = true;
 			if (result != null) {
-				Toast.makeText(getApplicationContext(), "Reference Object Detected (Row: "+result[0]+"-"+result[1]+")", Toast.LENGTH_SHORT).show();
-				referenceObjTopRow = minRow + result[0];
-				referenceObjBottomRow = minRow + result[1];
-				int referenceObjectLeftCol = minCol + result[2];
-				int referenceObjRightCol = minCol + result[3];
-				
+				referenceObjBound[INDEX_REF_TOP] = minRow + result[INDEX_REF_TOP];
+				referenceObjBound[INDEX_REF_BOTTOM] = minRow + result[INDEX_REF_BOTTOM];
+				referenceObjBound[INDEX_REF_LEFT] = minCol + result[INDEX_REF_LEFT];
+				referenceObjBound[INDEX_REF_RIGHT] = minCol + result[INDEX_REF_RIGHT];
 
-				org.opencv.core.Point pt1 = new org.opencv.core.Point(referenceObjectLeftCol, referenceObjTopRow);
-				org.opencv.core.Point pt2 = new org.opencv.core.Point(referenceObjRightCol, referenceObjBottomRow);
-				Core.rectangle(imageMat, pt1, pt2, new Scalar(255,128,100), 5);	
-
+				org.opencv.core.Point pt1 = new org.opencv.core.Point(referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_TOP]);
+				org.opencv.core.Point pt2 = new org.opencv.core.Point(referenceObjBound[INDEX_REF_RIGHT], referenceObjBound[INDEX_REF_BOTTOM]);
+				Core.rectangle(displayMat, pt1, pt2, new Scalar(255,128,100), LINE_THICKNESS);	
+				Toast.makeText(getApplicationContext(), "Reference Object Detected (Row: "+referenceObjBound[INDEX_REF_TOP]+"-"+referenceObjBound[INDEX_REF_BOTTOM]+")", Toast.LENGTH_SHORT).show();
 			} else {
 				Toast.makeText(getApplicationContext(), "No Reference Object Detected", Toast.LENGTH_SHORT).show();
 			}
@@ -562,7 +581,7 @@ public class ImageProcessingActivity extends Activity {
 
 		@Override
 		protected Integer [] doInBackground(Void... params) {
-			imageMat.submat(new Range(yPos-10, yPos+10), new Range(xPos-10, xPos+10)).setTo(new Scalar(255,0,0));
+			displayMat.submat(new Range(yPos-10, yPos+10), new Range(xPos-10, xPos+10)).setTo(new Scalar(255,0,0));
 			return null;
 		}
 
@@ -636,14 +655,14 @@ public class ImageProcessingActivity extends Activity {
 
 		Log.i("XXXXXXXXX", "imgUri : "+imgUri);
 		Log.i("XXXXXXXXX", "imgUri.getPath() : "+imgUri.getEncodedPath());
-		
-		
+
+
 		//retrieve image from storage
 		InputStream imageStream = getContentResolver().openInputStream(imgUri);
 		Bitmap loadedImage = BitmapFactory.decodeStream(imageStream);
 
-/*
-		
+		/*
+
 	    // First decode with inJustDecodeBounds=true to check dimensions
 	    final BitmapFactory.Options options = new BitmapFactory.Options();
 	    options.inJustDecodeBounds = true;
@@ -660,13 +679,13 @@ public class ImageProcessingActivity extends Activity {
 	    // Decode bitmap with inSampleSize set
 	    options.inJustDecodeBounds = false;
 	    loadedImage = BitmapFactory.decodeFile(imgUri.getPath(), options);
-		
-		*/
-		
-		
-		
-		
-		
+
+		 */
+
+
+
+
+
 		//rotate image
 		Matrix matrix = new Matrix();
 		matrix.postRotate(90);
@@ -683,16 +702,17 @@ public class ImageProcessingActivity extends Activity {
 
 
 		//create a matrix of the selected image for processing
-		imageMat = new Mat(loadedImage.getHeight(), loadedImage.getWidth(), CvType.CV_8UC1);
-		Utils.bitmapToMat(loadedImage, imageMat);
+		originalMat = new Mat(loadedImage.getHeight(), loadedImage.getWidth(), CvType.CV_8UC1);
+		Utils.bitmapToMat(loadedImage, originalMat);
+		displayMat = originalMat.clone();
 	}
-	
+
 	public static int calculateInSampleSize(
 			BitmapFactory.Options options, int reqWidth, int reqHeight) {
 		// Raw height and width of image
 		final int height = options.outHeight;
 		final int width = options.outWidth;
-		
+
 		Log.i("XXXXXXXXX", "height = "+height+"\twidth = "+width);
 		int inSampleSize = 1;
 
@@ -708,13 +728,14 @@ public class ImageProcessingActivity extends Activity {
 				inSampleSize *= 2;
 			}
 		}
-
 		return inSampleSize;
 	}
 
+
 	private void updateImage() {
-		ImageView image = (ImageView) findViewById(R.id.imageViewCapturedImage);
-		image.setImageBitmap(mat2bitmap(imageMat));
+		Bitmap image = Bitmap.createBitmap(displayMat.cols(), displayMat.rows(), Bitmap.Config.RGB_565);
+		Utils.matToBitmap(displayMat, image);
+		imageView.setImageBitmap(image);
 	}
 
 
@@ -738,8 +759,7 @@ public class ImageProcessingActivity extends Activity {
 		treeHeight = 0;
 		treetopRow = 0;
 		treeBottomRow = 0;
-		referenceObjTopRow = 0;
-		referenceObjBottomRow = 0;
+		referenceObjBound = new int [4];
 		selectedColor = COLOR_WHITE;
 		imgUri = getIntent().getExtras().getParcelable("ImgUri");
 
@@ -759,7 +779,7 @@ public class ImageProcessingActivity extends Activity {
 						heightRatio = ratio[0];
 						widthRatio = ratio[1];
 						Log.i("XXXX", "Ratios ["+ratio[0]+", "+ratio[1]+"]");
-						
+
 						//setup for reference object
 						setupReferenceObjHeight();
 
