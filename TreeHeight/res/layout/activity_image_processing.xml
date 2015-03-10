@@ -13,4 +13,15 @@
         android:layout_alignParentTop="true"
         android:contentDescription="@string/empty" />
 
+    <Button
+        android:id="@+id/buttonTask"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="41dp"
+        android:onClick="onClickButton"
+        android:text="@string/button_detect_tree"/>
+
+
 </RelativeLayout>

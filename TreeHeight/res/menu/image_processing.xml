@@ -7,17 +7,5 @@
         android:orderInCategory="100"
         android:showAsAction="never"
         android:title="@string/action_settings"/>
-    <item
-        android:id="@+id/actionDetectTree"
-        android:title="@string/action_detect_tree">
-    </item>
-    <item
-        android:id="@+id/actionDetectReference"
-        android:title="@string/action_detect_reference">
-    </item>
-    <item
-        android:id="@+id/actionTreeHeight"
-        android:title="@string/action_tree_height">
-    </item>
 
 </menu>

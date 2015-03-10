@@ -46,6 +46,10 @@ import android.widget.Toast;
 
 public class ImageProcessingActivity extends Activity {
 
+	private static final int STATE_TREETOP = 0;
+	private static final int STATE_REFERENCE = 1;
+	private static final int STATE_HEIGHT = 2;
+
 	private static final int COLOR_RED = 0;
 	private static final int COLOR_YELLOW = 1;
 	private static final int COLOR_WHITE = 2;
@@ -60,14 +64,15 @@ public class ImageProcessingActivity extends Activity {
 	private static final int LINE_THICKNESS = 5;
 
 	private final String TAG = "StillImageProcessingActivity";
-	private boolean detectedTree, detectedReference;
 	private double treeHeight, referenceObjHeight;
 	private double heightRatio, widthRatio;
 	private int treetopRow, treeBottomRow;
 	private int [] referenceObjBound;
 	private int selectedColor;
+	private int currentState;
 	private Uri imgUri;
 	private ImageView imageView;
+	private Button buttonTask;
 	private Mat displayMat;
 	private Mat originalMat;
 
@@ -79,34 +84,21 @@ public class ImageProcessingActivity extends Activity {
 	 */
 	private void calculateHeight() {
 		Log.d(TAG, "onClickCalculateHeight");
-		if (detectedTree && detectedReference) {
-			treeBottomRow = referenceObjBound[INDEX_REF_BOTTOM];
-			double treePixelHeight = treeBottomRow-treetopRow;
-			double referenceObjPixelHeight = referenceObjBound[INDEX_REF_BOTTOM]-referenceObjBound[INDEX_REF_TOP];
+		treeBottomRow = referenceObjBound[INDEX_REF_BOTTOM];
+		double treePixelHeight = treeBottomRow-treetopRow;
+		double referenceObjPixelHeight = referenceObjBound[INDEX_REF_BOTTOM]-referenceObjBound[INDEX_REF_TOP];
 
-			treeHeight = (treePixelHeight*referenceObjHeight)/referenceObjPixelHeight;
+		treeHeight = (treePixelHeight*referenceObjHeight)/referenceObjPixelHeight;
 
-			Toast.makeText(this, String.format("Tree Height = ( %d * %d ) / %d = %d", (int)treePixelHeight, (int)referenceObjHeight, (int)referenceObjPixelHeight, (int)treeHeight), Toast.LENGTH_LONG).show();
-		} else {
-			Toast.makeText(this, "Error: Run detections first", Toast.LENGTH_LONG).show();
-		}
+		Toast.makeText(this, String.format("Tree Height = ( %d * %d ) / %d = %d", (int)treePixelHeight, (int)referenceObjHeight, (int)referenceObjPixelHeight, (int)treeHeight), Toast.LENGTH_LONG).show();
+
 	}
 
 	private void detectTreetop() {
 		Log.d(TAG, "detectTreetop");
 
-		if (!detectedTree && displayMat != null) {
+		if (displayMat != null) {
 			new TaskDetectTreetop().execute();	
-		} else if (detectedTree) {
-			imageView.setOnTouchListener(new View.OnTouchListener() {
-
-				@Override
-				public boolean onTouch(View v, MotionEvent event) {
-					markTouch(v,event, DETECT_TYPE_TREETOP);
-					return false;
-				}
-			});
-			Toast.makeText(getApplicationContext(), "Touch input enabled", Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -117,7 +109,7 @@ public class ImageProcessingActivity extends Activity {
 	private void detectReference() {
 		Log.d(TAG, "detectReference");
 
-		if (!detectedReference && displayMat != null) {
+		if (displayMat != null) {
 			imageView.setOnTouchListener(new View.OnTouchListener() {
 
 				@Override
@@ -196,7 +188,6 @@ public class ImageProcessingActivity extends Activity {
 			new TaskDetectTreetop(posY, posX).execute();
 			break;
 		case DETECT_TYPE_REFERENCE:
-
 			if(MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_POINTER_DOWN) {
 				if (MotionEventCompat.getPointerCount(event) == 2) {
 					//Log.i("XXXXX", "["+(event.getY()*heightRatio)+", "+(event.getX()*widthRatio)+"]");
@@ -374,7 +365,6 @@ public class ImageProcessingActivity extends Activity {
 			//TODO:
 			//visual and animation at description
 			//Repeating reference "how many times" <- animation
-			//make two mats: display, processing
 
 			/*List<MatOfPoint> contours = new Vector<MatOfPoint>();
 			Mat hierarchy = new Mat();
@@ -419,16 +409,16 @@ public class ImageProcessingActivity extends Activity {
 		protected void onPostExecute(Integer result) {
 			progressDialog.dismiss();
 			if (result != null) {
-				detectedTree = true;
 				treetopRow = minRow + result;
 				Core.rectangle(displayMat, new org.opencv.core.Point(0,treetopRow), new org.opencv.core.Point(displayMat.cols(), treetopRow), new Scalar(255,0,0), LINE_THICKNESS);
 
 				displayMat.submat(new Range(treetopRow, treetopRow+1), Range.all()).setTo(new Scalar(255,0,0));
 				Toast.makeText(getApplicationContext(), "Treetop Detected (Row: "+treetopRow+")", Toast.LENGTH_SHORT).show();
-			} else {
-				Toast.makeText(getApplicationContext(), "No Tree Detected", Toast.LENGTH_SHORT).show();
-			}
 
+				verifyDetection();
+			} else {
+				Toast.makeText(getApplicationContext(), "No Treetop Detected .. try again or use different image", Toast.LENGTH_SHORT).show();
+			}
 			updateImage();
 		}
 	}
@@ -550,7 +540,6 @@ public class ImageProcessingActivity extends Activity {
 		@Override
 		protected void onPostExecute(Integer [] result) {
 			progressDialog.dismiss();
-			detectedReference = true;
 			if (result != null) {
 				referenceObjBound[INDEX_REF_TOP] = minRow + result[INDEX_REF_TOP];
 				referenceObjBound[INDEX_REF_BOTTOM] = minRow + result[INDEX_REF_BOTTOM];
@@ -561,8 +550,10 @@ public class ImageProcessingActivity extends Activity {
 				org.opencv.core.Point pt2 = new org.opencv.core.Point(referenceObjBound[INDEX_REF_RIGHT], referenceObjBound[INDEX_REF_BOTTOM]);
 				Core.rectangle(displayMat, pt1, pt2, new Scalar(255,128,100), LINE_THICKNESS);	
 				Toast.makeText(getApplicationContext(), "Reference Object Detected (Row: "+referenceObjBound[INDEX_REF_TOP]+"-"+referenceObjBound[INDEX_REF_BOTTOM]+")", Toast.LENGTH_SHORT).show();
+
+				verifyDetection();
 			} else {
-				Toast.makeText(getApplicationContext(), "No Reference Object Detected", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), "No Reference Object Detected .. try again or use different image", Toast.LENGTH_SHORT).show();
 			}
 			updateImage();
 		}
@@ -738,7 +729,72 @@ public class ImageProcessingActivity extends Activity {
 		imageView.setImageBitmap(image);
 	}
 
+	public void onClickButton(View v) {
+		switch(currentState) {
+		case STATE_TREETOP:
+			buttonTask.setEnabled(false);
+			detectTreetop();
+			break;
+		case STATE_REFERENCE:
+			buttonTask.setEnabled(false);
+			detectReference();
+			break;
+		case STATE_HEIGHT:
+			calculateHeight();
+			break;
+		default:
+			break;
+		}
+	}
 
+	private void verifyDetection() {
+		AlertDialog.Builder verifyDetectionDialog = new AlertDialog.Builder(this);
+		verifyDetectionDialog.setMessage("Correct Detection?");
+		verifyDetectionDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface arg0, int arg1) {
+				switch(currentState) {
+				case STATE_TREETOP:
+					currentState = STATE_REFERENCE;
+					buttonTask.setEnabled(true);
+					buttonTask.setText(R.string.button_detect_reference);
+					break;
+				case STATE_REFERENCE:
+					currentState = STATE_HEIGHT;
+					setupReferenceObjHeight();
+					buttonTask.setEnabled(true);
+					buttonTask.setText(R.string.button_calc_height);
+					imageView.setOnTouchListener(null);
+					break;
+				default:
+					break;
+				}
+				return;
+			}
+		});
+
+		verifyDetectionDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface arg0, int arg1) {
+				imageView.setOnTouchListener(new View.OnTouchListener() {
+
+					@Override
+					public boolean onTouch(View v, MotionEvent event) {
+						switch(currentState) {
+						case STATE_TREETOP:
+							markTouch(v,event, DETECT_TYPE_TREETOP);
+							return false;
+						case STATE_REFERENCE:
+							markTouch(v,event, DETECT_TYPE_REFERENCE);
+							return true;
+						}
+						return false;
+					}
+				});
+				Toast.makeText(getApplicationContext(), "Touch input enabled", Toast.LENGTH_SHORT).show();
+			}
+		});
+		verifyDetectionDialog.setCancelable(false);
+		verifyDetectionDialog.show();
+	}
 
 
 
@@ -747,6 +803,8 @@ public class ImageProcessingActivity extends Activity {
 
 	//	---------------- Activity Methods ---------------- //
 
+
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate");
@@ -754,13 +812,13 @@ public class ImageProcessingActivity extends Activity {
 		setContentView(R.layout.activity_image_processing);
 
 		//initializations
-		detectedReference = false;
-		detectedTree = false;
+		currentState = STATE_TREETOP;
 		treeHeight = 0;
 		treetopRow = 0;
 		treeBottomRow = 0;
 		referenceObjBound = new int [4];
 		selectedColor = COLOR_WHITE;
+		buttonTask = (Button) findViewById(R.id.buttonTask);
 		imgUri = getIntent().getExtras().getParcelable("ImgUri");
 
 		mLoaderCallback = new BaseLoaderCallback(this) {
@@ -779,9 +837,6 @@ public class ImageProcessingActivity extends Activity {
 						heightRatio = ratio[0];
 						widthRatio = ratio[1];
 						Log.i("XXXX", "Ratios ["+ratio[0]+", "+ratio[1]+"]");
-
-						//setup for reference object
-						setupReferenceObjHeight();
 
 					} catch (FileNotFoundException e) {
 						Toast.makeText(getApplicationContext(), "Error locating the file path", Toast.LENGTH_SHORT).show();
@@ -818,17 +873,6 @@ public class ImageProcessingActivity extends Activity {
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
 		switch(id){
-		case R.id.actionDetectReference:
-			detectReference();
-			item.setTitle("Incorrect Reference Detection?");
-			return true;
-		case R.id.actionDetectTree:
-			detectTreetop();
-			item.setTitle("Incorrect Treetop Detection?");
-			return true;
-		case R.id.actionTreeHeight:
-			calculateHeight();
-			return true;
 		case R.id.action_settings:
 			//FIXME: delete later
 			switch(selectedColor) {
