@@ -559,26 +559,32 @@ public class ImageProcessingActivity extends Activity {
 		}
 	}
 
-	private class TaskDraw extends AsyncTask<Void, Void, Integer []> {
+	private class TaskAnimateRef extends AsyncTask<Void, Void, Integer []> {
+		Mat processingMat;
+		int counter;
 
-		private int yPos;
-		private int xPos;
-
-		public TaskDraw(int yPos, int xPos) {
-
-			this.yPos = yPos;
-			this.xPos = xPos;
+		public TaskAnimateRef(int counter) {
+			this.counter = counter;
 		}
 
 		@Override
 		protected Integer [] doInBackground(Void... params) {
-			displayMat.submat(new Range(yPos-10, yPos+10), new Range(xPos-10, xPos+10)).setTo(new Scalar(255,0,0));
+			try {
+				int hei = Math.abs(referenceObjBound[INDEX_REF_TOP]-referenceObjBound[INDEX_REF_BOTTOM]);
+				processingMat.copyTo(displayMat.submat(referenceObjBound[INDEX_REF_TOP]-(counter*hei), referenceObjBound[INDEX_REF_BOTTOM]-(counter*hei), referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]));
+				Thread.sleep((long) (0.25*1000));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
 			return null;
 		}
 
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
+			displayMat = originalMat.clone();
+			processingMat = displayMat.submat(referenceObjBound[INDEX_REF_TOP], referenceObjBound[INDEX_REF_BOTTOM], referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]);	
 		}
 
 		@Override
@@ -740,7 +746,14 @@ public class ImageProcessingActivity extends Activity {
 			detectReference();
 			break;
 		case STATE_HEIGHT:
+			int treeHei = Math.abs(treetopRow-referenceObjBound[INDEX_REF_BOTTOM]);
+			int refHei = Math.abs(referenceObjBound[INDEX_REF_TOP]-referenceObjBound[INDEX_REF_BOTTOM]);
+			for (int counter = 0 ; counter < (int)(treeHei/refHei) ; counter++) {
+				new TaskAnimateRef(counter).execute();	
+			}
 			calculateHeight();
+			buttonTask.setClickable(false);
+			buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
 			break;
 		default:
 			break;
@@ -796,14 +809,7 @@ public class ImageProcessingActivity extends Activity {
 		verifyDetectionDialog.show();
 	}
 
-
-
-
-
-
 	//	---------------- Activity Methods ---------------- //
-
-
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
