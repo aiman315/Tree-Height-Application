@@ -53,6 +53,8 @@ public class ImageProcessingActivity extends Activity {
 	private static final int COLOR_RED = 0;
 	private static final int COLOR_YELLOW = 1;
 	private static final int COLOR_WHITE = 2;
+	private static final int COLOR_BLACK = 3;
+	
 	private static final int DETECT_TYPE_TREETOP = 0;
 	private static final int DETECT_TYPE_REFERENCE = 1;
 
@@ -166,6 +168,10 @@ public class ImageProcessingActivity extends Activity {
 		case COLOR_WHITE:
 			colorUpLimit = new Scalar(180, 50, 255);
 			colorLowLimit = new Scalar(0, 0, 230);
+			break;
+		case COLOR_BLACK:
+			colorUpLimit = new Scalar(80, 80, 80);
+			colorLowLimit = new Scalar(0, 0, 0);
 			break;
 		default:
 			Log.e(TAG, "Error in colour selection");
@@ -331,8 +337,8 @@ public class ImageProcessingActivity extends Activity {
 			Imgproc.Sobel(edgeYmat, edgeYmat, edgeYmat.depth(), 0, 1); //detect in y direction
 			Core.addWeighted(egdeXmat, 0.5, edgeYmat, 0.5, 0, processingMat);
 
-			/*
-			Mat learnMat = temp1.submat(0,  100, minCol, maxCol);
+/*			
+			Mat learnMat = processingMat.submat(0,  100, minCol, maxCol);
 			double sum = Core.sumElems(learnMat).val[0];
 			double mean = sum/100;
 			MatOfDouble stdMat = new MatOfDouble();
@@ -344,12 +350,12 @@ public class ImageProcessingActivity extends Activity {
 			Log.i("XXXXX", "===================================");
 
 			for (int r = minRow ; r < maxRow-1 ; r ++) {
-				Log.i("XXXXXXXX", ""+Core.sumElems(temp1.submat(r,  r+1, minCol, maxCol)).val[0]);
-				if (Core.sumElems(temp1.submat(r,  r+1, minCol, maxCol)).val[0] > (mean + 2 * stDeviation)) {
+				Log.i("XXXXXXXX", ""+Core.sumElems(processingMat.submat(r,  r+1, minCol, maxCol)).val[0]);
+				if (Core.sumElems(processingMat.submat(r,  r+1, minCol, maxCol)).val[0] > (mean + 2 * stDeviation)) {
 					return r;
 				}
-			}*/
-
+			}
+*/
 
 
 			Imgproc.threshold(processingMat, processingMat, 100, 255, Imgproc.THRESH_BINARY);
@@ -360,11 +366,6 @@ public class ImageProcessingActivity extends Activity {
 					return r;
 				}
 			}
-
-
-			//TODO:
-			//visual and animation at description
-			//Repeating reference "how many times" <- animation
 
 			/*List<MatOfPoint> contours = new Vector<MatOfPoint>();
 			Mat hierarchy = new Mat();
@@ -438,22 +439,16 @@ public class ImageProcessingActivity extends Activity {
 			int colRaduis = 50;
 			displayMat = originalMat.clone();
 
-			//flip around y axis
-			if ((posY0-posY1)/(posX0-posX1) < 0) {
-				int temp = posX0;
-				posX0 = posX1;
-				posX1 = temp;
-			}
-
-			//interchange points
-			if (posX0 > posX1) {
-				int temp = posX0;
-				posX0 = posX1;
-				posX1 = temp;
-
-				temp = posY0;
+			if(posY0 > posY1) {
+				int temp = posY0;
 				posY0 = posY1;
 				posY1 = temp;
+			}
+			
+			if(posX0 > posX1) {
+				int temp = posX0;
+				posX0 = posX1;
+				posX1 = temp;
 			}
 
 			minRow = posY0-rowRaduis;
@@ -565,6 +560,8 @@ public class ImageProcessingActivity extends Activity {
 
 		public TaskAnimateRef(int counter) {
 			this.counter = counter;
+			displayMat = originalMat.clone();
+			processingMat = displayMat.submat(referenceObjBound[INDEX_REF_TOP], referenceObjBound[INDEX_REF_BOTTOM], referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]).clone();
 		}
 		
 		@Override
@@ -583,8 +580,6 @@ public class ImageProcessingActivity extends Activity {
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			displayMat = originalMat.clone();
-			processingMat = displayMat.submat(referenceObjBound[INDEX_REF_TOP], referenceObjBound[INDEX_REF_BOTTOM], referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]);	
 		}
 
 		@Override
@@ -748,10 +743,26 @@ public class ImageProcessingActivity extends Activity {
 		case STATE_HEIGHT:
 			int treeHei = Math.abs(treetopRow-referenceObjBound[INDEX_REF_BOTTOM]);
 			int refHei = Math.abs(referenceObjBound[INDEX_REF_TOP]-referenceObjBound[INDEX_REF_BOTTOM]);
+			
+			//start reference duplication animation
 			for (int counter = 0 ; counter < (int)(treeHei/refHei) ; counter++) {
 				new TaskAnimateRef(counter).execute();	
 			}
 			calculateHeight();
+			
+			//draw vertical line next to reference object
+			if (referenceObjBound[INDEX_REF_LEFT] > displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT]) {
+				int offSet = referenceObjBound[INDEX_REF_LEFT]/4;
+				displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_LEFT]-offSet, referenceObjBound[INDEX_REF_LEFT]-offSet+LINE_THICKNESS).setTo(new Scalar(255,0,255));
+			} else {
+				int offSet = (displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT])/4;
+				displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_RIGHT]+offSet, referenceObjBound[INDEX_REF_RIGHT]+offSet+LINE_THICKNESS).setTo(new Scalar(255, 0,255));
+			}
+
+			//draw detection lines
+			displayMat.submat(new Range(treetopRow, treetopRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255, 0, 0));
+			displayMat.submat(new Range(treeBottomRow, treeBottomRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255, 0, 0));
+			
 			buttonTask.setClickable(false);
 			buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
 			break;
@@ -887,6 +898,10 @@ public class ImageProcessingActivity extends Activity {
 				selectedColor = COLOR_WHITE;
 				break;
 			case COLOR_WHITE:
+				Toast.makeText(getApplicationContext(), "Detecting Color: BLACK", Toast.LENGTH_SHORT).show();
+				selectedColor = COLOR_BLACK;
+				break;
+			case COLOR_BLACK:
 				Toast.makeText(getApplicationContext(), "Detecting Color: RED", Toast.LENGTH_SHORT).show();
 				selectedColor = COLOR_RED;
 				break;
