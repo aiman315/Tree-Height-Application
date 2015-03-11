@@ -35,10 +35,13 @@ import android.support.v4.view.MotionEventCompat;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -54,7 +57,7 @@ public class ImageProcessingActivity extends Activity {
 	private static final int COLOR_YELLOW = 1;
 	private static final int COLOR_WHITE = 2;
 	private static final int COLOR_BLACK = 3;
-	
+
 	private static final int DETECT_TYPE_TREETOP = 0;
 	private static final int DETECT_TYPE_REFERENCE = 1;
 
@@ -80,12 +83,22 @@ public class ImageProcessingActivity extends Activity {
 
 	private BaseLoaderCallback mLoaderCallback;
 
+	//TOOD:
+	//Add remaining of reference duplication animation
+	//Take photos with A4 paper
+	//Make mathematical approach more visual
+	//Add TextView next to vertical animation line (formula with results)
+	//At verification dialog: move dialog to the bottom and don't gray out the background
+	//Test for landscape images
+	//indicate that tree bottom = reference object bottom
+
 
 	/**
 	 * Calculate tree height by finding the ratio of reference object to  the tree 
 	 */
 	private void calculateHeight() {
 		Log.d(TAG, "onClickCalculateHeight");
+
 		treeBottomRow = referenceObjBound[INDEX_REF_BOTTOM];
 		double treePixelHeight = treeBottomRow-treetopRow;
 		double referenceObjPixelHeight = referenceObjBound[INDEX_REF_BOTTOM]-referenceObjBound[INDEX_REF_TOP];
@@ -337,7 +350,7 @@ public class ImageProcessingActivity extends Activity {
 			Imgproc.Sobel(edgeYmat, edgeYmat, edgeYmat.depth(), 0, 1); //detect in y direction
 			Core.addWeighted(egdeXmat, 0.5, edgeYmat, 0.5, 0, processingMat);
 
-/*			
+			/*			
 			Mat learnMat = processingMat.submat(0,  100, minCol, maxCol);
 			double sum = Core.sumElems(learnMat).val[0];
 			double mean = sum/100;
@@ -355,7 +368,7 @@ public class ImageProcessingActivity extends Activity {
 					return r;
 				}
 			}
-*/
+			 */
 
 
 			Imgproc.threshold(processingMat, processingMat, 100, 255, Imgproc.THRESH_BINARY);
@@ -444,7 +457,7 @@ public class ImageProcessingActivity extends Activity {
 				posY0 = posY1;
 				posY1 = temp;
 			}
-			
+
 			if(posX0 > posX1) {
 				int temp = posX0;
 				posX0 = posX1;
@@ -563,7 +576,7 @@ public class ImageProcessingActivity extends Activity {
 			displayMat = originalMat.clone();
 			processingMat = displayMat.submat(referenceObjBound[INDEX_REF_TOP], referenceObjBound[INDEX_REF_BOTTOM], referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]).clone();
 		}
-		
+
 		@Override
 		protected Integer [] doInBackground(Void... params) {
 			try {
@@ -606,7 +619,7 @@ public class ImageProcessingActivity extends Activity {
 		input.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
 
 		//reference object height input-dialog setup
-		final AlertDialog heightDialog = new AlertDialog.Builder(this)
+		final AlertDialog heightDialog = new AlertDialog.Builder(this, R.style.myCustomDialog)
 		.setView(input)
 		.setTitle(R.string.ref_height_dialog_title)
 		.setPositiveButton(android.R.string.ok, null)
@@ -743,13 +756,13 @@ public class ImageProcessingActivity extends Activity {
 		case STATE_HEIGHT:
 			int treeHei = Math.abs(treetopRow-referenceObjBound[INDEX_REF_BOTTOM]);
 			int refHei = Math.abs(referenceObjBound[INDEX_REF_TOP]-referenceObjBound[INDEX_REF_BOTTOM]);
-			
+
 			//start reference duplication animation
 			for (int counter = 0 ; counter < (int)(treeHei/refHei) ; counter++) {
 				new TaskAnimateRef(counter).execute();	
 			}
 			calculateHeight();
-			
+
 			//draw vertical line next to reference object
 			if (referenceObjBound[INDEX_REF_LEFT] > displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT]) {
 				int offSet = referenceObjBound[INDEX_REF_LEFT]/4;
@@ -762,7 +775,7 @@ public class ImageProcessingActivity extends Activity {
 			//draw detection lines
 			displayMat.submat(new Range(treetopRow, treetopRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255, 0, 0));
 			displayMat.submat(new Range(treeBottomRow, treeBottomRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255, 0, 0));
-			
+
 			buttonTask.setClickable(false);
 			buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
 			break;
@@ -772,9 +785,9 @@ public class ImageProcessingActivity extends Activity {
 	}
 
 	private void verifyDetection() {
-		AlertDialog.Builder verifyDetectionDialog = new AlertDialog.Builder(this);
-		verifyDetectionDialog.setMessage("Correct Detection?");
-		verifyDetectionDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.myCustomDialog);
+		builder.setMessage("Correct Detection?");
+		builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface arg0, int arg1) {
 				switch(currentState) {
 				case STATE_TREETOP:
@@ -796,7 +809,7 @@ public class ImageProcessingActivity extends Activity {
 			}
 		});
 
-		verifyDetectionDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+		builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface arg0, int arg1) {
 				imageView.setOnTouchListener(new View.OnTouchListener() {
 
@@ -816,6 +829,17 @@ public class ImageProcessingActivity extends Activity {
 				Toast.makeText(getApplicationContext(), "Touch input enabled", Toast.LENGTH_SHORT).show();
 			}
 		});
+
+		AlertDialog verifyDetectionDialog = builder.create();
+		verifyDetectionDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+		WindowManager.LayoutParams dialogAttrib = verifyDetectionDialog.getWindow().getAttributes();
+		
+		Point point = new Point();
+		getWindowManager().getDefaultDisplay().getSize(point);
+		
+		dialogAttrib.gravity = Gravity.BOTTOM;
+		dialogAttrib.y = 100;
+
 		verifyDetectionDialog.setCancelable(false);
 		verifyDetectionDialog.show();
 	}
