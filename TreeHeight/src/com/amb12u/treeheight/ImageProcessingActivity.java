@@ -45,6 +45,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class ImageProcessingActivity extends Activity {
@@ -61,6 +62,9 @@ public class ImageProcessingActivity extends Activity {
 	private static final int DETECT_TYPE_TREETOP = 0;
 	private static final int DETECT_TYPE_REFERENCE = 1;
 
+	protected static final int RATIO_INDEX_Y = 0;
+	protected static final int RATIO_INDEX_X = 1;
+	
 	private static final int INDEX_REF_BOTTOM = 0;
 	private static final int INDEX_REF_RIGHT = 1;
 	private static final int INDEX_REF_TOP = 2;
@@ -78,19 +82,20 @@ public class ImageProcessingActivity extends Activity {
 	private Uri imgUri;
 	private ImageView imageView;
 	private Button buttonTask;
+	private TextView textTreeHeight;
 	private Mat displayMat;
 	private Mat originalMat;
 
 	private BaseLoaderCallback mLoaderCallback;
 
-	//TOOD:
+	//TODO:
 	//Add remaining of reference duplication animation
+	//Add TextView next to vertical animation line (formula with results)
 	//Take photos with A4 paper
 	//Make mathematical approach more visual
-	//Add TextView next to vertical animation line (formula with results)
-	//At verification dialog: move dialog to the bottom and don't gray out the background
 	//Test for landscape images
-	//indicate that tree bottom = reference object bottom
+	//Indicate that tree bottom = reference object bottom
+	//Code documentation
 
 
 	/**
@@ -103,10 +108,43 @@ public class ImageProcessingActivity extends Activity {
 		double treePixelHeight = treeBottomRow-treetopRow;
 		double referenceObjPixelHeight = referenceObjBound[INDEX_REF_BOTTOM]-referenceObjBound[INDEX_REF_TOP];
 
+		int numDuplicates = (int)(treePixelHeight/referenceObjPixelHeight);
+		if (numDuplicates <= 10){
+			//start reference duplication animation
+			for (int counter = 0 ; counter < numDuplicates ; counter++) {
+				new TaskAnimateRef(counter).execute();	
+			}			
+		}
+		
+		//calculate tree height
 		treeHeight = (treePixelHeight*referenceObjHeight)/referenceObjPixelHeight;
-
 		Toast.makeText(this, String.format("Tree Height = ( %d * %d ) / %d = %d", (int)treePixelHeight, (int)referenceObjHeight, (int)referenceObjPixelHeight, (int)treeHeight), Toast.LENGTH_LONG).show();
+		buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
+		
 
+		//draw vertical line next to reference object 
+		//and set tree height calculation text next to it
+		if (referenceObjBound[INDEX_REF_LEFT] > displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT]) {
+			int offset = referenceObjBound[INDEX_REF_LEFT]/4;
+			textTreeHeight.setX((int)((referenceObjBound[INDEX_REF_LEFT]-(5/4)*offset)/widthRatio));
+			displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_LEFT]-offset, referenceObjBound[INDEX_REF_LEFT]-offset+LINE_THICKNESS).setTo(new Scalar(255,0,255));
+		} else {
+			int offset = (displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT])/4;
+			textTreeHeight.setX((int)((referenceObjBound[INDEX_REF_RIGHT]-(5/4)*offset)/widthRatio));
+			displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_RIGHT]+offset, referenceObjBound[INDEX_REF_RIGHT]+offset+LINE_THICKNESS).setTo(new Scalar(255, 0,255));
+		}
+		textTreeHeight.setY((int)(((treetopRow+treeBottomRow)/2)/heightRatio));
+		textTreeHeight.setText(String.format("Tree Height = ( %d * %d ) / %d = %d", (int)treePixelHeight, (int)referenceObjHeight, (int)referenceObjPixelHeight, (int)treeHeight));
+
+		textTreeHeight.setPivotX(0);
+		textTreeHeight.setPivotY(0);
+		textTreeHeight.setRotation(270);
+
+		//draw detection lines
+		displayMat.submat(new Range(treetopRow, treetopRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255, 0, 0));
+		displayMat.submat(new Range(treeBottomRow, treeBottomRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255, 0, 0));
+		
+		updateImage();
 	}
 
 	private void detectTreetop() {
@@ -652,7 +690,7 @@ public class ImageProcessingActivity extends Activity {
 				});
 			}
 		});
-		heightDialog.setCanceledOnTouchOutside(false);
+		heightDialog.setCancelable(false);
 		heightDialog.show();
 	}
 
@@ -737,7 +775,8 @@ public class ImageProcessingActivity extends Activity {
 	}
 
 
-	private void updateImage() {
+	//FIXME: is it correct to keep synchronized?
+	private synchronized void updateImage() {
 		Bitmap image = Bitmap.createBitmap(displayMat.cols(), displayMat.rows(), Bitmap.Config.RGB_565);
 		Utils.matToBitmap(displayMat, image);
 		imageView.setImageBitmap(image);
@@ -754,30 +793,8 @@ public class ImageProcessingActivity extends Activity {
 			detectReference();
 			break;
 		case STATE_HEIGHT:
-			int treeHei = Math.abs(treetopRow-referenceObjBound[INDEX_REF_BOTTOM]);
-			int refHei = Math.abs(referenceObjBound[INDEX_REF_TOP]-referenceObjBound[INDEX_REF_BOTTOM]);
-
-			//start reference duplication animation
-			for (int counter = 0 ; counter < (int)(treeHei/refHei) ; counter++) {
-				new TaskAnimateRef(counter).execute();	
-			}
-			calculateHeight();
-
-			//draw vertical line next to reference object
-			if (referenceObjBound[INDEX_REF_LEFT] > displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT]) {
-				int offSet = referenceObjBound[INDEX_REF_LEFT]/4;
-				displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_LEFT]-offSet, referenceObjBound[INDEX_REF_LEFT]-offSet+LINE_THICKNESS).setTo(new Scalar(255,0,255));
-			} else {
-				int offSet = (displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT])/4;
-				displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_RIGHT]+offSet, referenceObjBound[INDEX_REF_RIGHT]+offSet+LINE_THICKNESS).setTo(new Scalar(255, 0,255));
-			}
-
-			//draw detection lines
-			displayMat.submat(new Range(treetopRow, treetopRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255, 0, 0));
-			displayMat.submat(new Range(treeBottomRow, treeBottomRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255, 0, 0));
-
 			buttonTask.setClickable(false);
-			buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
+			calculateHeight();
 			break;
 		default:
 			break;
@@ -860,6 +877,7 @@ public class ImageProcessingActivity extends Activity {
 		referenceObjBound = new int [4];
 		selectedColor = COLOR_WHITE;
 		buttonTask = (Button) findViewById(R.id.buttonTask);
+		textTreeHeight = (TextView) findViewById(R.id.textTreeHeight);
 		imgUri = getIntent().getExtras().getParcelable("ImgUri");
 
 		mLoaderCallback = new BaseLoaderCallback(this) {
@@ -875,8 +893,8 @@ public class ImageProcessingActivity extends Activity {
 
 						//calculate image to screen ratio
 						double ratio [] = calculateImage2ScreenRatio();
-						heightRatio = ratio[0];
-						widthRatio = ratio[1];
+						heightRatio = ratio[RATIO_INDEX_Y];
+						widthRatio = ratio[RATIO_INDEX_X];
 						Log.i("XXXX", "Ratios ["+ratio[0]+", "+ratio[1]+"]");
 
 					} catch (FileNotFoundException e) {
