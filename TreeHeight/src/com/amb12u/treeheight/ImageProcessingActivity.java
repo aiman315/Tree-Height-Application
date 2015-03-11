@@ -566,7 +566,7 @@ public class ImageProcessingActivity extends Activity {
 		public TaskAnimateRef(int counter) {
 			this.counter = counter;
 		}
-
+		
 		@Override
 		protected Integer [] doInBackground(Void... params) {
 			try {
