@@ -64,7 +64,7 @@ public class ImageProcessingActivity extends Activity {
 
 	protected static final int RATIO_INDEX_Y = 0;
 	protected static final int RATIO_INDEX_X = 1;
-	
+
 	private static final int INDEX_REF_BOTTOM = 0;
 	private static final int INDEX_REF_RIGHT = 1;
 	private static final int INDEX_REF_TOP = 2;
@@ -108,42 +108,43 @@ public class ImageProcessingActivity extends Activity {
 		double treePixelHeight = treeBottomRow-treetopRow;
 		double referenceObjPixelHeight = referenceObjBound[INDEX_REF_BOTTOM]-referenceObjBound[INDEX_REF_TOP];
 
-		int numDuplicates = (int)(treePixelHeight/referenceObjPixelHeight);
-		if (numDuplicates <= 10){
-			//start reference duplication animation
-			for (int counter = 0 ; counter < numDuplicates ; counter++) {
-				new TaskAnimateRef(counter).execute();	
-			}			
-		}
 		
+		int numDuplicates = (int)(treePixelHeight/referenceObjPixelHeight);
+		for (int counter = 0 ; counter < numDuplicates ; counter++) {
+			new TaskAnimateRef(counter).execute();	
+		}
+
 		//calculate tree height
 		treeHeight = (treePixelHeight*referenceObjHeight)/referenceObjPixelHeight;
 		Toast.makeText(this, String.format("Tree Height = ( %d * %d ) / %d = %d", (int)treePixelHeight, (int)referenceObjHeight, (int)referenceObjPixelHeight, (int)treeHeight), Toast.LENGTH_LONG).show();
 		buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
-		
 
-		//draw vertical line next to reference object 
-		//and set tree height calculation text next to it
-		if (referenceObjBound[INDEX_REF_LEFT] > displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT]) {
-			int offset = referenceObjBound[INDEX_REF_LEFT]/4;
-			textTreeHeight.setX((int)((referenceObjBound[INDEX_REF_LEFT]-(5/4)*offset)/widthRatio));
-			displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_LEFT]-offset, referenceObjBound[INDEX_REF_LEFT]-offset+LINE_THICKNESS).setTo(new Scalar(255,0,255));
-		} else {
-			int offset = (displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT])/4;
-			textTreeHeight.setX((int)((referenceObjBound[INDEX_REF_RIGHT]-(5/4)*offset)/widthRatio));
-			displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_RIGHT]+offset, referenceObjBound[INDEX_REF_RIGHT]+offset+LINE_THICKNESS).setTo(new Scalar(255, 0,255));
-		}
-		textTreeHeight.setY((int)(((treetopRow+treeBottomRow)/2)/heightRatio));
+
 		textTreeHeight.setText(String.format("Tree Height = ( %d * %d ) / %d = %d", (int)treePixelHeight, (int)referenceObjHeight, (int)referenceObjPixelHeight, (int)treeHeight));
-
 		textTreeHeight.setPivotX(0);
 		textTreeHeight.setPivotY(0);
-		textTreeHeight.setRotation(270);
+		textTreeHeight.setY((int)(treetopRow/heightRatio)-30);
 
-		//draw detection lines
-		displayMat.submat(new Range(treetopRow, treetopRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255, 0, 0));
-		displayMat.submat(new Range(treeBottomRow, treeBottomRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255, 0, 0));
-		
+		//draw line next to reference object 
+		//and set tree height calculation text next to it
+		int offset;
+		if (referenceObjBound[INDEX_REF_LEFT] > displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT]) {
+			offset = -1*referenceObjBound[INDEX_REF_LEFT]/4;
+			textTreeHeight.setX((int)((referenceObjBound[INDEX_REF_LEFT]+(7/4)*offset)/widthRatio));
+
+			// negative offset
+			displayMat.submat(treetopRow, treetopRow+LINE_THICKNESS, referenceObjBound[INDEX_REF_LEFT]+offset, referenceObjBound[INDEX_REF_LEFT]).setTo(new Scalar(255, 0, 0));
+			displayMat.submat(treeBottomRow, treeBottomRow+LINE_THICKNESS, referenceObjBound[INDEX_REF_LEFT]+offset, referenceObjBound[INDEX_REF_LEFT]).setTo(new Scalar(255, 0, 0));
+		} else {
+			offset = (displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT])/4;
+			textTreeHeight.setX((int)(referenceObjBound[INDEX_REF_RIGHT]/widthRatio));
+
+			displayMat.submat(treetopRow, treetopRow+LINE_THICKNESS, referenceObjBound[INDEX_REF_RIGHT], referenceObjBound[INDEX_REF_RIGHT]+offset).setTo(new Scalar(255, 0, 0));
+			displayMat.submat(treeBottomRow, treeBottomRow+LINE_THICKNESS, referenceObjBound[INDEX_REF_RIGHT], referenceObjBound[INDEX_REF_RIGHT]+offset).setTo(new Scalar(255, 0, 0));
+		}
+		//vertical line
+		displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_LEFT]+offset, referenceObjBound[INDEX_REF_LEFT]+offset+LINE_THICKNESS).setTo(new Scalar(255, 0, 0));
+
 		updateImage();
 	}
 
@@ -620,7 +621,7 @@ public class ImageProcessingActivity extends Activity {
 			try {
 				int hei = Math.abs(referenceObjBound[INDEX_REF_TOP]-referenceObjBound[INDEX_REF_BOTTOM]);
 				processingMat.copyTo(displayMat.submat(referenceObjBound[INDEX_REF_TOP]-(counter*hei), referenceObjBound[INDEX_REF_BOTTOM]-(counter*hei), referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]));
-				Thread.sleep((long) (0.25*1000));
+				Thread.sleep((long) (0.5*1000));
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -850,10 +851,10 @@ public class ImageProcessingActivity extends Activity {
 		AlertDialog verifyDetectionDialog = builder.create();
 		verifyDetectionDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		WindowManager.LayoutParams dialogAttrib = verifyDetectionDialog.getWindow().getAttributes();
-		
+
 		Point point = new Point();
 		getWindowManager().getDefaultDisplay().getSize(point);
-		
+
 		dialogAttrib.gravity = Gravity.BOTTOM;
 		dialogAttrib.y = 100;
 
