@@ -86,15 +86,15 @@ public class ImageProcessingActivity extends Activity {
 	private BaseLoaderCallback mLoaderCallback;
 
 	//TODO:
-	//Take photos with A4 paper
-	//Make mathematical approach more visual
-	//Test for landscape images
 	//Indicate that tree bottom = reference object bottom
 	//Indicate treetop must be in top third
 	//Code documentation
 	//Consider removing Toasts
 	//Add option to convert units
 	//markTouch at bottom of image has large offset
+	//Take photos with A4 paper
+	//Make mathematical approach more visual
+	//Test for landscape images
 
 
 	/**
@@ -169,7 +169,7 @@ public class ImageProcessingActivity extends Activity {
 	 */
 	private void detectColor(Mat mat) {
 		Log.d(TAG, "detectColor");
-		
+
 		Scalar colorUpLimit = null;
 		Scalar colorLowLimit = null;
 
@@ -245,7 +245,7 @@ public class ImageProcessingActivity extends Activity {
 	 */
 	private void calculateImage2ScreenRatio() {
 		Log.d(TAG, "calculateImage2ScreenRatio");
-		
+
 		Display display = getWindowManager().getDefaultDisplay();
 		Point size = new Point();
 		display.getSize(size);
@@ -283,8 +283,8 @@ public class ImageProcessingActivity extends Activity {
 		private boolean isLocalSearch;
 
 		public TaskDetectTreetop() {
-			Log.i(TAG, "TaskDetectTreetop");
-			
+			Log.d(TAG, "TaskDetectTreetop");
+
 			//setup search region
 			minRow = 0;
 			maxRow = originalMat.rows()/3;
@@ -294,7 +294,7 @@ public class ImageProcessingActivity extends Activity {
 		}
 
 		public TaskDetectTreetop(int yPos, int xPos) {
-			Log.i(TAG, "TaskDetectTreetop");
+			Log.d(TAG, "TaskDetectTreetop");
 
 			int rowRaduis = 50;
 			int colRaduis = 50;
@@ -334,11 +334,7 @@ public class ImageProcessingActivity extends Activity {
 				Core.rectangle(displayMat, pt1, pt2, col);	
 			}
 
-			//FIXME: do correct implementation
-			//TODO: train algorithm: use top rows to learn sky standard deviation
-			//FIXME: does learning standard deviation rows apply to local search?
-
-			//Detection using Sobel Filter
+			//Sobel filter edge detection
 			Mat egdeXmat = new Mat();
 			Mat edgeYmat = new Mat();
 
@@ -349,64 +345,18 @@ public class ImageProcessingActivity extends Activity {
 			Imgproc.Sobel(edgeYmat, edgeYmat, edgeYmat.depth(), 0, 1); //detect in y direction
 			Core.addWeighted(egdeXmat, 0.5, edgeYmat, 0.5, 0, processingMat);
 
-			/*			
-			Mat learnMat = processingMat.submat(0,  100, minCol, maxCol);
-			double sum = Core.sumElems(learnMat).val[0];
-			double mean = sum/100;
-			MatOfDouble stdMat = new MatOfDouble();
-			Core.meanStdDev(learnMat, new MatOfDouble(), stdMat);
-			double stDeviation = stdMat.toArray()[0];
-			Log.i("XXXXX", "Sum = "+sum);
-			Log.i("XXXXX", "Mean = "+mean);
-			Log.i("XXXXX", "std = "+stDeviation);
-			Log.i("XXXXX", "===================================");
-
-			for (int r = minRow ; r < maxRow-1 ; r ++) {
-				Log.i("XXXXXXXX", ""+Core.sumElems(processingMat.submat(r,  r+1, minCol, maxCol)).val[0]);
-				if (Core.sumElems(processingMat.submat(r,  r+1, minCol, maxCol)).val[0] > (mean + 2 * stDeviation)) {
-					return r;
-				}
-			}
-			 */
-
-
+			//convert to binary mat
 			Imgproc.threshold(processingMat, processingMat, 100, 255, Imgproc.THRESH_BINARY);
 			
-			for (int r = 0 ; r < processingMat.rows() ; r++) {
-				double sum = Core.sumElems(processingMat.submat(r,  r+1, 0, processingMat.cols()-1)).val[0];
-				if (sum > 1) {
+			//compute threshold
+			double threshold = calculateThreshold();
+	
+			//detect treetop row
+			for (int r = 0 ; r < processingMat.rows()-1 ; r ++) {
+				if (Core.sumElems(processingMat.submat(new Range(r,  r+1), Range.all())).val[0] > threshold) {
 					return r;
 				}
-			}
-
-			/*List<MatOfPoint> contours = new Vector<MatOfPoint>();
-			Mat hierarchy = new Mat();
-
-			Imgproc.findContours(temp1, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-			 */
-
-			/*if (!contours.isEmpty()) {
-				MatOfPoint points = new MatOfPoint(contours.get(0));
-				List<org.opencv.core.Point> list = points.toList();
-				return (int) list.get(0).y;
-			}*/
-
-
-			/*
-			//Detection using Standard Deviation
-			double tempStd = 0;
-
-			for (int r = minRow ; r < maxRow-1 ; r ++) {
-				MatOfDouble stdMat = new MatOfDouble();
-				Core.meanStdDev(imageMat.submat(r,  r+1, minCol, maxCol), new MatOfDouble(), stdMat);
-				double stDeviation = stdMat.toArray()[0];
-				if (stDeviation-tempStd > 0) {
-					return r;
-				}
-			}
-
-			 */
-
+			} 
 			return null;
 		}
 
@@ -438,6 +388,44 @@ public class ImageProcessingActivity extends Activity {
 			}
 			updateDisplayImage();
 		}
+		
+		/**
+		 * Calculate threshold used to detect treetop 
+		 * It computes mean and standard deviation of top 10% rows and applies the 68–95–99.7 rule (cover 95%)
+		 * @return threshold for treetop detection
+		 */
+		private double calculateThreshold() {
+			int rowsCount = processingMat.rows()/10;
+			Mat trainingMat = processingMat.submat(new Range(0,  rowsCount), Range.all());
+			double calculationArray [] = new double[rowsCount];
+			double sum = 0;
+			double sumVar = 0;
+
+			//compute sum of matrix row elements and sum of array elements
+			for (int r = 0 ; r < rowsCount ; r++) {
+				calculationArray[r] = Core.sumElems(trainingMat.submat(new Range(r, r+1), Range.all())).val[0];
+				sum += calculationArray[r];
+			}
+
+			//compute mean of array elements
+			double mean = sum/rowsCount;
+
+			//compute variance
+			for (int i = 0 ; i < calculationArray.length ; i++) {
+				calculationArray[i] = Math.pow((calculationArray[i]-mean), 2);
+			}
+
+			//compute sum of variances 
+			for (int i = 0 ; i < calculationArray.length ; i++) {
+				sumVar += calculationArray[i];
+			}
+
+			//compute standard deviation
+			double stDeviation = Math.sqrt(sumVar/calculationArray.length);
+			
+			//cover 95% of curve values
+			return mean + 2 * stDeviation;
+		}
 	}
 
 	/**
@@ -461,7 +449,7 @@ public class ImageProcessingActivity extends Activity {
 		private int maxCol;
 
 		public TaskDetectReference(int posY0, int posX0, int posY1, int posX1) {
-			Log.i(TAG, "TaskDetectReference");
+			Log.d(TAG, "TaskDetectReference");
 
 			int rowRaduis = 50;
 			int colRaduis = 50;
@@ -687,7 +675,6 @@ public class ImageProcessingActivity extends Activity {
 		}
 	}
 
-
 	/**
 	 * Creates a dialog to input reference object height
 	 * The value of reference object height is a positive double, and can't be zero
@@ -909,8 +896,6 @@ public class ImageProcessingActivity extends Activity {
 			public void onManagerConnected(int status) {
 				switch (status) {
 				case LoaderCallbackInterface.SUCCESS:
-					Log.i(TAG, "OpenCV loaded successfully");
-
 					try {
 						//load image and setup
 						loadDisplayImage();
