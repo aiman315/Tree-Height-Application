@@ -73,9 +73,9 @@ public class ImageProcessingActivity extends Activity {
 	private static final int LINE_THICKNESS = 5;
 
 	private final String TAG = "StillImageProcessingActivity";
-	private double treeHeight, referenceObjHeight;
-	private double treePixelHeight, referenceObjPixelHeight;
 	private double heightRatio, widthRatio;
+	private double treeHeight, referenceObjHeight;
+	private int treePixelHeight, referenceObjPixelHeight;
 	private int treetopRow, treeBottomRow;
 	private int [] referenceObjBound;
 	private int selectedColor;
@@ -113,7 +113,7 @@ public class ImageProcessingActivity extends Activity {
 
 		//calculate tree height
 		treeHeight = (treePixelHeight*referenceObjHeight)/referenceObjPixelHeight;
-		Toast.makeText(this, String.format("Tree Height = ( %d * %d ) / %d = %d", (int)treePixelHeight, (int)referenceObjHeight, (int)referenceObjPixelHeight, (int)treeHeight), Toast.LENGTH_LONG).show();
+		Toast.makeText(this, String.format("Tree Height = ( %d * %d ) / %d = %d", treePixelHeight, (int)referenceObjHeight, referenceObjPixelHeight, (int)treeHeight), Toast.LENGTH_LONG).show();
 	}
 
 	private void detectTreetop() {
@@ -581,19 +581,23 @@ public class ImageProcessingActivity extends Activity {
 		@Override
 		protected Integer [] doInBackground(Void... params) {
 			displayMat = originalMat.clone();
-			int numDuplicates = (int)(treePixelHeight/referenceObjPixelHeight);
+			int numDuplicates = treePixelHeight/referenceObjPixelHeight;
 
-			for (int counter = 0 ; counter < numDuplicates ; counter++) {
+			for (int duplicate = 0 ; duplicate < numDuplicates ; duplicate++) {
 				try {
-					int hei = Math.abs(referenceObjBound[INDEX_REF_TOP]-referenceObjBound[INDEX_REF_BOTTOM]);
-					processingMat.copyTo(displayMat.submat(referenceObjBound[INDEX_REF_TOP]-(counter*hei), referenceObjBound[INDEX_REF_BOTTOM]-(counter*hei), referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]));
+					processingMat.copyTo(displayMat.submat(referenceObjBound[INDEX_REF_TOP]-(duplicate*referenceObjPixelHeight), referenceObjBound[INDEX_REF_BOTTOM]-(duplicate*referenceObjPixelHeight), referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]));
 					publishProgress();
 					Thread.sleep((long) (0.25*1000));
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
-			//TODO: remaining of duplicate
+			
+			//sub reference to fill duplicate remains
+			processingMat = processingMat.submat(new Range(0, treePixelHeight%referenceObjPixelHeight), Range.all());
+			processingMat.copyTo(displayMat.submat(treetopRow, treetopRow+processingMat.rows(), referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]));
+			publishProgress();
+
 			return null;
 		}
 
@@ -670,7 +674,7 @@ public class ImageProcessingActivity extends Activity {
 
 		buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
 
-		textTreeHeight.setText(String.format("Tree Height = ( %d * %d ) / %d = %d", (int)treePixelHeight, (int)referenceObjHeight, (int)referenceObjPixelHeight, (int)treeHeight));
+		textTreeHeight.setText(String.format("Tree Height = ( %d * %d ) / %d = %d", treePixelHeight, (int)referenceObjHeight, referenceObjPixelHeight, (int)treeHeight));
 		textTreeHeight.setPivotX(0);
 		textTreeHeight.setPivotY(0);
 		textTreeHeight.setY((int)(treetopRow/heightRatio)-30);
