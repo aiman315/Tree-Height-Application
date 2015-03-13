@@ -141,7 +141,6 @@ public class ImageProcessingActivity extends Activity {
 		}
 	}
 
-
 	/**
 	 * Detect a selected color in the displayed image by setting its upper and lower limit values
 	 * @param selectedColorHSV: HSV color value
@@ -169,7 +168,8 @@ public class ImageProcessingActivity extends Activity {
 </table>
 	 */
 	private void detectColor(Mat mat) {
-
+		Log.d(TAG, "detectColor");
+		
 		Scalar colorUpLimit = null;
 		Scalar colorLowLimit = null;
 
@@ -212,6 +212,7 @@ public class ImageProcessingActivity extends Activity {
 	 * @param event
 	 */
 	private void markTouch(MotionEvent event) {
+		Log.d(TAG, "markTouch");
 
 		switch(currentState) {
 		case STATE_TREETOP:
@@ -243,6 +244,8 @@ public class ImageProcessingActivity extends Activity {
 	 * Normally, the ratios are greater than 1
 	 */
 	private void calculateImage2ScreenRatio() {
+		Log.d(TAG, "calculateImage2ScreenRatio");
+		
 		Display display = getWindowManager().getDefaultDisplay();
 		Point size = new Point();
 		display.getSize(size);
