@@ -16,7 +16,6 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Range;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
@@ -59,9 +58,6 @@ public class ImageProcessingActivity extends Activity {
 	private static final int COLOR_WHITE = 2;
 	private static final int COLOR_BLACK = 3;
 
-	private static final int DETECT_TYPE_TREETOP = 0;
-	private static final int DETECT_TYPE_REFERENCE = 1;
-
 	protected static final int RATIO_INDEX_Y = 0;
 	protected static final int RATIO_INDEX_X = 1;
 
@@ -90,29 +86,31 @@ public class ImageProcessingActivity extends Activity {
 	private BaseLoaderCallback mLoaderCallback;
 
 	//TODO:
-	//Add remaining of reference duplication animation
 	//Take photos with A4 paper
 	//Make mathematical approach more visual
 	//Test for landscape images
 	//Indicate that tree bottom = reference object bottom
+	//Indicate treetop must be in top third
 	//Code documentation
+	//Consider removing Toasts
+	//Add option to convert units
+	//markTouch at bottom of image has large offset
 
 
 	/**
-	 * Calculate tree height by finding the ratio of reference object to  the tree 
+	 * Calculate tree height by finding the ratio of reference object to the tree
 	 */
 	private void calculateHeight() {
-		Log.d(TAG, "onClickCalculateHeight");
+		Log.d(TAG, "calculateHeight");
 
+		//Required computations for tree height calculation
 		treeBottomRow = referenceObjBound[INDEX_REF_BOTTOM];
 		treePixelHeight = treeBottomRow-treetopRow;
 		referenceObjPixelHeight = referenceObjBound[INDEX_REF_BOTTOM]-referenceObjBound[INDEX_REF_TOP];
 
-
-		new TaskAnimateRef().execute();
-
-		//calculate tree height
+		//Tree height calculation formula
 		treeHeight = (treePixelHeight*referenceObjHeight)/referenceObjPixelHeight;
+
 		Toast.makeText(this, String.format("Tree Height = ( %d * %d ) / %d = %d", treePixelHeight, (int)referenceObjHeight, referenceObjPixelHeight, (int)treeHeight), Toast.LENGTH_LONG).show();
 	}
 
@@ -125,8 +123,7 @@ public class ImageProcessingActivity extends Activity {
 	}
 
 	/**
-	 * If the matrix is initialized and the reference object is not yet detected, 
-	 * calls the method to detect reference object
+	 * If the matrix is initialized, allow user touch input to trigger reference detection
 	 */
 	private void detectReference() {
 		Log.d(TAG, "detectReference");
@@ -136,17 +133,17 @@ public class ImageProcessingActivity extends Activity {
 
 				@Override
 				public boolean onTouch(View v, MotionEvent event) {
-					markTouch(v,event, DETECT_TYPE_REFERENCE);
+					markTouch(event);
 					return true;
 				}
 			});
-			Toast.makeText(getApplicationContext(), "Touch input enabled", Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), "Reference detection touch input enabled", Toast.LENGTH_SHORT).show();
 		}
 	}
 
 
 	/**
-	 * Detect a selected color in the displayed image
+	 * Detect a selected color in the displayed image by setting its upper and lower limit values
 	 * @param selectedColorHSV: HSV color value
 	 * <br /><b>HSV in OpenCV</b><br />
 	 * Hue Range: [0-180]<br />
@@ -205,18 +202,30 @@ public class ImageProcessingActivity extends Activity {
 		Core.inRange(mat, colorLowLimit, colorUpLimit, mat);
 	}
 
-	private void markTouch(View v, MotionEvent event, int detectionType) {
 
-		switch(detectionType) {
-		case DETECT_TYPE_TREETOP:
+	/**
+	 * Obtain touch position and execute corresponding task according to current program state
+	 * <ul>
+	 * <li>State (treetop): handle one finger touch to execute treetop detection task</li>
+	 * <li>State (referenceObject):handle two fingers touch to execute reference object detection task</li>
+	 * </ul>
+	 * @param event
+	 */
+	private void markTouch(MotionEvent event) {
+
+		switch(currentState) {
+		case STATE_TREETOP:
+			//handle touch of one finger
 			int posY = (int) (event.getY() *heightRatio);
-			int posX = (int) (event.getX() *widthRatio);			
+			int posX = (int) (event.getX() *widthRatio);
+			//start treetop detection at touch position
 			new TaskDetectTreetop(posY, posX).execute();
 			break;
-		case DETECT_TYPE_REFERENCE:
+		case STATE_REFERENCE:
+			//handle touch of two fingers
 			if(MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_POINTER_DOWN) {
 				if (MotionEventCompat.getPointerCount(event) == 2) {
-					//Log.i("XXXXX", "["+(event.getY()*heightRatio)+", "+(event.getX()*widthRatio)+"]");
+					//start reference object detection at touch boundaries
 					new TaskDetectReference(
 							(int) (MotionEventCompat.getY(event, 0) *heightRatio), 
 							(int) (MotionEventCompat.getX(event, 0) *widthRatio), 
@@ -229,47 +238,11 @@ public class ImageProcessingActivity extends Activity {
 		}
 	}
 
-	private int [] calculateImageOffset() {
-		int screenWid, screenHei;
-		int imgWid, imgHei;
-		int diffWid, diffHei;
-		int offsetW, offsetH;
-
-		//Calculate offset
-		Display display = getWindowManager().getDefaultDisplay();
-		Point size = new Point();
-		display.getSize(size);
-
-		screenWid = size.x;
-		screenHei = size.y;
-
-		imgWid = displayMat.cols();
-		imgHei = displayMat.rows();
-
-		Log.i("XXXX", "img hei: "+imgHei+"\timg wid: "+imgWid);
-		Log.i("XXXX", "screen hei: "+screenHei+"\tscreen wid: "+screenWid);
-
-		imgWid = screenHei * imgWid / imgHei;
-		imgHei = screenHei;
-
-		diffWid = screenWid - imgWid;
-		diffHei = screenHei - imgHei;
-
-		offsetW = diffWid/2;	
-		offsetH = diffHei/2;
-		int [] imgOffset = {offsetH, offsetW};
-
-		Imgproc.resize(displayMat, displayMat, new Size(screenWid, screenHei));
-		updateImage();
-
-		Log.i("XXXX", "NEW img hei: "+imgHei+"\timg wid: "+imgWid);
-		Log.i("XXXX", "screen hei: "+screenHei+"\tscreen wid: "+screenWid);
-
-		return imgOffset;
-	}
-
-	private double [] calculateImage2ScreenRatio() {
-		double [] ratio = null;
+	/**
+	 * Calculate image pixels to screen pixels ratio (width ratio and height ratio separately).
+	 * Normally, the ratios are greater than 1
+	 */
+	private void calculateImage2ScreenRatio() {
 		Display display = getWindowManager().getDefaultDisplay();
 		Point size = new Point();
 		display.getSize(size);
@@ -278,15 +251,24 @@ public class ImageProcessingActivity extends Activity {
 		int screenHei = size.y;
 
 		if (displayMat != null) {
-			ratio = new double[2];
-			Log.i("XXXX", "screen hei: "+screenHei+"\tscreen wid: "+screenWid);
-			Log.i("XXXX", "img hei: "+displayMat.rows()+"\timg wid: "+displayMat.cols());
-			ratio[0] = displayMat.rows()/(double)screenHei;
-			ratio[1] = displayMat.cols()/(double)screenWid;
+			heightRatio = displayMat.rows()/(double)screenHei;
+			widthRatio = displayMat.cols()/(double)screenWid;
 		}
-		return ratio; 
 	}
 
+	/**
+	 * AsyncTask (off main UI thread) to detect treetop in image matrix
+	 * Detection Algorithm:
+	 * <ol>
+	 * <li>Limit search region within touch range (default is matrix top third)</li>
+	 * <li>Detect edges using Sobel filter</li>
+	 * <li>Use few top matrix rows to learn standard deviation value for sky (normally, sky occupies some of the top rows of image)</li>
+	 * <li>Use learned standard deviation value as threshold</li>
+	 * <li>The row with standard deviation value above threshold is marked as treetop</li>
+	 * </ol>   
+	 * @author Aiman
+	 *
+	 */
 	private class TaskDetectTreetop extends AsyncTask<Void, Void, Integer> {
 
 		private ProgressDialog progressDialog;
@@ -295,22 +277,27 @@ public class ImageProcessingActivity extends Activity {
 		private int maxRow;
 		private int minCol;
 		private int maxCol;
+		private boolean isLocalSearch;
 
 		public TaskDetectTreetop() {
-			displayMat = originalMat.clone();
+			Log.i(TAG, "TaskDetectTreetop");
+			
+			//setup search region
 			minRow = 0;
 			maxRow = originalMat.rows()/3;
 			minCol = 0;
 			maxCol = originalMat.cols();
-			processingMat = originalMat.submat(minRow, maxRow, minCol, maxCol).clone();
+			isLocalSearch = false;
 		}
 
 		public TaskDetectTreetop(int yPos, int xPos) {
-			displayMat = originalMat.clone();
+			Log.i(TAG, "TaskDetectTreetop");
 
 			int rowRaduis = 50;
 			int colRaduis = 50;
+			isLocalSearch = true;
 
+			//setup search region
 			minRow = yPos-rowRaduis;
 			maxRow = yPos+rowRaduis;
 			minCol = xPos-colRaduis;
@@ -331,20 +318,22 @@ public class ImageProcessingActivity extends Activity {
 			if (maxCol > originalMat.cols()-1) {
 				maxCol = originalMat.cols()-1;
 			}
-
-			processingMat = originalMat.submat(minRow, maxRow, minCol, maxCol).clone();
-
-			//Mark area around touch position
-			org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
-			org.opencv.core.Point pt2 = new org.opencv.core.Point(maxCol, maxRow);
-			Scalar col = new Scalar(0,255,255);
-			Core.rectangle(displayMat, pt1, pt2, col);
 		}
 
 		@Override
 		protected Integer doInBackground(Void... params) {
 
+			if(isLocalSearch) {
+				//Mark area around touch position
+				org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
+				org.opencv.core.Point pt2 = new org.opencv.core.Point(maxCol, maxRow);
+				Scalar col = new Scalar(0,255,255);
+				Core.rectangle(displayMat, pt1, pt2, col);	
+			}
 
+			//FIXME: do correct implementation
+			//TODO: train algorithm: use top rows to learn sky standard deviation
+			//FIXME: does learning standard deviation rows apply to local search?
 
 			//Detection using Sobel Filter
 			Mat egdeXmat = new Mat();
@@ -379,8 +368,8 @@ public class ImageProcessingActivity extends Activity {
 
 
 			Imgproc.threshold(processingMat, processingMat, 100, 255, Imgproc.THRESH_BINARY);
-
-			for (int r = 0 ; r < processingMat.cols() ; r++) {
+			
+			for (int r = 0 ; r < processingMat.rows() ; r++) {
 				double sum = Core.sumElems(processingMat.submat(r,  r+1, 0, processingMat.cols()-1)).val[0];
 				if (sum > 1) {
 					return r;
@@ -421,6 +410,9 @@ public class ImageProcessingActivity extends Activity {
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
+			displayMat = originalMat.clone();
+			processingMat = originalMat.submat(minRow, maxRow, minCol, maxCol).clone();
+
 			progressDialog = new ProgressDialog(ImageProcessingActivity.this);
 			progressDialog.setMessage("Detecting Treetop...");
 			progressDialog.show(); 
@@ -431,19 +423,31 @@ public class ImageProcessingActivity extends Activity {
 			progressDialog.dismiss();
 			if (result != null) {
 				treetopRow = minRow + result;
-				Core.rectangle(displayMat, new org.opencv.core.Point(0,treetopRow), new org.opencv.core.Point(displayMat.cols(), treetopRow), new Scalar(255,0,0), LINE_THICKNESS);
 
-				displayMat.submat(new Range(treetopRow, treetopRow+1), Range.all()).setTo(new Scalar(255,0,0));
+				//draw line at treetop position
+				displayMat.submat(new Range(treetopRow, treetopRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255,0,0));
 				Toast.makeText(getApplicationContext(), "Treetop Detected (Row: "+treetopRow+")", Toast.LENGTH_SHORT).show();
 
+				//check with user if treetop is correctly detected
 				verifyDetection();
 			} else {
 				Toast.makeText(getApplicationContext(), "No Treetop Detected .. try again or use different image", Toast.LENGTH_SHORT).show();
 			}
-			updateImage();
+			updateDisplayImage();
 		}
 	}
 
+	/**
+	 * AsyncTask (off main UI thread) to detect reference object within image matrix
+	 * Detection Algorithm:
+	 * <ol>
+	 * <li>Limit search region within touch range</li>
+	 * <li>Use HSV color model to threshold specified color (default is white)</li>
+	 * <li>Select largest area of connected points of the specified color and mark it as reference object</li>
+	 * </ol>  
+	 * @author Aiman
+	 *
+	 */
 	private class TaskDetectReference extends AsyncTask<Void, Void, Integer []> {
 
 		private ProgressDialog progressDialog;
@@ -454,10 +458,12 @@ public class ImageProcessingActivity extends Activity {
 		private int maxCol;
 
 		public TaskDetectReference(int posY0, int posX0, int posY1, int posX1) {
+			Log.i(TAG, "TaskDetectReference");
 
 			int rowRaduis = 50;
 			int colRaduis = 50;
-			displayMat = originalMat.clone();
+
+			//setup search area
 
 			if(posY0 > posY1) {
 				int temp = posY0;
@@ -492,12 +498,10 @@ public class ImageProcessingActivity extends Activity {
 				maxCol = originalMat.cols()-1;
 			}
 
-			processingMat = originalMat.submat(minRow, maxRow, minCol, maxCol).clone();
 		}
 
 		@Override
 		protected Integer [] doInBackground(Void... params) {
-
 			// Mark area around touch position
 			org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
 			org.opencv.core.Point pt2 = new org.opencv.core.Point(maxCol, maxRow);
@@ -542,6 +546,9 @@ public class ImageProcessingActivity extends Activity {
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
+			displayMat = originalMat.clone();
+			processingMat = originalMat.submat(minRow, maxRow, minCol, maxCol).clone();
+
 			progressDialog = new ProgressDialog(ImageProcessingActivity.this);
 			progressDialog.setMessage("Detecting Reference Object...");
 			progressDialog.show(); 
@@ -550,54 +557,46 @@ public class ImageProcessingActivity extends Activity {
 		@Override
 		protected void onProgressUpdate(Void... values) {
 			super.onProgressUpdate(values);
-			updateImage();
 		}
 
 		@Override
 		protected void onPostExecute(Integer [] result) {
 			progressDialog.dismiss();
 			if (result != null) {
+				//setup boundary points of reference object rectangle
 				referenceObjBound[INDEX_REF_TOP] = minRow + result[INDEX_REF_TOP];
 				referenceObjBound[INDEX_REF_BOTTOM] = minRow + result[INDEX_REF_BOTTOM];
 				referenceObjBound[INDEX_REF_LEFT] = minCol + result[INDEX_REF_LEFT];
 				referenceObjBound[INDEX_REF_RIGHT] = minCol + result[INDEX_REF_RIGHT];
 
+				//draw rectangle around reference object
 				org.opencv.core.Point pt1 = new org.opencv.core.Point(referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_TOP]);
 				org.opencv.core.Point pt2 = new org.opencv.core.Point(referenceObjBound[INDEX_REF_RIGHT], referenceObjBound[INDEX_REF_BOTTOM]);
 				Core.rectangle(displayMat, pt1, pt2, new Scalar(255,128,100), LINE_THICKNESS);	
+
 				Toast.makeText(getApplicationContext(), "Reference Object Detected (Row: "+referenceObjBound[INDEX_REF_TOP]+"-"+referenceObjBound[INDEX_REF_BOTTOM]+")", Toast.LENGTH_SHORT).show();
 
+				//check with user if reference object is correctly detected
 				verifyDetection();
 			} else {
 				Toast.makeText(getApplicationContext(), "No Reference Object Detected .. try again or use different image", Toast.LENGTH_SHORT).show();
 			}
-			updateImage();
+			updateDisplayImage();
 		}
 	}
 
+	/**
+	 * AsyncTask (off main UI thread) to simulate animation of repeating reference object image up to detected line for treetop
+	 * @author Aiman
+	 *
+	 */
 	private class TaskAnimateRef extends AsyncTask<Void, Void, Integer []> {
 		Mat processingMat;
 
 		@Override
 		protected Integer [] doInBackground(Void... params) {
-			displayMat = originalMat.clone();
-			int numDuplicates = treePixelHeight/referenceObjPixelHeight;
-
-			for (int duplicate = 0 ; duplicate < numDuplicates ; duplicate++) {
-				try {
-					processingMat.copyTo(displayMat.submat(referenceObjBound[INDEX_REF_TOP]-(duplicate*referenceObjPixelHeight), referenceObjBound[INDEX_REF_BOTTOM]-(duplicate*referenceObjPixelHeight), referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]));
-					publishProgress();
-					Thread.sleep((long) (0.25*1000));
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			
-			//sub reference to fill duplicate remains
-			processingMat = processingMat.submat(new Range(0, treePixelHeight%referenceObjPixelHeight), Range.all());
-			processingMat.copyTo(displayMat.submat(treetopRow, treetopRow+processingMat.rows(), referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]));
-			publishProgress();
-
+			duplicateReference();
+			handleFinalVisual();
 			return null;
 		}
 
@@ -611,23 +610,88 @@ public class ImageProcessingActivity extends Activity {
 		@Override
 		protected void onProgressUpdate(Void... values) {
 			super.onProgressUpdate(values);
-			updateImage();
+			updateDisplayImage();
 		}
 
 		@Override
 		protected void onPostExecute(Integer [] result) {
-			handleFinalVisual();
+			//set position of textView for tree height calculation formula
+
+			buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
+
+			textTreeHeight.setText(String.format("Tree Height = ( %d * %d ) / %d = %d", treePixelHeight, (int)referenceObjHeight, referenceObjPixelHeight, (int)treeHeight));
+			textTreeHeight.setPivotX(0);
+			textTreeHeight.setPivotY(0);
+			textTreeHeight.setY((int)(treetopRow/heightRatio)-30);
+
+			if (referenceObjBound[INDEX_REF_LEFT] > displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT]) {
+				textTreeHeight.setX((int)((referenceObjBound[INDEX_REF_LEFT]-(7*referenceObjBound[INDEX_REF_LEFT]/16))/widthRatio));
+			} else {
+				textTreeHeight.setX((int)(referenceObjBound[INDEX_REF_RIGHT]/widthRatio));
+			}
+		}
+
+		/**
+		 * Duplicate reference object image up to the treetop
+		 */
+		private void duplicateReference() {
+			Log.d(TAG,"duplicateReference");
+
+			int numDuplicates = treePixelHeight/referenceObjPixelHeight;
+
+			for (int duplicate = 0 ; duplicate < numDuplicates ; duplicate++) {
+				try {
+					processingMat.copyTo(displayMat.submat(referenceObjBound[INDEX_REF_TOP]-(duplicate*referenceObjPixelHeight), referenceObjBound[INDEX_REF_BOTTOM]-(duplicate*referenceObjPixelHeight), referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]));
+					publishProgress();
+					Thread.sleep((long) (0.25*1000));
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+
+			//Fill remaining area of less than one duplicate
+			processingMat = processingMat.submat(new Range(0, treePixelHeight%referenceObjPixelHeight), Range.all());
+			processingMat.copyTo(displayMat.submat(treetopRow, treetopRow+processingMat.rows(), referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]));
+			publishProgress();
+		}
+
+		/**
+		 * Completes screen visuals (draw lines for tree height)
+		 */
+		private void handleFinalVisual() {
+			Log.d(TAG,"handleFinalVisual");
+
+			int offset;
+
+			//draw visuals on the left of reference object
+			if (referenceObjBound[INDEX_REF_LEFT] > displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT]) {
+				offset = -1*referenceObjBound[INDEX_REF_LEFT]/4;
+
+				// negative offset
+				displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_LEFT]+offset, referenceObjBound[INDEX_REF_LEFT]+offset+LINE_THICKNESS).setTo(new Scalar(255, 0, 0));
+				displayMat.submat(treetopRow, treetopRow+LINE_THICKNESS, referenceObjBound[INDEX_REF_LEFT]+offset, referenceObjBound[INDEX_REF_LEFT]).setTo(new Scalar(255, 0, 0));
+				displayMat.submat(treeBottomRow, treeBottomRow+LINE_THICKNESS, referenceObjBound[INDEX_REF_LEFT]+offset, referenceObjBound[INDEX_REF_LEFT]).setTo(new Scalar(255, 0, 0));
+
+				//draw visuals on the right of reference object
+			} else {
+				offset = (displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT])/4;
+
+				displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_RIGHT]+offset, referenceObjBound[INDEX_REF_RIGHT]+offset+LINE_THICKNESS).setTo(new Scalar(255, 0, 0));
+				displayMat.submat(treetopRow, treetopRow+LINE_THICKNESS, referenceObjBound[INDEX_REF_RIGHT], referenceObjBound[INDEX_REF_RIGHT]+offset).setTo(new Scalar(255, 0, 0));
+				displayMat.submat(treeBottomRow, treeBottomRow+LINE_THICKNESS, referenceObjBound[INDEX_REF_RIGHT], referenceObjBound[INDEX_REF_RIGHT]+offset).setTo(new Scalar(255, 0, 0));
+			}
+			publishProgress();
 		}
 	}
 
 
 	/**
 	 * Creates a dialog to input reference object height
-	 * The value of reference object height is positive double, and can't be zero
+	 * The value of reference object height is a positive double, and can't be zero
 	 * The unit for reference object height is cm
 	 */
 	private void setupReferenceObjHeight() {
-		// EditText to allow user input
+		//EditText to allow user input
 		final EditText input = new EditText(this);
 		input.setHint(R.string.ref_height_dialog_text);
 		input.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
@@ -670,78 +734,21 @@ public class ImageProcessingActivity extends Activity {
 		heightDialog.show();
 	}
 
-	private void handleFinalVisual() {
-
-		buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
-
-		textTreeHeight.setText(String.format("Tree Height = ( %d * %d ) / %d = %d", treePixelHeight, (int)referenceObjHeight, referenceObjPixelHeight, (int)treeHeight));
-		textTreeHeight.setPivotX(0);
-		textTreeHeight.setPivotY(0);
-		textTreeHeight.setY((int)(treetopRow/heightRatio)-30);
-
-		//draw line next to reference object 
-		//and set tree height calculation text next to it
-		int offset;
-		if (referenceObjBound[INDEX_REF_LEFT] > displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT]) {
-			offset = -1*referenceObjBound[INDEX_REF_LEFT]/4;
-			textTreeHeight.setX((int)((referenceObjBound[INDEX_REF_LEFT]+(7/4)*offset)/widthRatio));
-
-			// negative offset
-			displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_LEFT]+offset, referenceObjBound[INDEX_REF_LEFT]+offset+LINE_THICKNESS).setTo(new Scalar(255, 0, 0));
-			displayMat.submat(treetopRow, treetopRow+LINE_THICKNESS, referenceObjBound[INDEX_REF_LEFT]+offset, referenceObjBound[INDEX_REF_LEFT]).setTo(new Scalar(255, 0, 0));
-			displayMat.submat(treeBottomRow, treeBottomRow+LINE_THICKNESS, referenceObjBound[INDEX_REF_LEFT]+offset, referenceObjBound[INDEX_REF_LEFT]).setTo(new Scalar(255, 0, 0));
-		} else {
-			offset = (displayMat.cols() - referenceObjBound[INDEX_REF_RIGHT])/4;
-			textTreeHeight.setX((int)(referenceObjBound[INDEX_REF_RIGHT]/widthRatio));
-
-			displayMat.submat(treetopRow, treeBottomRow, referenceObjBound[INDEX_REF_RIGHT]+offset, referenceObjBound[INDEX_REF_RIGHT]+offset+LINE_THICKNESS).setTo(new Scalar(255, 0, 0));
-			displayMat.submat(treetopRow, treetopRow+LINE_THICKNESS, referenceObjBound[INDEX_REF_RIGHT], referenceObjBound[INDEX_REF_RIGHT]+offset).setTo(new Scalar(255, 0, 0));
-			displayMat.submat(treeBottomRow, treeBottomRow+LINE_THICKNESS, referenceObjBound[INDEX_REF_RIGHT], referenceObjBound[INDEX_REF_RIGHT]+offset).setTo(new Scalar(255, 0, 0));
-		}
-
-		updateImage();
-	}
-
-	private void loadImage() throws FileNotFoundException {
-
-		Log.i("XXXXXXXXX", "imgUri : "+imgUri);
-		Log.i("XXXXXXXXX", "imgUri.getPath() : "+imgUri.getEncodedPath());
-
+	/**
+	 * Loads selected image into application, and setup program matrices
+	 * @throws FileNotFoundException
+	 */
+	private void loadDisplayImage() throws FileNotFoundException {
+		Log.d(TAG, "loadDisplayImage");
 
 		//retrieve image from storage
 		InputStream imageStream = getContentResolver().openInputStream(imgUri);
 		Bitmap loadedImage = BitmapFactory.decodeStream(imageStream);
 
-		/*
-
-	    // First decode with inJustDecodeBounds=true to check dimensions
-	    final BitmapFactory.Options options = new BitmapFactory.Options();
-	    options.inJustDecodeBounds = true;
-	    Bitmap loadedImage = BitmapFactory.decodeFile(imgUri.getPath(), options);
-	    if (loadedImage == null) {
-	    	Log.i("XXXXXXXXX", "loaded Image == null");
-	    } else {
-	    	Log.i("XXXXXXXXX", "loaded Image != null");
-	    }
-
-	    // Calculate inSampleSize
-	    options.inSampleSize = calculateInSampleSize(options, 100, 100);
-
-	    // Decode bitmap with inSampleSize set
-	    options.inJustDecodeBounds = false;
-	    loadedImage = BitmapFactory.decodeFile(imgUri.getPath(), options);
-
-		 */
-
-
-
-
-
 		//rotate image
 		Matrix matrix = new Matrix();
 		matrix.postRotate(90);
 
-		getResources().getConfiguration();
 		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
 			matrix.postRotate(90);
 		}
@@ -758,39 +765,27 @@ public class ImageProcessingActivity extends Activity {
 		displayMat = originalMat.clone();
 	}
 
-	public static int calculateInSampleSize(
-			BitmapFactory.Options options, int reqWidth, int reqHeight) {
-		// Raw height and width of image
-		final int height = options.outHeight;
-		final int width = options.outWidth;
+	/**
+	 * Update the image displayed on screen
+	 * Invoked by methods which process <i>displayMat</i> TaskDetectTreetop, TaskDetectReference, TaskAnimateReference, <b>handleFinalVisual()</b>
+	 */
+	private synchronized void updateDisplayImage() {
+		Log.d(TAG, "updateImage");
 
-		Log.i("XXXXXXXXX", "height = "+height+"\twidth = "+width);
-		int inSampleSize = 1;
-
-		if (height > reqHeight || width > reqWidth) {
-
-			final int halfHeight = height / 2;
-			final int halfWidth = width / 2;
-
-			// Calculate the largest inSampleSize value that is a power of 2 and keeps both
-			// height and width larger than the requested height and width.
-			while ((halfHeight / inSampleSize) > reqHeight
-					&& (halfWidth / inSampleSize) > reqWidth) {
-				inSampleSize *= 2;
-			}
-		}
-		return inSampleSize;
-	}
-
-
-	//FIXME: is it correct to keep synchronized?
-	private synchronized void updateImage() {
+		//FIXME: is it correct to keep synchronized?
+		//FIXME: is this the correct format to use for Bitmap (RGB_565)?
 		Bitmap image = Bitmap.createBitmap(displayMat.cols(), displayMat.rows(), Bitmap.Config.RGB_565);
 		Utils.matToBitmap(displayMat, image);
 		imageView.setImageBitmap(image);
 	}
 
+	/**
+	 * Handle click on UI button according to program state
+	 * @param v
+	 */
 	public void onClickButton(View v) {
+		Log.d(TAG, "onClickButton");
+
 		switch(currentState) {
 		case STATE_TREETOP:
 			buttonTask.setEnabled(false);
@@ -803,15 +798,26 @@ public class ImageProcessingActivity extends Activity {
 		case STATE_HEIGHT:
 			buttonTask.setClickable(false);
 			calculateHeight();
+			//Animate reference duplicate
+			new TaskAnimateRef().execute();
 			break;
 		default:
 			break;
 		}
 	}
 
+	/**
+	 * Opens a dialog box to verify whether the automatic detection for treetop or reference object is correct
+	 * If correct: change program state, and enable UI button
+	 * If incorrect: enable touch user-input
+	 */
 	private void verifyDetection() {
+		Log.d(TAG, "verifyDetection");
+
 		AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.myCustomDialog);
 		builder.setMessage("Correct Detection?");
+
+		//handle correct detection
 		builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface arg0, int arg1) {
 				switch(currentState) {
@@ -821,40 +827,45 @@ public class ImageProcessingActivity extends Activity {
 					buttonTask.setText(R.string.button_detect_reference);
 					break;
 				case STATE_REFERENCE:
-					currentState = STATE_HEIGHT;
-					setupReferenceObjHeight();
-					buttonTask.setEnabled(true);
-					buttonTask.setText(R.string.button_calc_height);
-					imageView.setOnTouchListener(null);
+					if (referenceObjBound[INDEX_REF_TOP] < treetopRow) {
+						Toast.makeText(getApplicationContext(), "Reference object must be below treetop", Toast.LENGTH_SHORT).show();
+					} else {
+						currentState = STATE_HEIGHT;
+						setupReferenceObjHeight();
+						buttonTask.setEnabled(true);
+						buttonTask.setText(R.string.button_calc_height);
+						imageView.setOnTouchListener(null);
+					}
 					break;
 				default:
 					break;
 				}
-				return;
 			}
 		});
 
+		//handle incorrect detection
 		builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface arg0, int arg1) {
-				imageView.setOnTouchListener(new View.OnTouchListener() {
+				switch(currentState) {
+				case STATE_TREETOP:
+					Toast.makeText(getApplicationContext(), "Treetop detection touch input enabled", Toast.LENGTH_SHORT).show();
+					imageView.setOnTouchListener(new View.OnTouchListener() {
 
-					@Override
-					public boolean onTouch(View v, MotionEvent event) {
-						switch(currentState) {
-						case STATE_TREETOP:
-							markTouch(v,event, DETECT_TYPE_TREETOP);
+						@Override
+						public boolean onTouch(View v, MotionEvent event) {
+							markTouch(event);	
 							return false;
-						case STATE_REFERENCE:
-							markTouch(v,event, DETECT_TYPE_REFERENCE);
-							return true;
 						}
-						return false;
-					}
-				});
-				Toast.makeText(getApplicationContext(), "Touch input enabled", Toast.LENGTH_SHORT).show();
+					});
+					break;
+				case STATE_REFERENCE:
+					Toast.makeText(getApplicationContext(), "Try again or use different image", Toast.LENGTH_SHORT).show();
+					break;
+				}
 			}
 		});
 
+		//dialog additional configuration
 		AlertDialog verifyDetectionDialog = builder.create();
 		verifyDetectionDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		WindowManager.LayoutParams dialogAttrib = verifyDetectionDialog.getWindow().getAttributes();
@@ -899,14 +910,10 @@ public class ImageProcessingActivity extends Activity {
 
 					try {
 						//load image and setup
-						loadImage();
+						loadDisplayImage();
 
 						//calculate image to screen ratio
-						double ratio [] = calculateImage2ScreenRatio();
-						heightRatio = ratio[RATIO_INDEX_Y];
-						widthRatio = ratio[RATIO_INDEX_X];
-						Log.i("XXXX", "Ratios ["+ratio[0]+", "+ratio[1]+"]");
-
+						calculateImage2ScreenRatio();
 					} catch (FileNotFoundException e) {
 						Toast.makeText(getApplicationContext(), "Error locating the file path", Toast.LENGTH_SHORT).show();
 						Log.e(TAG, ""+e.getMessage());
@@ -925,8 +932,6 @@ public class ImageProcessingActivity extends Activity {
 		};
 
 	}
-
-
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
