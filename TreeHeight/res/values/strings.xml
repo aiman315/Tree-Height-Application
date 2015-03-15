@@ -37,7 +37,19 @@
     <string name="button_calc_height">Calculate Tree Height</string>
     <string name="ref_height_dialog_title">Reference Object Height (cm):</string>
     <string name="ref_height_dialog_text">"Enter reference object height"</string>
-    <string name="title_activity_settings">SettingsActivity</string>
-    <string name="hello_world">Hello world!</string>
+    
+	<!-- Image Processing Activity -->
+    <string name="title_activity_settings">Settings</string>
+    <string name="text_hue">Hue</string>
+    <string name="text_saturation">Saturation</string>
+    <string name="text_value">Value</string>
+    <string name="text_colour_preview">Colour Preview</string>
+    <string name="text_measuring_units">Measuring Units</string>
+    <string name="radio_cm">cm</string>
+    <string name="radio_inches">inches</string>
+    <string name="button_colour_lower_limit">Set Colour Lower Limit</string>
+    <string name="button_colour_upper_limit">Set Colour Upper Limit</string>
+    <string name="button_save_settings">Save Settings</string>
+    
 
 </resources>
