@@ -131,7 +131,8 @@
         android:layout_below="@+id/textViewColourPreview"
         android:layout_centerHorizontal="true"
         android:contentDescription="@string/empty"
-        android:src="@drawable/capture_button" />
+        android:minHeight="50dp"
+        android:minWidth="100dp" />
 
     <Button
         android:id="@+id/buttonColourLowerLimit"

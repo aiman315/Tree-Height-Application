@@ -7,11 +7,16 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 
 public class SettingsActivity extends Activity {
 
 	private final String TAG = "SettingsActivity";
+	private final int INDEX_HUE = 0;
+	private final int INDEX_SATURATION = 1;
+	private final int INDEX_VALUE = 2;
+	
 	private int colourLowerHue;
 	private int colourLowerSaturation;
 	private int colourLowerValue;
@@ -26,6 +31,8 @@ public class SettingsActivity extends Activity {
 	private EditText editTextHue;
 	private EditText editTextSaturation;
 	private EditText editTextValue;
+	
+	private ImageView imageViewColourPreview;
 
 
 	public void onClickSetColourLowerLimit(View v) {
@@ -47,11 +54,23 @@ public class SettingsActivity extends Activity {
 
 	private class MySeekBarListener implements SeekBar.OnSeekBarChangeListener {
 		EditText editText;
-		int seekBarProgress;
 
 		@Override
 		public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-			seekBarProgress = progress;
+			if (editText != null) {
+				editText.setText(""+progress);	
+			}
+			updateColourPreview();
+		}
+
+		private void updateColourPreview() {
+			float hsv [] = new float[3];
+			
+			hsv[INDEX_HUE] = seekBarHue.getProgress();
+			hsv[INDEX_SATURATION] = seekBarSaturation.getProgress()/(float)100;
+			hsv[INDEX_VALUE] = seekBarValue.getProgress()/(float)100;
+			imageViewColourPreview.setBackgroundColor(Color.HSVToColor(hsv));
+			
 		}
 
 		@Override
@@ -76,9 +95,6 @@ public class SettingsActivity extends Activity {
 		@Override
 		public void onStopTrackingTouch(SeekBar seekBar) {
 
-			if (editText != null) {
-				editText.setText(""+seekBarProgress);	
-			}
 		}
 
 	}
@@ -168,6 +184,9 @@ public class SettingsActivity extends Activity {
 		editTextValue = (EditText) findViewById(R.id.editTextValue);
 		editTextWatcher = new MyEditTextWatcher(R.id.editTextValue);
 		editTextValue.addTextChangedListener(editTextWatcher);
+		
+		imageViewColourPreview = (ImageView) findViewById(R.id.imageViewColourPreview);
+		imageViewColourPreview.setBackgroundColor(Color.BLACK);
 	}
 
 	@Override
