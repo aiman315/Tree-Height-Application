@@ -29,20 +29,12 @@ public class SettingsActivity extends Activity {
 
 
 	public void onClickSetColourLowerLimit(View v) {
-		EditText editTextHue = (EditText) findViewById(R.id.editTextHue);
-		EditText editTextSaturation = (EditText) findViewById(R.id.editTextSaturation);
-		EditText editTextValue = (EditText) findViewById(R.id.editTextValue);
-
 		colourLowerHue = Integer.parseInt(editTextHue.getText().toString());
 		colourLowerSaturation = Integer.parseInt(editTextSaturation.getText().toString());
 		colourLowerValue = Integer.parseInt(editTextValue.getText().toString());
 	}
 
 	public void onClickSetColourUpperLimit(View v) {
-		EditText editTextHue = (EditText) findViewById(R.id.editTextHue);
-		EditText editTextSaturation = (EditText) findViewById(R.id.editTextSaturation);
-		EditText editTextValue = (EditText) findViewById(R.id.editTextValue);
-
 		colourUpperHue = Integer.parseInt(editTextHue.getText().toString());
 		colourUpperSaturation = Integer.parseInt(editTextSaturation.getText().toString());
 		colourUpperValue = Integer.parseInt(editTextValue.getText().toString());
@@ -66,13 +58,13 @@ public class SettingsActivity extends Activity {
 		public void onStartTrackingTouch(SeekBar seekBar) {
 			switch (seekBar.getId()) {
 			case R.id.seekBarHue:
-				editText = (EditText) findViewById(R.id.editTextHue);
+				editText = editTextHue;
 				break;
 			case R.id.seekBarSaturation:
-				editText = (EditText) findViewById(R.id.editTextSaturation);
+				editText = editTextSaturation;
 				break;
 			case R.id.seekBarValue:
-				editText = (EditText) findViewById(R.id.editTextValue);
+				editText = editTextValue;
 				break;
 			default:
 				editText = null;
@@ -121,13 +113,13 @@ public class SettingsActivity extends Activity {
 		public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 			switch (editTextID) {
 			case R.id.editTextHue:
-				seekBar = (SeekBar) findViewById(R.id.seekBarHue);
+				seekBar = seekBarHue;
 				break;
 			case R.id.editTextSaturation:
-				seekBar = (SeekBar) findViewById(R.id.seekBarSaturation);
+				seekBar = seekBarSaturation;
 				break;
 			case R.id.editTextValue:
-				seekBar = (SeekBar) findViewById(R.id.seekBarValue);
+				seekBar = seekBarValue;
 				break;
 			default:
 				seekBar = null;
@@ -138,7 +130,6 @@ public class SettingsActivity extends Activity {
 
 		@Override
 		public void onTextChanged(CharSequence s, int start, int before, int count) {
-			// TODO Auto-generated method stub
 
 		}
 
