@@ -22,6 +22,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -958,6 +959,8 @@ public class ImageProcessingActivity extends Activity {
 		int id = item.getItemId();
 		switch(id){
 		case R.id.action_settings:
+			Intent intent = new Intent(this, SettingsActivity.class);
+			startActivity(intent);
 			//FIXME: delete later
 			switch(selectedColor) {
 			case COLOR_RED:
