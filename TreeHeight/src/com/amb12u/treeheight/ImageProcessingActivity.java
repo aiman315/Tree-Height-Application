@@ -83,6 +83,10 @@ public class ImageProcessingActivity extends Activity {
 	private Mat displayMat;
 	private Mat originalMat;
 
+	private AsyncTask<Void, Void, Integer> taskDetectTreetop;
+	private AsyncTask<Void, Void, Integer[]> taskDetectReference;
+	private AsyncTask<Void, Void, Void> taskAnimateReference;
+
 	private BaseLoaderCallback mLoaderCallback;
 
 	//TODO:
@@ -220,14 +224,14 @@ public class ImageProcessingActivity extends Activity {
 			int posY = (int) (event.getY() *heightRatio);
 			int posX = (int) (event.getX() *widthRatio);
 			//start treetop detection at touch position
-			new TaskDetectTreetop(posY, posX).execute();
+			taskDetectTreetop = new TaskDetectTreetop(posY, posX).execute();
 			break;
 		case STATE_REFERENCE:
 			//handle touch of two fingers
 			if(MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_POINTER_DOWN) {
 				if (MotionEventCompat.getPointerCount(event) == 2) {
 					//start reference object detection at touch boundaries
-					new TaskDetectReference(
+					taskDetectReference = new TaskDetectReference(
 							(int) (MotionEventCompat.getY(event, 0) *heightRatio), 
 							(int) (MotionEventCompat.getX(event, 0) *widthRatio), 
 							(int) (MotionEventCompat.getY(event, 1) *heightRatio), 
@@ -325,7 +329,7 @@ public class ImageProcessingActivity extends Activity {
 
 		@Override
 		protected Integer doInBackground(Void... params) {
-
+			
 			if(isLocalSearch) {
 				//Mark area around touch position
 				org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
@@ -347,12 +351,16 @@ public class ImageProcessingActivity extends Activity {
 
 			//convert to binary mat
 			Imgproc.threshold(processingMat, processingMat, 100, 255, Imgproc.THRESH_BINARY);
-			
+
 			//compute threshold
 			double threshold = calculateThreshold();
-	
+
 			//detect treetop row
 			for (int r = 0 ; r < processingMat.rows()-1 ; r ++) {
+				if(isCancelled()) {
+					return null;
+				}
+				
 				if (Core.sumElems(processingMat.submat(new Range(r,  r+1), Range.all())).val[0] > threshold) {
 					return r;
 				}
@@ -388,7 +396,7 @@ public class ImageProcessingActivity extends Activity {
 			}
 			updateDisplayImage();
 		}
-		
+
 		/**
 		 * Calculate threshold used to detect treetop 
 		 * It computes mean and standard deviation of top 10% rows and applies the 68–95–99.7 rule (cover 95%)
@@ -422,7 +430,7 @@ public class ImageProcessingActivity extends Activity {
 
 			//compute standard deviation
 			double stDeviation = Math.sqrt(sumVar/calculationArray.length);
-			
+
 			//cover 95% of curve values
 			return mean + 2 * stDeviation;
 		}
@@ -493,6 +501,7 @@ public class ImageProcessingActivity extends Activity {
 
 		@Override
 		protected Integer [] doInBackground(Void... params) {
+			
 			// Mark area around touch position
 			org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
 			org.opencv.core.Point pt2 = new org.opencv.core.Point(maxCol, maxRow);
@@ -512,7 +521,9 @@ public class ImageProcessingActivity extends Activity {
 				double largestContourArea = 0;
 				int largestContourIndex = 0;
 				for( int i = 1; i < contours.size(); i++ ) {
-					//Imgproc.drawContours(processingMat, contours, i, new Scalar(255,255,255, LINE_THICKNESS);
+					if(isCancelled()) {
+						return null;
+					}
 					double contourArea = Imgproc.contourArea(contours.get(i),false); 
 					if(contourArea > largestContourArea){
 						largestContourArea = contourArea;
@@ -581,11 +592,11 @@ public class ImageProcessingActivity extends Activity {
 	 * @author Aiman
 	 *
 	 */
-	private class TaskAnimateRef extends AsyncTask<Void, Void, Integer []> {
+	private class TaskAnimateReference extends AsyncTask<Void, Void, Void> {
 		Mat processingMat;
 
 		@Override
-		protected Integer [] doInBackground(Void... params) {
+		protected Void doInBackground(Void... params) {
 			duplicateReference();
 			handleFinalVisual();
 			return null;
@@ -605,7 +616,7 @@ public class ImageProcessingActivity extends Activity {
 		}
 
 		@Override
-		protected void onPostExecute(Integer [] result) {
+		protected void onPostExecute(Void result) {
 			//set position of textView for tree height calculation formula
 
 			buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
@@ -631,6 +642,9 @@ public class ImageProcessingActivity extends Activity {
 			int numDuplicates = treePixelHeight/referenceObjPixelHeight;
 
 			for (int duplicate = 0 ; duplicate < numDuplicates ; duplicate++) {
+				if(isCancelled()) {
+					return;
+				}
 				try {
 					processingMat.copyTo(displayMat.submat(referenceObjBound[INDEX_REF_TOP]-(duplicate*referenceObjPixelHeight), referenceObjBound[INDEX_REF_BOTTOM]-(duplicate*referenceObjPixelHeight), referenceObjBound[INDEX_REF_LEFT], referenceObjBound[INDEX_REF_RIGHT]));
 					publishProgress();
@@ -789,7 +803,7 @@ public class ImageProcessingActivity extends Activity {
 			buttonTask.setClickable(false);
 			calculateHeight();
 			//Animate reference duplicate
-			new TaskAnimateRef().execute();
+			taskAnimateReference = new TaskAnimateReference().execute();
 			break;
 		default:
 			break;
@@ -890,6 +904,9 @@ public class ImageProcessingActivity extends Activity {
 		buttonTask = (Button) findViewById(R.id.buttonTask);
 		textTreeHeight = (TextView) findViewById(R.id.textTreeHeight);
 		imgUri = getIntent().getExtras().getParcelable("ImgUri");
+		taskDetectTreetop = null;
+		taskDetectReference = null;
+		taskAnimateReference = null;
 
 		mLoaderCallback = new BaseLoaderCallback(this) {
 			@Override
@@ -960,6 +977,19 @@ public class ImageProcessingActivity extends Activity {
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroy");
 		super.onDestroy();
+		
+		if(taskDetectTreetop != null) {
+			taskDetectTreetop.cancel(true);
+		}
+		
+		if(taskDetectReference != null) {
+		taskDetectReference.cancel(true);
+		}
+		
+		if(taskAnimateReference != null) {
+		taskAnimateReference.cancel(true);
+		}
+		//FIXME: when activity starts again after shutting tasks, they don't run again
 	}
 
 
