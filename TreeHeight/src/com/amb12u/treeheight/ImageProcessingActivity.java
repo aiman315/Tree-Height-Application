@@ -587,6 +587,7 @@ public class ImageProcessingActivity extends Activity {
 		}
 	}
 
+	
 	/**
 	 * AsyncTask (off main UI thread) to simulate animation of repeating reference object image up to detected line for treetop
 	 * @author Aiman
@@ -689,6 +690,7 @@ public class ImageProcessingActivity extends Activity {
 		}
 	}
 
+	
 	/**
 	 * Creates a dialog to input reference object height
 	 * The value of reference object height is a positive double, and can't be zero
@@ -738,6 +740,7 @@ public class ImageProcessingActivity extends Activity {
 		heightDialog.show();
 	}
 
+	
 	/**
 	 * Loads selected image into application, and setup program matrices
 	 * @throws FileNotFoundException
@@ -769,6 +772,7 @@ public class ImageProcessingActivity extends Activity {
 		displayMat = originalMat.clone();
 	}
 
+	
 	/**
 	 * Update the image displayed on screen
 	 * Invoked by methods which process <i>displayMat</i> TaskDetectTreetop, TaskDetectReference, TaskAnimateReference, <b>handleFinalVisual()</b>
@@ -783,6 +787,7 @@ public class ImageProcessingActivity extends Activity {
 		imageView.setImageBitmap(image);
 	}
 
+	
 	/**
 	 * Handle click on UI button according to program state
 	 * @param v

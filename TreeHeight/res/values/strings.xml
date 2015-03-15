@@ -37,5 +37,7 @@
     <string name="button_calc_height">Calculate Tree Height</string>
     <string name="ref_height_dialog_title">Reference Object Height (cm):</string>
     <string name="ref_height_dialog_text">"Enter reference object height"</string>
-    
+    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="hello_world">Hello world!</string>
+
 </resources>
