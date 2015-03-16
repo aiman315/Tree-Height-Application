@@ -49,33 +49,39 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class ImageProcessingActivity extends Activity {
-
-	private static final int STATE_TREETOP = 0;
-	private static final int STATE_REFERENCE = 1;
-	private static final int STATE_HEIGHT = 2;
-
-	private static final int COLOR_RED = 0;
-	private static final int COLOR_YELLOW = 1;
-	private static final int COLOR_WHITE = 2;
-	private static final int COLOR_BLACK = 3;
-
-	protected static final int RATIO_INDEX_Y = 0;
-	protected static final int RATIO_INDEX_X = 1;
-
-	private static final int INDEX_REF_BOTTOM = 0;
-	private static final int INDEX_REF_RIGHT = 1;
-	private static final int INDEX_REF_TOP = 2;
-	private static final int INDEX_REF_LEFT = 3;
-
-	private static final int LINE_THICKNESS = 5;
-
 	private final String TAG = "StillImageProcessingActivity";
+
+	private final int REQUEST_CODE_SETTING_ACTIVITY = 0;
+
+	private final int STATE_TREETOP = 0;
+	private final int STATE_REFERENCE = 1;
+	private final int STATE_HEIGHT = 2;
+
+	protected final int INDEX_RATIO_Y = 0;
+	protected final int INDEX_RATIO_X = 1;
+
+	private final int INDEX_REF_BOTTOM = 0;
+	private final int INDEX_REF_RIGHT = 1;
+	private final int INDEX_REF_TOP = 2;
+	private final int INDEX_REF_LEFT = 3;
+
+	private final int INDEX_HUE = 0;
+	private final int INDEX_SATURATION = 1;
+	private final int INDEX_VALUE = 2;
+
+	private final int UNITS_CM = 0;
+	private final int UNITS_INCHES = 1;
+
+	private final int LINE_THICKNESS = 5;
+
 	private double heightRatio, widthRatio;
 	private double treeHeight, referenceObjHeight;
 	private int treePixelHeight, referenceObjPixelHeight;
 	private int treetopRow, treeBottomRow;
 	private int [] referenceObjBound;
-	private int selectedColor;
+	private float [] colourUpperLimit;
+	private float [] colourLowerLimit;
+	private int selectedMeasurementsUnit;
 	private int currentState;
 	private Uri imgUri;
 	private ImageView imageView;
@@ -91,6 +97,8 @@ public class ImageProcessingActivity extends Activity {
 	private BaseLoaderCallback mLoaderCallback;
 
 	//TODO:
+	//color changing option
+	//units changing option
 	//Indicate that tree bottom = reference object bottom
 	//Indicate treetop must be in top third
 	//Code documentation
@@ -178,30 +186,8 @@ public class ImageProcessingActivity extends Activity {
 		Scalar colorUpLimit = null;
 		Scalar colorLowLimit = null;
 
-		switch(selectedColor) {
-		case COLOR_RED:
-			colorUpLimit = new Scalar(10, 255, 255);
-			colorLowLimit = new Scalar(0, 100, 100);
-			break;
-		case COLOR_YELLOW:
-			colorUpLimit = new Scalar(32, 255, 255);
-			colorLowLimit = new Scalar(0, 100, 100);
-			break;
-		case COLOR_WHITE:
-			colorUpLimit = new Scalar(180, 50, 255);
-			colorLowLimit = new Scalar(0, 0, 230);
-			break;
-		case COLOR_BLACK:
-			colorUpLimit = new Scalar(80, 80, 80);
-			colorLowLimit = new Scalar(0, 0, 0);
-			break;
-		default:
-			Log.e(TAG, "Error in colour selection");
-			colorUpLimit = new Scalar(0, 0, 0);
-			colorLowLimit = new Scalar(0, 0, 0);
-			break;
-
-		}
+		colorUpLimit = new Scalar(colourUpperLimit[INDEX_HUE],colourUpperLimit[INDEX_SATURATION], colourUpperLimit[INDEX_VALUE]);
+		colorLowLimit = new Scalar(colourLowerLimit[INDEX_HUE],colourLowerLimit[INDEX_SATURATION], colourLowerLimit[INDEX_VALUE]);
 
 		Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2HSV, 0);
 		Core.inRange(mat, colorLowLimit, colorUpLimit, mat);
@@ -330,7 +316,7 @@ public class ImageProcessingActivity extends Activity {
 
 		@Override
 		protected Integer doInBackground(Void... params) {
-			
+
 			if(isLocalSearch) {
 				//Mark area around touch position
 				org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
@@ -361,7 +347,7 @@ public class ImageProcessingActivity extends Activity {
 				if(isCancelled()) {
 					return null;
 				}
-				
+
 				if (Core.sumElems(processingMat.submat(new Range(r,  r+1), Range.all())).val[0] > threshold) {
 					return r;
 				}
@@ -502,14 +488,14 @@ public class ImageProcessingActivity extends Activity {
 
 		@Override
 		protected Integer [] doInBackground(Void... params) {
-			
+
 			// Mark area around touch position
 			org.opencv.core.Point pt1 = new org.opencv.core.Point(minCol,minRow);
 			org.opencv.core.Point pt2 = new org.opencv.core.Point(maxCol, maxRow);
 			Scalar col = new Scalar(0,255,0);
 			Core.rectangle(displayMat, pt1, pt2, col);	
 
-			//TODO: add options for color detection
+			// Detect colour
 			detectColor(processingMat);
 
 			List<MatOfPoint> contours = new ArrayList<MatOfPoint>();  
@@ -588,7 +574,7 @@ public class ImageProcessingActivity extends Activity {
 		}
 	}
 
-	
+
 	/**
 	 * AsyncTask (off main UI thread) to simulate animation of repeating reference object image up to detected line for treetop
 	 * @author Aiman
@@ -691,7 +677,7 @@ public class ImageProcessingActivity extends Activity {
 		}
 	}
 
-	
+
 	/**
 	 * Creates a dialog to input reference object height
 	 * The value of reference object height is a positive double, and can't be zero
@@ -741,7 +727,7 @@ public class ImageProcessingActivity extends Activity {
 		heightDialog.show();
 	}
 
-	
+
 	/**
 	 * Loads selected image into application, and setup program matrices
 	 * @throws FileNotFoundException
@@ -773,7 +759,7 @@ public class ImageProcessingActivity extends Activity {
 		displayMat = originalMat.clone();
 	}
 
-	
+
 	/**
 	 * Update the image displayed on screen
 	 * Invoked by methods which process <i>displayMat</i> TaskDetectTreetop, TaskDetectReference, TaskAnimateReference, <b>handleFinalVisual()</b>
@@ -788,7 +774,7 @@ public class ImageProcessingActivity extends Activity {
 		imageView.setImageBitmap(image);
 	}
 
-	
+
 	/**
 	 * Handle click on UI button according to program state
 	 * @param v
@@ -900,16 +886,32 @@ public class ImageProcessingActivity extends Activity {
 
 		//initializations
 		currentState = STATE_TREETOP;
+		selectedMeasurementsUnit = UNITS_CM;
+
 		treeHeight = 0;
 		treePixelHeight = 0;
 		referenceObjHeight = 0;
+
 		treetopRow = 0;
 		treeBottomRow = 0;
+
 		referenceObjBound = new int [4];
-		selectedColor = COLOR_WHITE;
+		colourLowerLimit = new float[3];
+		colourUpperLimit = new float[3];
+
+		//white colour HSV representation
+		colourLowerLimit[INDEX_HUE] = 0;
+		colourLowerLimit[INDEX_SATURATION] = 0;
+		colourLowerLimit[INDEX_VALUE] = 80 * 255 /(float) 100;
+
+		colourUpperLimit[INDEX_HUE] = 180;
+		colourUpperLimit[INDEX_SATURATION] = 255;
+		colourUpperLimit[INDEX_VALUE] = 255;
+
 		buttonTask = (Button) findViewById(R.id.buttonTask);
 		textTreeHeight = (TextView) findViewById(R.id.textTreeHeight);
 		imgUri = getIntent().getExtras().getParcelable("ImgUri");
+
 		taskDetectTreetop = null;
 		taskDetectReference = null;
 		taskAnimateReference = null;
@@ -960,23 +962,7 @@ public class ImageProcessingActivity extends Activity {
 		switch(id){
 		case R.id.action_settings:
 			Intent intent = new Intent(this, SettingsActivity.class);
-			startActivity(intent);
-			//FIXME: delete later
-			switch(selectedColor) {
-			case COLOR_RED:
-				Toast.makeText(getApplicationContext(), "Detecting Color: WHITE", Toast.LENGTH_SHORT).show();
-				selectedColor = COLOR_WHITE;
-				break;
-			case COLOR_WHITE:
-				Toast.makeText(getApplicationContext(), "Detecting Color: BLACK", Toast.LENGTH_SHORT).show();
-				selectedColor = COLOR_BLACK;
-				break;
-			case COLOR_BLACK:
-				Toast.makeText(getApplicationContext(), "Detecting Color: RED", Toast.LENGTH_SHORT).show();
-				selectedColor = COLOR_RED;
-				break;
-			}
-			return true;
+			startActivityForResult(intent, REQUEST_CODE_SETTING_ACTIVITY);
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -985,17 +971,17 @@ public class ImageProcessingActivity extends Activity {
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroy");
 		super.onDestroy();
-		
+
 		if(taskDetectTreetop != null) {
 			taskDetectTreetop.cancel(true);
 		}
-		
+
 		if(taskDetectReference != null) {
-		taskDetectReference.cancel(true);
+			taskDetectReference.cancel(true);
 		}
-		
+
 		if(taskAnimateReference != null) {
-		taskAnimateReference.cancel(true);
+			taskAnimateReference.cancel(true);
 		}
 		//FIXME: when activity starts again after shutting tasks, they don't run again
 	}
@@ -1028,4 +1014,19 @@ public class ImageProcessingActivity extends Activity {
 		Log.d(TAG, "onStop");
 		super.onStop();
 	}
+
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+		if (requestCode == REQUEST_CODE_SETTING_ACTIVITY) {
+			if(resultCode == RESULT_OK){
+				colourLowerLimit = data.getFloatArrayExtra("colourLowerLimit");
+				colourUpperLimit = data.getFloatArrayExtra("colourUpperLimit");
+				selectedMeasurementsUnit = data.getIntExtra("measurementsUnits", UNITS_CM);
+			}
+			if (resultCode == RESULT_CANCELED) {
+				Log.e(TAG, "Error saving settings");
+			}
+		}
+	}
+
 }
