@@ -50,15 +50,20 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 	 * Connects the preview to the selected camera
 	 * and uses its ID to correct preview's orientation
 	 * and starts preview
-	 * @param camera: camera to connect to
+	 * @param cameraRef: camera to connect to
 	 * @param cameraId: ID of camera to connect to
 	 */
-	public void connectCamera (Camera camera, int cameraId) {
+	public void connectCamera (Camera cameraRef, int cameraId) {
 		Log.d(TAG, "connectCamera");
-		this.camera = camera;
+		camera = cameraRef;
 
 		int previewOrientation = getCameraPreviewOrientation(cameraId);
 		camera.setDisplayOrientation(previewOrientation);
+
+		//TODO: set other camera params
+		Camera.Parameters params = camera.getParameters();
+		params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+		camera.setParameters(params);
 
 		holder = getHolder();
 		holder.addCallback(this);
