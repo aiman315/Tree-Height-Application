@@ -52,6 +52,13 @@ public class SettingsActivity extends Activity {
 	}
 
 
+	/**
+	 * Handles changes to SeekBars.
+	 * Updates EditText corresponding to the SeekBar.
+	 * Updates imageViewColourPreview colour to the values of SeekBars
+	 * @author Aiman
+	 *
+	 */
 	private class MySeekBarListener implements SeekBar.OnSeekBarChangeListener {
 		EditText editText;
 
@@ -61,16 +68,6 @@ public class SettingsActivity extends Activity {
 				editText.setText(""+progress);	
 			}
 			updateColourPreview();
-		}
-
-		private void updateColourPreview() {
-			float hsv [] = new float[3];
-			
-			hsv[INDEX_HUE] = seekBarHue.getProgress();
-			hsv[INDEX_SATURATION] = seekBarSaturation.getProgress()/(float)100;
-			hsv[INDEX_VALUE] = seekBarValue.getProgress()/(float)100;
-			imageViewColourPreview.setBackgroundColor(Color.HSVToColor(hsv));
-			
 		}
 
 		@Override
@@ -96,9 +93,31 @@ public class SettingsActivity extends Activity {
 		public void onStopTrackingTouch(SeekBar seekBar) {
 
 		}
+		
+		/**
+		 * Changes the colour of colour preview View to using values from progress bars.
+		 * Dependent on SeekBars values, NOT EditTexts.
+		 * Colour of imageViewColourPreview is RGB, hence HSV values are converted
+		 */
+		private void updateColourPreview() {
+			float hsv [] = new float[3];
+			
+			hsv[INDEX_HUE] = seekBarHue.getProgress();
+			hsv[INDEX_SATURATION] = seekBarSaturation.getProgress()/(float)100;
+			hsv[INDEX_VALUE] = seekBarValue.getProgress()/(float)100;
+			imageViewColourPreview.setBackgroundColor(Color.HSVToColor(hsv));
+			
+		}
 
 	}
 
+	/**
+	 * Handles changes to EditTexts.
+	 * Updates SeekBar corresponding to the EditText
+	 * Exceeding the maximum value will change the colour of text
+	 * @author Aiman
+	 *
+	 */
 	private class MyEditTextWatcher implements TextWatcher {
 
 		int editTextID;
@@ -158,6 +177,8 @@ public class SettingsActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_settings);
 
+		//Initializations
+		
 		MySeekBarListener seekBarListener = new MySeekBarListener();
 		MyEditTextWatcher editTextWatcher;
 
