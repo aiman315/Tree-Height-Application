@@ -1,14 +1,18 @@
 package com.amb12u.treeheight;
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
+import android.widget.Toast;
 
 public class SettingsActivity extends Activity {
 
@@ -16,13 +20,17 @@ public class SettingsActivity extends Activity {
 	private final int INDEX_HUE = 0;
 	private final int INDEX_SATURATION = 1;
 	private final int INDEX_VALUE = 2;
+	private final int UNITS_CM = 0;
+	private final int UNITS_INCHES = 1;
 	
-	private int colourLowerHue;
-	private int colourLowerSaturation;
-	private int colourLowerValue;
-	private int colourUpperHue;
-	private int colourUpperSaturation;
-	private int colourUpperValue;
+	private int colourHue;
+	private int colourSaturation;
+	private int colourValue;
+	
+	private float [] colourUpperLimit;
+	private float [] colourLowerLimit;
+	
+	private int selectedMeasurementsUnit;
 
 	private SeekBar seekBarHue;
 	private SeekBar seekBarSaturation;
@@ -33,22 +41,87 @@ public class SettingsActivity extends Activity {
 	private EditText editTextValue;
 	
 	private ImageView imageViewColourPreview;
+	
+	private RadioGroup radioGroupMeasurementsUnits;
 
-
+	/**
+	 * Stores the values for colour (Hue, Saturation and Value) as Lower Limit Threshold 
+	 * @param v
+	 */
 	public void onClickSetColourLowerLimit(View v) {
-		colourLowerHue = Integer.parseInt(editTextHue.getText().toString());
-		colourLowerSaturation = Integer.parseInt(editTextSaturation.getText().toString());
-		colourLowerValue = Integer.parseInt(editTextValue.getText().toString());
+		Log.d(TAG, "onClickSetColourLowerLimit");
+		
+		colourHue = Integer.parseInt(editTextHue.getText().toString());
+		colourSaturation = Integer.parseInt(editTextSaturation.getText().toString());
+		colourValue = Integer.parseInt(editTextValue.getText().toString());
+		
+		colourLowerLimit[INDEX_HUE] = colourHue;
+		colourLowerLimit[INDEX_SATURATION] = colourSaturation;
+		colourLowerLimit[INDEX_VALUE] = colourValue;
+		
+		((Button) findViewById(R.id.buttonColourLowerLimit)).setBackgroundColor(Color.HSVToColor(colourLowerLimit));
+		Toast.makeText(getApplicationContext(), "Colour Lower Limit is set", Toast.LENGTH_SHORT).show();
 	}
 
+	/**
+	 * Stores the values for colour (Hue, Saturation and Value) as Lower Upper Threshold
+	 * @param v
+	 */
 	public void onClickSetColourUpperLimit(View v) {
-		colourUpperHue = Integer.parseInt(editTextHue.getText().toString());
-		colourUpperSaturation = Integer.parseInt(editTextSaturation.getText().toString());
-		colourUpperValue = Integer.parseInt(editTextValue.getText().toString());
+		Log.d(TAG, "onClickSetColourUpperLimit");
+		
+		colourHue = Integer.parseInt(editTextHue.getText().toString());
+		colourSaturation = Integer.parseInt(editTextSaturation.getText().toString());
+		colourValue = Integer.parseInt(editTextValue.getText().toString());
+		
+		colourUpperLimit[INDEX_HUE] = colourHue;
+		colourUpperLimit[INDEX_SATURATION] = colourSaturation;
+		colourUpperLimit[INDEX_VALUE] = colourValue;
+		
+		((Button) findViewById(R.id.buttonColourUpperLimit)).setBackgroundColor(Color.HSVToColor(colourUpperLimit));
+		Toast.makeText(getApplicationContext(), "Colour Upper Limit is set", Toast.LENGTH_SHORT).show();
 	}
 
+	/**
+	 * Saves programme settings to be used in ImageProcessingActivity
+	 * Settings:
+	 * <ul>
+	 * <ol>Colour Limits (Upper and Lower)</ol>
+	 * <ol>Measurement Units (cm or inches)</ol>
+	 * @param v
+	 */
 	public void onClickSaveSettings(View v) {
-
+		Log.d(TAG, "onClickSaveSettings");
+		
+		//convert HSV to OpenCV HSV
+		colourLowerLimit[INDEX_HUE] = colourLowerLimit[INDEX_HUE]/(float)2; 
+		colourLowerLimit[INDEX_SATURATION] = colourLowerLimit[INDEX_SATURATION] * 255 / (float) 100;
+		colourLowerLimit[INDEX_VALUE] = colourLowerLimit[INDEX_VALUE] * 255 / (float) 100;
+		
+		colourUpperLimit[INDEX_HUE] = colourUpperLimit[INDEX_HUE]/(float)2; 
+		colourUpperLimit[INDEX_SATURATION] = colourUpperLimit[INDEX_SATURATION] * 255 / (float) 100;
+		colourUpperLimit[INDEX_VALUE] = colourUpperLimit[INDEX_VALUE] * 255 / (float) 100;
+		
+		//get selected units
+		switch(radioGroupMeasurementsUnits.getCheckedRadioButtonId()) {
+		case R.id.radioCM:
+			selectedMeasurementsUnit = UNITS_CM;
+			break;
+		case R.id.radioInches:
+			selectedMeasurementsUnit = UNITS_INCHES;
+			break;
+			default:
+				selectedMeasurementsUnit = -1;
+				break;
+		}
+		
+		//send back settings
+		Intent intent = new Intent();
+		intent.putExtra("colourLowerLimit", colourLowerLimit);
+		intent.putExtra("colourUpperLimit", colourUpperLimit);
+		intent.putExtra("measurementsUnits", selectedMeasurementsUnit);
+		setResult(RESULT_OK,intent);
+		finish();
 	}
 
 
@@ -106,7 +179,6 @@ public class SettingsActivity extends Activity {
 			hsv[INDEX_SATURATION] = seekBarSaturation.getProgress()/(float)100;
 			hsv[INDEX_VALUE] = seekBarValue.getProgress()/(float)100;
 			imageViewColourPreview.setBackgroundColor(Color.HSVToColor(hsv));
-			
 		}
 
 	}
@@ -174,10 +246,14 @@ public class SettingsActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		Log.d(TAG, "onCreate");
+		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_settings);
 
 		//Initializations
+		colourLowerLimit = new float [3];
+		colourUpperLimit = new float [3];
 		
 		MySeekBarListener seekBarListener = new MySeekBarListener();
 		MyEditTextWatcher editTextWatcher;
@@ -208,6 +284,8 @@ public class SettingsActivity extends Activity {
 		
 		imageViewColourPreview = (ImageView) findViewById(R.id.imageViewColourPreview);
 		imageViewColourPreview.setBackgroundColor(Color.BLACK);
+		
+		radioGroupMeasurementsUnits = (RadioGroup) findViewById(R.id.radioGroupMeasurementsUnits);
 	}
 
 	@Override
