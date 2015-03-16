@@ -97,7 +97,6 @@ public class ImageProcessingActivity extends Activity {
 	private BaseLoaderCallback mLoaderCallback;
 
 	//TODO:
-	//color changing option
 	//units changing option
 	//Indicate that tree bottom = reference object bottom
 	//Indicate treetop must be in top third
@@ -183,6 +182,8 @@ public class ImageProcessingActivity extends Activity {
 	private void detectColor(Mat mat) {
 		Log.d(TAG, "detectColor");
 
+		
+		//FIXME: what's the effect of swapping lower and upper limits?
 		Scalar colorUpLimit = null;
 		Scalar colorLowLimit = null;
 
@@ -905,7 +906,7 @@ public class ImageProcessingActivity extends Activity {
 		colourLowerLimit[INDEX_VALUE] = 80 * 255 /(float) 100;
 
 		colourUpperLimit[INDEX_HUE] = 180;
-		colourUpperLimit[INDEX_SATURATION] = 255;
+		colourUpperLimit[INDEX_SATURATION] = 10 * 255 /(float) 100;
 		colourUpperLimit[INDEX_VALUE] = 255;
 
 		buttonTask = (Button) findViewById(R.id.buttonTask);

@@ -99,6 +99,28 @@ public class SettingsActivity extends Activity {
 		if (colourLowerLimit == null || colourUpperLimit == null) {
 			Toast.makeText(getApplicationContext(), "Set both limits please ..", Toast.LENGTH_SHORT).show();
 		} else {
+			//force arrange values into upper and lower
+			float temp;
+			
+			//FIXME: what about range [360, 20] != [20, 360]
+			if (colourLowerLimit[INDEX_HUE] > colourUpperLimit[INDEX_HUE]) {
+				temp = colourLowerLimit[INDEX_HUE];
+				colourLowerLimit[INDEX_HUE] = colourUpperLimit[INDEX_HUE];
+				colourUpperLimit[INDEX_HUE] = temp;
+			}
+			
+			if (colourLowerLimit[INDEX_SATURATION] > colourUpperLimit[INDEX_SATURATION]) {
+				temp = colourLowerLimit[INDEX_SATURATION];
+				colourLowerLimit[INDEX_SATURATION] = colourUpperLimit[INDEX_SATURATION];
+				colourUpperLimit[INDEX_SATURATION] = temp;
+			}
+			
+			if (colourLowerLimit[INDEX_VALUE] > colourUpperLimit[INDEX_VALUE]) {
+				temp = colourLowerLimit[INDEX_VALUE];
+				colourLowerLimit[INDEX_VALUE] = colourUpperLimit[INDEX_VALUE];
+				colourUpperLimit[INDEX_VALUE] = temp;
+			}
+			
 			//convert HSV to OpenCV HSV
 			colourLowerLimit[INDEX_HUE] = colourLowerLimit[INDEX_HUE]/(float)2; 
 			colourLowerLimit[INDEX_SATURATION] = colourLowerLimit[INDEX_SATURATION] * 255 / (float) 100;
