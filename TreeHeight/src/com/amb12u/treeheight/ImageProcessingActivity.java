@@ -22,7 +22,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -36,8 +35,6 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -51,8 +48,6 @@ import android.widget.Toast;
 public class ImageProcessingActivity extends Activity {
 	private final String TAG = "StillImageProcessingActivity";
 
-	private final int REQUEST_CODE_SETTING_ACTIVITY = 0;
-
 	private final int STATE_TREETOP = 0;
 	private final int STATE_REFERENCE = 1;
 	private final int STATE_HEIGHT = 2;
@@ -65,13 +60,6 @@ public class ImageProcessingActivity extends Activity {
 	private final int INDEX_REF_TOP = 2;
 	private final int INDEX_REF_LEFT = 3;
 
-	private final int INDEX_HUE = 0;
-	private final int INDEX_SATURATION = 1;
-	private final int INDEX_VALUE = 2;
-
-	private final int UNITS_CM = 0;
-	private final int UNITS_INCHES = 1;
-
 	private final int LINE_THICKNESS = 5;
 
 	private double heightRatio, widthRatio;
@@ -79,9 +67,6 @@ public class ImageProcessingActivity extends Activity {
 	private int treePixelHeight, referenceObjPixelHeight;
 	private int treetopRow, treeBottomRow;
 	private int [] referenceObjBound;
-	private float [] colourUpperLimit;
-	private float [] colourLowerLimit;
-	private int selectedMeasurementsUnit;
 	private int currentState;
 	private Uri imgUri;
 	private ImageView imageView;
@@ -102,11 +87,16 @@ public class ImageProcessingActivity extends Activity {
 	//Indicate treetop must be in top third
 	//Code documentation
 	//Consider removing Toasts
-	//Add option to convert units
 	//markTouch at bottom of image has large offset
-	//Take photos with A4 paper
 	//Make mathematical approach more visual
 	//Test for landscape images
+	
+	//FIXME:
+	//white
+	//fix double casting to nominator 
+	//remove only top third (treetop)
+	//if no treetop detected, enable user input
+	//two angles +ve and -ve
 
 
 	/**
@@ -152,48 +142,6 @@ public class ImageProcessingActivity extends Activity {
 			Toast.makeText(getApplicationContext(), "Reference detection touch input enabled", Toast.LENGTH_SHORT).show();
 		}
 	}
-
-	/**
-	 * Detect a selected color in the displayed image by setting its upper and lower limit values
-	 * @param selectedColorHSV: HSV color value
-	 * <br /><b>HSV in OpenCV</b><br />
-	 * Hue Range: [0-180]<br />
-	 * Saturation Range: [0-255]<br />
-	 * Value Range: [0-255]<br />
-	 * Normally, the ranges for Hue, Saturation and Value are: [0-360], [0-100] and [0-100] respectively<br />
-	 * To convert to OpenCV ranges:<br />
-	 * <table>
-  <tr>
-    <th ></th><th "></th><th >Normal Value</th><th "></th><th >OpenCV Value</th>
-  </tr>
-  <tr>
-    <td >Hue</td>
-    <td "></td><td >X</td><td "></td><td >X / 2</td>
-  </tr>
-  <tr>
-    <td >Saturation</td>
-    <td "></td><td >X</td><td "></td><td >X * 255 / 100</td>
-  </tr>
-  <tr>
-    <td >Value</td><td "></td><td >X</td><td "></td><td >X * 255 / 100</td>
-  </tr>
-</table>
-	 */
-	private void detectColor(Mat mat) {
-		Log.d(TAG, "detectColor");
-
-		
-		//FIXME: what's the effect of swapping lower and upper limits?
-		Scalar colorUpLimit = null;
-		Scalar colorLowLimit = null;
-
-		colorUpLimit = new Scalar(colourUpperLimit[INDEX_HUE],colourUpperLimit[INDEX_SATURATION], colourUpperLimit[INDEX_VALUE]);
-		colorLowLimit = new Scalar(colourLowerLimit[INDEX_HUE],colourLowerLimit[INDEX_SATURATION], colourLowerLimit[INDEX_VALUE]);
-
-		Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2HSV, 0);
-		Core.inRange(mat, colorLowLimit, colorUpLimit, mat);
-	}
-
 
 	/**
 	 * Obtain touch position and execute corresponding task according to current program state
@@ -246,8 +194,8 @@ public class ImageProcessingActivity extends Activity {
 		int screenHei = size.y;
 
 		if (displayMat != null) {
-			heightRatio = displayMat.rows()/(double)screenHei;
-			widthRatio = displayMat.cols()/(double)screenWid;
+			heightRatio = (double) displayMat.rows()/screenHei;
+			widthRatio = (double) displayMat.cols()/screenWid;
 		}
 	}
 
@@ -497,11 +445,11 @@ public class ImageProcessingActivity extends Activity {
 			Core.rectangle(displayMat, pt1, pt2, col);	
 
 			// Detect colour
-			detectColor(processingMat);
-
-			List<MatOfPoint> contours = new ArrayList<MatOfPoint>();  
+			Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY, 0);
+			Imgproc.threshold(processingMat, processingMat, 80 * 255 /(float) 100, 255, Imgproc.THRESH_BINARY);
 
 			/// Find contours
+			List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 			Imgproc.findContours(processingMat, contours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
 			if (!contours.isEmpty()) {
@@ -887,7 +835,6 @@ public class ImageProcessingActivity extends Activity {
 
 		//initializations
 		currentState = STATE_TREETOP;
-		selectedMeasurementsUnit = UNITS_CM;
 
 		treeHeight = 0;
 		treePixelHeight = 0;
@@ -897,18 +844,7 @@ public class ImageProcessingActivity extends Activity {
 		treeBottomRow = 0;
 
 		referenceObjBound = new int [4];
-		colourLowerLimit = new float[3];
-		colourUpperLimit = new float[3];
-
-		//white colour HSV representation
-		colourLowerLimit[INDEX_HUE] = 0;
-		colourLowerLimit[INDEX_SATURATION] = 0;
-		colourLowerLimit[INDEX_VALUE] = 80 * 255 /(float) 100;
-
-		colourUpperLimit[INDEX_HUE] = 180;
-		colourUpperLimit[INDEX_SATURATION] = 10 * 255 /(float) 100;
-		colourUpperLimit[INDEX_VALUE] = 255;
-
+		
 		buttonTask = (Button) findViewById(R.id.buttonTask);
 		textTreeHeight = (TextView) findViewById(R.id.textTreeHeight);
 		imgUri = getIntent().getExtras().getParcelable("ImgUri");
@@ -945,27 +881,6 @@ public class ImageProcessingActivity extends Activity {
 			}
 		};
 
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.image_processing, menu);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		switch(id){
-		case R.id.action_settings:
-			Intent intent = new Intent(this, SettingsActivity.class);
-			startActivityForResult(intent, REQUEST_CODE_SETTING_ACTIVITY);
-		}
-		return super.onOptionsItemSelected(item);
 	}
 
 	@Override
@@ -1015,19 +930,4 @@ public class ImageProcessingActivity extends Activity {
 		Log.d(TAG, "onStop");
 		super.onStop();
 	}
-
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-		if (requestCode == REQUEST_CODE_SETTING_ACTIVITY) {
-			if(resultCode == RESULT_OK){
-				colourLowerLimit = data.getFloatArrayExtra("colourLowerLimit");
-				colourUpperLimit = data.getFloatArrayExtra("colourUpperLimit");
-				selectedMeasurementsUnit = data.getIntExtra("measurementsUnits", UNITS_CM);
-			}
-			if (resultCode == RESULT_CANCELED) {
-				Log.e(TAG, "Error saving settings");
-			}
-		}
-	}
-
 }
