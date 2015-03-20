@@ -108,8 +108,6 @@ public class ImageProcessingActivity extends Activity {
 
 		//Tree height calculation formula
 		treeHeight = (treePixelHeight*referenceObjHeight)/referenceObjPixelHeight;
-
-		Toast.makeText(this, String.format("Tree Height = ( %d * %d ) / %d = %d", treePixelHeight, (int)referenceObjHeight, referenceObjPixelHeight, (int)treeHeight), Toast.LENGTH_LONG).show();
 	}
 
 	private void detectTreetop() {
