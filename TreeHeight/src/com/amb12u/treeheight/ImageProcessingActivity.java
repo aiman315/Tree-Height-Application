@@ -203,7 +203,7 @@ public class ImageProcessingActivity extends Activity {
 	 * AsyncTask (off main UI thread) to detect treetop in image matrix
 	 * Detection Algorithm:
 	 * <ol>
-	 * <li>Limit search region within touch range (default is matrix top third)</li>
+	 * <li>Limit search region within touch range (default is entire image)</li>
 	 * <li>Detect edges using Sobel filter</li>
 	 * <li>Use few top matrix rows to learn standard deviation value for sky (normally, sky occupies some of the top rows of image)</li>
 	 * <li>Use learned standard deviation value as threshold</li>
@@ -227,7 +227,7 @@ public class ImageProcessingActivity extends Activity {
 
 			//setup search region
 			minRow = 0;
-			maxRow = originalMat.rows()/3;
+			maxRow = originalMat.rows();
 			minCol = 0;
 			maxCol = originalMat.cols();
 			isLocalSearch = false;
