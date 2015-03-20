@@ -92,10 +92,6 @@ public class ImageProcessingActivity extends Activity {
 	//Test for landscape images
 	
 	//FIXME:
-	//white
-	//fix double casting to nominator 
-	//remove only top third (treetop)
-	//if no treetop detected, enable user input
 	//two angles +ve and -ve
 
 
@@ -452,9 +448,9 @@ public class ImageProcessingActivity extends Activity {
 			Scalar col = new Scalar(0,255,0);
 			Core.rectangle(displayMat, pt1, pt2, col);	
 
-			// Detect colour
+			// Detect white colour
 			Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY, 0);
-			Imgproc.threshold(processingMat, processingMat, 80 * 255 /(float) 100, 255, Imgproc.THRESH_BINARY);
+			Imgproc.threshold(processingMat, processingMat, (float) 80 * 255 / 100, 255, Imgproc.THRESH_BINARY);
 
 			/// Find contours
 			List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
