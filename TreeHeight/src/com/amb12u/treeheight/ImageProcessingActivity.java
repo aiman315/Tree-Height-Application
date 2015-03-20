@@ -328,7 +328,15 @@ public class ImageProcessingActivity extends Activity {
 				//check with user if treetop is correctly detected
 				verifyDetection();
 			} else {
-				Toast.makeText(getApplicationContext(), "No Treetop Detected .. try again or use different image", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), "No Treetop Detected .. try touch input or use a different image", Toast.LENGTH_SHORT).show();
+				imageView.setOnTouchListener(new View.OnTouchListener() {
+
+					@Override
+					public boolean onTouch(View v, MotionEvent event) {
+						markTouch(event);	
+						return false;
+					}
+				});
 			}
 			updateDisplayImage();
 		}
