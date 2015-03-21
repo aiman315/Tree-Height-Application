@@ -22,7 +22,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -68,6 +67,7 @@ public class ImageProcessingActivity extends Activity {
 	private int treetopRow, treeBottomRow;
 	private int [] referenceObjBound;
 	private int currentState;
+	private boolean isPortraitImg;
 	private Uri imgUri;
 	private ImageView imageView;
 	private Button buttonTask;
@@ -82,14 +82,11 @@ public class ImageProcessingActivity extends Activity {
 	private BaseLoaderCallback mLoaderCallback;
 
 	//TODO:
-	//units changing option
+	//Test for landscape images (Added isPortraitImg variable . use it)
 	//Indicate that tree bottom = reference object bottom
-	//Indicate treetop must be in top third
 	//Code documentation
-	//Consider removing Toasts
 	//markTouch at bottom of image has large offset
 	//Make mathematical approach more visual
-	//Test for landscape images
 	
 	//FIXME:
 	//two angles +ve and -ve
@@ -694,8 +691,11 @@ public class ImageProcessingActivity extends Activity {
 		Matrix matrix = new Matrix();
 		matrix.postRotate(90);
 
-		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-			matrix.postRotate(90);
+		Log.i("XXXXX", "height "+loadedImage.getHeight());
+		Log.i("XXXXX", "width "+loadedImage.getWidth());
+		
+		if (loadedImage.getHeight() < loadedImage.getWidth()) {
+			isPortraitImg = false;
 		}
 		loadedImage = Bitmap.createBitmap(loadedImage , 0, 0, loadedImage.getWidth(), loadedImage .getHeight(), matrix, true);
 
@@ -837,6 +837,7 @@ public class ImageProcessingActivity extends Activity {
 
 		//initializations
 		currentState = STATE_TREETOP;
+		isPortraitImg = true;
 
 		treeHeight = 0;
 		treePixelHeight = 0;
