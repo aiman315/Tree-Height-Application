@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,7 +25,17 @@ public class DescActivity extends Activity {
 	private final int MATH_METHOD_SELECTION = 1;
 	private final int IMAGE_PROCESSING_METHOD_SELECTION = 2;
 
-	private TextView desc;
+	private TextView descHeightPerson;
+	private TextView descTree1;
+	private TextView descTree2;
+	private TextView descSnap1;
+	private TextView descSnap2;
+	private ImageView imageViewHeightPerson;
+	private ImageView imageViewTree1;
+	private ImageView imageViewTree2;
+	private ImageView imageViewSnap1;
+	private ImageView imageViewSnap2;
+
 	private int selectedMethod;
 
 	@Override
@@ -32,30 +43,58 @@ public class DescActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_desc);
 
-		desc = (TextView) findViewById(R.id.textViewDesc);
+		descHeightPerson = (TextView) findViewById(R.id.textViewDescHeightPerson);
+		descTree1 = (TextView) findViewById(R.id.textViewDescTree1);
+		descTree2 = (TextView) findViewById(R.id.textViewDescTree2);
+		descSnap1 = (TextView) findViewById(R.id.textViewDescSnap1);
+		descSnap2 = (TextView) findViewById(R.id.textViewDescSnap2);
+
+		imageViewHeightPerson = (ImageView) findViewById(R.id.imageViewHeightPerson);
+		imageViewTree1 = (ImageView) findViewById(R.id.imageViewTree1);
+		imageViewTree2 = (ImageView) findViewById(R.id.imageViewTree2);
+		imageViewSnap1 = (ImageView) findViewById(R.id.imageViewSnap1);
+		imageViewSnap2 = (ImageView) findViewById(R.id.imageViewSnap2);
+
 		selectedMethod = INVALID_METHOD_SELECTION;
 
 		Intent intent = getIntent();
 		Bundle bundle = intent.getExtras();
 
-		if(bundle!=null)
-		{
+		if(bundle!=null) {
 			int buttonId = (Integer) bundle.get("button_id");
 			switch(buttonId) {
 			case R.id.buttonMath: 
 				setTitle(R.string.button_math);
-				desc.setText(R.string.math_approach_desc); 
+				descHeightPerson.setText(R.string.math_approach_desc);
+				descTree1.setText(R.string.math_approach_desc); 
+				descTree2.setText(R.string.math_approach_desc);
+				descSnap1.setText(R.string.math_approach_desc);
+				descSnap2.setText(R.string.math_approach_desc);
+
+				imageViewHeightPerson.setBackgroundResource(R.drawable.height_person);
+				imageViewTree1.setBackgroundResource(R.drawable.math_treetop);
+				imageViewTree2.setBackgroundResource(R.drawable.math_tree_bottom);
+				imageViewSnap1.setBackgroundResource(R.drawable.snap_top);
+				imageViewSnap2.setBackgroundResource(R.drawable.snap_bottom);
+
 				selectedMethod = MATH_METHOD_SELECTION;
 				break;
 			case R.id.buttonIP: 
 				setTitle(R.string.button_image_processing);
-				desc.setText(R.string.img_processing_approach_desc);
+				descTree1.setText(R.string.img_processing_approach_desc);
+				descTree2.setText(R.string.img_processing_approach_desc);
+				descSnap2.setText(R.string.img_processing_approach_desc);
+
+				imageViewTree1.setBackgroundResource(R.drawable.ip_tree_man);
+				imageViewTree2.setBackgroundResource(R.drawable.ip_tree);
+				imageViewSnap2.setBackgroundResource(R.drawable.snap_ip);
+
 				selectedMethod = IMAGE_PROCESSING_METHOD_SELECTION;
 				break;
 			default:
 				//TODO: what to do here?
 				setTitle(R.string.button_something_else);
-				desc.setText("Error");
+				descTree1.setText("Error");
 				selectedMethod = INVALID_METHOD_SELECTION;
 				break;
 			}

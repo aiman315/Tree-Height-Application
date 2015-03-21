@@ -8,24 +8,114 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.amb12u.treeheight.DescActivity" >
 
-    <TextView
-        android:id="@+id/textViewDesc"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/buttonTryMe"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:text="@string/empty" />
-
     <Button
         android:id="@+id/buttonTryMe"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:text="@string/button_try_me"
-        android:onClick="onClickTry" />
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="true"
+        android:onClick="onClickTry"
+        android:text="@string/button_try_me" />
+
+    <ScrollView
+        android:id="@+id/scrollViewDesc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonTryMe"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:scrollbars="none" >
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/textViewDescHeightPerson"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentStart="true"
+                android:text="@string/empty" />
+
+            <ImageView
+                android:id="@+id/imageViewHeightPerson"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/textViewDescHeightPerson"
+                android:layout_centerHorizontal="true"
+                android:contentDescription="@string/empty"/>
+            
+            <TextView
+                android:id="@+id/textViewDescTree1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/imageViewHeightPerson"
+                android:text="@string/empty" />
+
+            <ImageView
+                android:id="@+id/imageViewTree1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/textViewDescTree1"
+                android:layout_centerHorizontal="true"
+                android:contentDescription="@string/empty"/>
+            
+            <TextView
+                android:id="@+id/textViewDescSnap1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/imageViewTree1"
+                android:text="@string/empty" />
+
+            <ImageView
+                android:id="@+id/imageViewSnap1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/textViewDescSnap1"
+                android:layout_centerHorizontal="true"
+                android:contentDescription="@string/empty"/>
+
+            <TextView
+                android:id="@+id/textViewDescTree2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/imageViewSnap1"
+                android:text="@string/empty" />
+            
+            <ImageView
+                android:id="@+id/imageViewTree2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/textViewDescTree2"
+                android:layout_centerHorizontal="true"
+                android:contentDescription="@string/empty"/>
+
+            <TextView
+                android:id="@+id/textViewDescSnap2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/imageViewTree2"
+                android:text="@string/empty" />
+
+            <ImageView
+                android:id="@+id/imageViewSnap2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/textViewDescSnap2"
+                android:layout_centerHorizontal="true"
+                android:contentDescription="@string/empty" />
+        </RelativeLayout>
+    </ScrollView>
 
 </RelativeLayout>
