@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:isScrollContainer="true" >
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="true"
+        android:padding="10dp"
+        android:text="For this measurement approach you will need to know your height" />
+
+    <ImageView
+        android:id="@+id/imageViewHeightPerson"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView1"
+        android:layout_centerHorizontal="true"
+        android:contentDescription="@string/empty"
+        android:padding="10dp"
+        android:src="@drawable/height_person" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/imageViewHeightPerson"
+        android:padding="10dp"
+        android:text="What is your height?" />
+
+    <EditText
+        android:id="@+id/editTextHeight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/textView2"
+        android:layout_toStartOf="@+id/textViewCmUnit"
+        android:ems="10"
+        android:hint="Enter your height here"
+        android:inputType="numberDecimal"
+        android:padding="10dp" />
+
+    <TextView
+        android:id="@+id/textViewCmUnit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextHeight"
+        android:layout_alignBottom="@+id/editTextHeight"
+        android:layout_alignParentEnd="true"
+        android:padding="10dp"
+        android:text="cm" />
+
+    <Button
+        android:id="@+id/buttonConfrimHeight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editTextHeight"
+        android:layout_centerHorizontal="true"
+        android:padding="10dp"
+        android:text="Confirm"/>
+
+</RelativeLayout>

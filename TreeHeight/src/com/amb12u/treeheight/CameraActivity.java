@@ -1,9 +1,8 @@
 package com.amb12u.treeheight;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.hardware.Camera;
@@ -12,7 +11,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -221,7 +219,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 						@Override
 						public void onStopTrackingTouch(SeekBar seekBar) {
-							
+
 						}
 
 						@Override
@@ -234,7 +232,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 							Camera.Parameters params = selectedCamera.getParameters();
 							params.setZoom(progress);
 							selectedCamera.setParameters(params);
-							
+
 						}
 					});
 				} else {
@@ -357,55 +355,42 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 * The unit for camera height is cm
 	 */
 	private void setupCameraHeight() {
-		// EditText to allow user input
-		final EditText input = new EditText(this);
-		input.setHint(R.string.height_dialog_text);
-		input.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-
 		//camera height input-dialog setup
-		final AlertDialog heightDialog = new AlertDialog.Builder(this)
-		.setView(input)
-		.setTitle(R.string.height_dialog_title)
-		.setPositiveButton(android.R.string.ok, null)
-		.create();
-
-		heightDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+		final Dialog dialogInstruction = new Dialog(this);
+		dialogInstruction.setContentView(R.layout.dialog_custom_person_height);
+		dialogInstruction.setTitle("Your Height");
+		
+		Button button = (Button) dialogInstruction.findViewById(R.id.buttonConfrimHeight);
+		button.setOnClickListener(new View.OnClickListener() {
 
 			@Override
-			public void onShow(DialogInterface dialog) {
+			public void onClick(View view) {
+				//verify correct input
+				try {
+					EditText editTextHeight = (EditText) dialogInstruction.findViewById(R.id.editTextHeight);
+					heightCamera = Double.parseDouble(editTextHeight.getText().toString());
 
-				Button buttonOk = heightDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-				buttonOk.setOnClickListener(new View.OnClickListener() {
+					if (heightCamera > 0) {
+						dialogInstruction.dismiss();
 
-					@Override
-					public void onClick(View view) {
-						//verify correct input
-						try {
-							heightCamera = Double.parseDouble(input.getText().toString());
-
-							if (heightCamera > 0) {
-								heightDialog.dismiss();
-
-								//Display Height
-								TextView textViewCameraHeight = (TextView) findViewById(R.id.textViewCameraHeight);
-								textViewCameraHeight.setText(String.format("Camera Height: %f", heightCamera));
-								//Enable interface
-								Button buttonReadAngle = (Button) findViewById(R.id.buttonReadAngle);
-								buttonReadAngle.setEnabled(true);
-							} else {
-								Toast.makeText(CameraActivity.this, "Input Must be greater than zero", Toast.LENGTH_SHORT).show();
-							}
-						} catch (NumberFormatException e) {
-							Toast.makeText(CameraActivity.this, "Invalid Input", Toast.LENGTH_SHORT).show();
-							Log.e(TAG, "exception", e);
-						}
-
+						//Display Height
+						TextView textViewCameraHeight = (TextView) findViewById(R.id.textViewCameraHeight);
+						textViewCameraHeight.setText(String.format("Camera Height: %f", heightCamera));
+						//Enable interface
+						Button buttonReadAngle = (Button) findViewById(R.id.buttonReadAngle);
+						buttonReadAngle.setEnabled(true);
+					} else {
+						Toast.makeText(CameraActivity.this, "Input Must be greater than zero", Toast.LENGTH_SHORT).show();
 					}
-				});
+				} catch (NumberFormatException e) {
+					Toast.makeText(CameraActivity.this, "Invalid Input", Toast.LENGTH_SHORT).show();
+					Log.e(TAG, "exception", e);
+				}
+
 			}
 		});
-		heightDialog.setCanceledOnTouchOutside(false);
-		heightDialog.show();
+		dialogInstruction.setCancelable(false);
+		dialogInstruction.show();
 	}
 
 	/**
@@ -435,8 +420,8 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		heightTree = Math.abs(heightTree);
 		textViewTreeHeight.setText(String.format("Tree Height = %.2f",heightTree));
 	}
-	
-	
+
+
 
 
 
