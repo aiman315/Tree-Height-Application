@@ -90,6 +90,7 @@ public class ImageProcessingActivity extends Activity {
 	
 	//FIXME:
 	//two angles +ve and -ve
+	//offset for clicks at bottom causing app to crash
 
 
 	/**

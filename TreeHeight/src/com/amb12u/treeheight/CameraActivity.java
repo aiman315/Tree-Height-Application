@@ -355,7 +355,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 */
 	private void setupCameraHeight() {
 		//camera height input-dialog setup
-		final Dialog dialogInstruction = new Dialog(this, android.R.style.Theme_Holo_Light_Dialog_MinWidth);
+		final Dialog dialogInstruction = new Dialog(this, R.style.myInstructionDialog);
 		dialogInstruction.setContentView(R.layout.dialog_custom_person_height);
 		dialogInstruction.setTitle("Your Height");
 
