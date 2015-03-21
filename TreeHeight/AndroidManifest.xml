@@ -53,7 +53,8 @@
         <activity
             android:name=".CameraActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:label="@string/title_activity_camera" >
+            android:label="@string/title_activity_camera" 
+            android:theme="@android:style/Theme.Holo.NoActionBar.TranslucentDecor" >
         </activity>
         <activity
             android:name=".ImageProcessingActivity"

@@ -359,7 +359,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		final Dialog dialogInstruction = new Dialog(this);
 		dialogInstruction.setContentView(R.layout.dialog_custom_person_height);
 		dialogInstruction.setTitle("Your Height");
-		
+
 		Button button = (Button) dialogInstruction.findViewById(R.id.buttonConfrimHeight);
 		button.setOnClickListener(new View.OnClickListener() {
 
@@ -422,9 +422,6 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	}
 
 
-
-
-
 	//	---------------- Activity Methods ---------------- //
 
 	@Override
@@ -438,8 +435,15 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate");
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_camera);
+		//hide navigation bar
+		getWindow().getDecorView().setSystemUiVisibility(
+				View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+				| View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+				| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+				| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+				| View.SYSTEM_UI_FLAG_FULLSCREEN
+				| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
 		//initializations
 		frontFacingCameraId = CAMERA_ID_NOT_SET;
@@ -546,5 +550,19 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	protected void onStop() {
 		Log.d(TAG, "onStop");
 		super.onStop();
+	}
+	
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+		super.onWindowFocusChanged(hasFocus);
+		if (hasFocus) {
+			getWindow().getDecorView().setSystemUiVisibility(
+					View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+					| View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+					| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+					| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+					| View.SYSTEM_UI_FLAG_FULLSCREEN
+					| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+		}
 	}
 }
