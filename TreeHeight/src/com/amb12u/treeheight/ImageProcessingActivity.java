@@ -834,6 +834,9 @@ public class ImageProcessingActivity extends Activity {
 		Log.d(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_image_processing);
+		View decorView = getWindow().getDecorView();
+		//hide navigation bar
+		decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN);
 
 		//initializations
 		currentState = STATE_TREETOP;
