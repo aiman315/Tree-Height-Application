@@ -16,7 +16,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Surface;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -356,7 +355,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 */
 	private void setupCameraHeight() {
 		//camera height input-dialog setup
-		final Dialog dialogInstruction = new Dialog(this);
+		final Dialog dialogInstruction = new Dialog(this, android.R.style.Theme_Holo_Light_Dialog_MinWidth);
 		dialogInstruction.setContentView(R.layout.dialog_custom_person_height);
 		dialogInstruction.setTitle("Your Height");
 
