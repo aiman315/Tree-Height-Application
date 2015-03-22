@@ -4,6 +4,8 @@
     <!-- General Strings -->
     <string name="empty"></string>
     <string name="reset">Reset</string>
+    <string name="ok">Okay</string>
+    <string name="confirm">Confirm</string>
 
     <!-- MainActivity -->
     <string name="app_name">Tree Height</string>
@@ -23,10 +25,10 @@
     <string name="title_activity_camera">Camera Activity</string>
     <string name="instruction_text">Instruction Text</string>
     <string name="button_read_angle">Read Angle</string>
-    <string name="height_dialog_title">Camera Height (cm):</string>
-    <string name="height_dialog_text">"Enter current camera height"</string>
     <string name="button_calculate_height">Find Height</string>
     <string name="action_camera_height">Set Height</string>
+    <string name="action_instructions">Show/Hide Instructions</string>
+    <string name="action_debugging_information">Show/Hide Debuggin Information</string>
     <string name="action_camera_swap">Swap Cameras</string>
 
     <!-- Image Processing Activity -->
@@ -37,6 +39,20 @@
     <string name="button_calc_height">Calculate Tree Height</string>
     <string name="ref_height_dialog_title">Reference Object Height (cm):</string>
     <string name="ref_height_dialog_text">"Enter reference object height"</string>
-    
+
+    <!-- Person Height Dialog -->
+    <string name="text_view_need_height">For this measurement approach you will need to know your height</string>
+    <string name="text_view_what_is_your_height">What is your height?</string>
+    <string name="edit_text_your_height_hint">Enter your height here</string>
+    <string name="text_view_cm_unit">cm</string>
+    <string name="check_box_instructions">Enable Application Instructions</string>
+
+    <!-- Math Treetop Dialog -->
+    <string name="text_view_treetop_instruction_1">Now hold your device at your height level, and point to the treetop</string>
+    <string name="text_view_treetop_instruction_2">When the cross is pointing at the treetop, press the capture button</string>
+
+    <!-- Math Tree Bottom Dialog -->
+    <string name="text_view_tree_bottom_instruction_1">We have to do this again, but this time for tree bottom. Don\'t forget! The device has to be at your height level</string>
+    <string name="text_view_tree_bottom_instruction_2">Again, try to press the button when the cross is pointing on the lowest point of tree</string>
 
 </resources>

@@ -10,39 +10,40 @@
         android:isScrollContainer="true" >
 
         <TextView
-            android:id="@+id/textView1"
+            android:id="@+id/textViewTreeBottomInstruction1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_alignParentStart="true"
             android:padding="10dp"
-            android:text="We have to do this again, but this time for tree bottom. Don&apos;t forget! The device has to be at your height level" />
+            android:text="@string/text_view_tree_bottom_instruction_1"
+            />
 
         <ImageView
             android:id="@+id/imageViewMathTreeBottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/textView1"
+            android:layout_below="@+id/textViewTreeBottomInstruction1"
             android:layout_centerHorizontal="true"
             android:contentDescription="@string/empty"
             android:padding="10dp"
             android:src="@drawable/math_tree_bottom" />
 
         <TextView
-            android:id="@+id/textView2"
+            android:id="@+id/textViewBottomInstruction2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_alignParentStart="true"
             android:layout_below="@+id/imageViewMathTreeBottom"
             android:padding="10dp"
-            android:text="Again, try to press the button when the cross is pointing on the lowest point of tree" />
+            android:text="@string/text_view_tree_bottom_instruction_2" />
 
         <ImageView
             android:id="@+id/imageViewSnapTreeBottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/textView2"
+            android:layout_below="@+id/textViewBottomInstruction2"
             android:layout_centerHorizontal="true"
             android:contentDescription="@string/empty"
             android:padding="10dp"
@@ -55,7 +56,7 @@
             android:layout_below="@+id/imageViewSnapTreeBottom"
             android:layout_centerHorizontal="true"
             android:padding="10dp"
-            android:text="Ok" />
+            android:text="@string/ok" />
     </RelativeLayout>
 
 </ScrollView>

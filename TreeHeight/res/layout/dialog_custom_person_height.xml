@@ -5,43 +5,43 @@
     android:isScrollContainer="true" >
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/textViewNeedHeight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentStart="true"
         android:padding="10dp"
-        android:text="For this measurement approach you will need to know your height" />
+        android:text="@string/text_view_need_height" />
 
     <ImageView
         android:id="@+id/imageViewMathTreetop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textView1"
+        android:layout_below="@+id/textViewNeedHeight"
         android:layout_centerHorizontal="true"
         android:contentDescription="@string/empty"
         android:padding="10dp"
         android:src="@drawable/height_person" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/textViewWhatIsYourHeight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/imageViewMathTreetop"
         android:padding="10dp"
-        android:text="What is your height?" />
+        android:text="@string/text_view_what_is_your_height" />
 
     <EditText
-        android:id="@+id/editTextHeight"
+        android:id="@+id/editTextYourHeight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/textView2"
+        android:layout_below="@+id/textViewWhatIsYourHeight"
         android:layout_toStartOf="@+id/textViewCmUnit"
         android:ems="10"
-        android:hint="Enter your height here"
+        android:hint="@string/edit_text_your_height_hint"
         android:inputType="numberDecimal"
         android:padding="10dp" />
 
@@ -49,19 +49,28 @@
         android:id="@+id/textViewCmUnit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/editTextHeight"
-        android:layout_alignBottom="@+id/editTextHeight"
+        android:layout_alignBaseline="@+id/editTextYourHeight"
+        android:layout_alignBottom="@+id/editTextYourHeight"
         android:layout_alignParentEnd="true"
         android:padding="10dp"
-        android:text="cm" />
+        android:text="@string/text_view_cm_unit" />
+
+    <CheckBox
+        android:id="@+id/checkBoxInstructions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editTextYourHeight"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:checked="true"
+        android:text="@string/check_box_instructions" />
 
     <Button
         android:id="@+id/buttonConfrimHeight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextHeight"
+        android:layout_below="@+id/checkBoxInstructions"
         android:layout_centerHorizontal="true"
         android:padding="10dp"
-        android:text="Confirm"/>
+        android:text="@string/confirm" />
 
 </RelativeLayout>

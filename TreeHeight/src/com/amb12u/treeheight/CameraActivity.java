@@ -18,6 +18,7 @@ import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -389,7 +390,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			public void onClick(View view) {
 				//verify correct input
 				try {
-					EditText editTextHeight = (EditText) dialogInstruction.findViewById(R.id.editTextHeight);
+					EditText editTextHeight = (EditText) dialogInstruction.findViewById(R.id.editTextYourHeight);
 					heightCamera = Double.parseDouble(editTextHeight.getText().toString());
 
 					if (heightCamera > 0) {
@@ -414,6 +415,11 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 			}
 		});
+		
+		CheckBox checkBoxInstruction = (CheckBox) dialogInstruction.findViewById(R.id.checkBoxInstructions);
+		if (checkBoxInstruction.isChecked()){
+			isInstructionEnabled = true;
+		}
 		dialogInstruction.setCancelable(false);
 		dialogInstruction.show();
 	}
@@ -470,7 +476,12 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	}
 
 
+	/**
+	 * Sets the visibility of debugging textViews
+	 * @param isEnabled: flag to show or hide debugging information
+	 */
 	private void showDebuggingInfo(boolean isEnabled) {
+		Log.d(TAG, "showDebuggingInfo");
 		if (isEnabled) {
 			textViewCameraHeight.setVisibility(View.VISIBLE);
 
@@ -564,7 +575,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		angle1 = INVALID_ANGLE;
 		angle2 = INVALID_ANGLE;
 		currentStage = STAGE_HEIGHT_INPUT;
-		isInstructionEnabled = true;
+		isInstructionEnabled = false;
 		isDebuggingEnabled = false;
 
 
@@ -629,6 +640,14 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		switch(id) {
 		case R.id.action_camera_height:
 			setupCameraHeight();
+			return true;
+		case R.id.action_instruction:
+			isInstructionEnabled = !isInstructionEnabled;
+			showInsturctions(isInstructionEnabled);
+			return true;
+		case R.id.action_debugging_information:
+			isDebuggingEnabled = !isDebuggingEnabled;
+			showDebuggingInfo(isDebuggingEnabled);
 			return true;
 		case R.id.action_camera_swap:
 			swapCamera();
