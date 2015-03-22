@@ -96,26 +96,44 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	public void onClickReadAngle(View v) {
 		Log.d(TAG, "onClickReadAngle");
 		if (currentStage == STAGE_TREETOP_ANGLE) {
-			if (accelerometerAngle > 0) {
-				
+			//Treetop angle must be positive
+			if(accelerometerAngle > 0) {
+				angleTreetop = accelerometerAngle;
+				Toast.makeText(this, String.format("Angle at treetop = %.2fº", angleTreetop), Toast.LENGTH_SHORT).show();
+
+				Button buttonUndoAngle = (Button) findViewById(R.id.buttonUndoAngle);
+				buttonUndoAngle.setEnabled(true);
+
+				//change programme stage
+				currentStage = STAGE_TREE_BOTTOM_ANGLE;
+
+				//show next step's instructions
+				showInsturctions(isInstructionEnabled);
+
+				//TODO:remove later
+				textViewFirstAngle.setText(String.format("angle treetop = %.2f",angleTreetop));
 			} else {
-				
+				Toast.makeText(this, "Angle to treetop must be positive", Toast.LENGTH_SHORT).show();
 			}
 		} else if (currentStage == STAGE_TREE_BOTTOM_ANGLE){
-			angleTreeBottom = accelerometerAngle;
-			Toast.makeText(this, String.format("Angle at tree bottom = %.2fº", angleTreeBottom), Toast.LENGTH_SHORT).show();
+			if(accelerometerAngle < 0) {
+				angleTreeBottom = accelerometerAngle;
+				Toast.makeText(this, String.format("Angle at tree bottom = %.2fº", angleTreeBottom), Toast.LENGTH_SHORT).show();
 
-			Button buttonReadAngle = (Button) v;
-			buttonReadAngle.setEnabled(false);
+				Button buttonReadAngle = (Button) v;
+				buttonReadAngle.setEnabled(false);
 
-			Button buttonCalculateHeight = (Button) findViewById(R.id.buttonCalculateHeight);
-			buttonCalculateHeight.setEnabled(true);
+				Button buttonCalculateHeight = (Button) findViewById(R.id.buttonCalculateHeight);
+				buttonCalculateHeight.setEnabled(true);
 
-			//change programme stage
-			currentStage = STAGE_CALCULATE_TREE_HEIGHT;
+				//change programme stage
+				currentStage = STAGE_CALCULATE_TREE_HEIGHT;
 
-			//TODO:remove later
-			textViewSecondAngle.setText(String.format("angle tree bottom = %.2f", angleTreeBottom));
+				//TODO:remove later
+				textViewSecondAngle.setText(String.format("angle tree bottom = %.2f", angleTreeBottom));
+			} else {
+				Toast.makeText(this, "Angle to tree bottom must be negative", Toast.LENGTH_SHORT).show();
+			}
 		}	
 	}
 
@@ -168,7 +186,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 		Button buttonUndoAngle = (Button) findViewById(R.id.buttonUndoAngle);
 		buttonUndoAngle.setEnabled(false);
-		
+
 		//show next step's instructions
 		showInsturctions(isInstructionEnabled);
 
@@ -410,10 +428,10 @@ public class CameraActivity extends Activity implements SensorEventListener {
 						if (checkBoxInstruction.isChecked()){
 							isInstructionEnabled = true;
 						}
-						
+
 						//change programme stage
 						currentStage = STAGE_TREETOP_ANGLE;
-						
+
 						//show next step's instructions
 						showInsturctions(isInstructionEnabled);
 					} else {
@@ -436,7 +454,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 */
 	private void showInsturctions(boolean isEnabled) {
 		Log.d(TAG, "showInsturctions");
-		
+
 		if (!isEnabled) {
 			return;
 		}
@@ -445,11 +463,11 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		dialogPerson.setContentView(R.layout.dialog_custom_person);
 		ImageView imageViewPerson = (ImageView) dialogPerson.findViewById(R.id.imageViewPerson);
 		imageViewPerson.setOnTouchListener(new OnTouchListener() {
-			
+
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				dialogPerson.dismiss();
-				
+
 				String dialogTitle = null;
 				int dialogLayoutID = 0;
 				final Dialog dialogInstruction = new Dialog(CameraActivity.this, R.style.myInstructionDialog);
@@ -464,7 +482,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 					dialogTitle = "Lowest Point!";
 					dialogLayoutID = R.layout.dialog_custom_math_tree_bottom;
 					break;
-					
+
 				case STAGE_CALCULATE_TREE_HEIGHT:
 					dialogTitle = "How Did We Calculate The Tree Height?";
 					dialogLayoutID = R.layout.dialog_custom_math_how;
