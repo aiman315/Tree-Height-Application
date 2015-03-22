@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Point;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -12,14 +13,18 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
@@ -91,21 +96,11 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	public void onClickReadAngle(View v) {
 		Log.d(TAG, "onClickReadAngle");
 		if (currentStage == STAGE_TREETOP_ANGLE) {
-			angleTreetop = accelerometerAngle;
-			Toast.makeText(this, String.format("Angle at treetop = %.2fº", angleTreetop), Toast.LENGTH_SHORT).show();
-
-			Button buttonUndoAngle = (Button) findViewById(R.id.buttonUndoAngle);
-			buttonUndoAngle.setEnabled(true);
-
-			//show next step's instructions
-			showInsturctions(isInstructionEnabled);
-
-			//change programme stage
-			currentStage = STAGE_TREE_BOTTOM_ANGLE;
-
-			//TODO:remove later
-			textViewFirstAngle.setText(String.format("angle treetop = %.2f",angleTreetop));
-
+			if (accelerometerAngle > 0) {
+				
+			} else {
+				
+			}
 		} else if (currentStage == STAGE_TREE_BOTTOM_ANGLE){
 			angleTreeBottom = accelerometerAngle;
 			Toast.makeText(this, String.format("Angle at tree bottom = %.2fº", angleTreeBottom), Toast.LENGTH_SHORT).show();
@@ -173,9 +168,9 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 		Button buttonUndoAngle = (Button) findViewById(R.id.buttonUndoAngle);
 		buttonUndoAngle.setEnabled(false);
-
-		//change programme stage
-		currentStage = STAGE_TREETOP_ANGLE;
+		
+		//show next step's instructions
+		showInsturctions(isInstructionEnabled);
 
 		//disable instructions
 		isInstructionEnabled = false;
@@ -316,7 +311,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-		//Log.d(TAG, "onSensorChanged");
+		Log.d(TAG, "onSensorChanged");
 
 		//TODO: remove TextViews. Only need to capture the values
 
@@ -324,7 +319,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		float valueY = event.values[1];
 		float valueZ = -1 * event.values[2]; //multiply by -1 to obtain Z actual readings for device on its back
 
-		Log.d(TAG, ""+System.currentTimeMillis()+","+event.values[0]+","+event.values[1]+","+(event.values[2]));
+		//Log.d(TAG, ""+System.currentTimeMillis()+","+event.values[0]+","+event.values[1]+","+(event.values[2]));
 		int rotation = getRotation(this);
 		switch (rotation) {
 		case Surface.ROTATION_0:
@@ -354,7 +349,6 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		textViewY.setText("acceleration Y = "+Float.toString(valueY));
 		textViewZ.setText("acceleration Z = "+Float.toString(valueZ));
 		textViewAngle.setText(String.format("Current angle = %.2f",accelerometerAngle));
-
 	}
 
 	/**
@@ -442,45 +436,71 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 */
 	private void showInsturctions(boolean isEnabled) {
 		Log.d(TAG, "showInsturctions");
+		
 		if (!isEnabled) {
 			return;
 		}
 
-		String dialogTitle = null;
-		int dialogLayoutID = 0;
-		final Dialog dialogInstruction = new Dialog(CameraActivity.this, R.style.myInstructionDialog);
-
-		switch(currentStage) {
-
-		case STAGE_HEIGHT_INPUT:
-			dialogTitle = "Highest Point!";
-			dialogLayoutID = R.layout.dialog_custom_math_treetop;
-			break;
-
-		case STAGE_TREETOP_ANGLE:
-			dialogTitle = "Lowest Point!";
-			dialogLayoutID = R.layout.dialog_custom_math_tree_bottom;
-			break;
-
-		case STAGE_TREE_BOTTOM_ANGLE:
-			dialogTitle = "How Did We Calculate The Tree Height?";
-			dialogLayoutID = R.layout.dialog_custom_math_treetop;
-			break;
-
-		default:
-			return;
-		}
-
-		dialogInstruction.setContentView(dialogLayoutID);
-		dialogInstruction.setTitle(dialogTitle);
-		Button button = (Button) dialogInstruction.findViewById(R.id.buttonOkay);
-		button.setOnClickListener(new View.OnClickListener() {
+		final Dialog dialogPerson = new Dialog(CameraActivity.this, R.style.myCustomDialog);
+		dialogPerson.setContentView(R.layout.dialog_custom_person);
+		ImageView imageViewPerson = (ImageView) dialogPerson.findViewById(R.id.imageViewPerson);
+		imageViewPerson.setOnTouchListener(new OnTouchListener() {
+			
 			@Override
-			public void onClick(View view) {
-				dialogInstruction.dismiss();
+			public boolean onTouch(View v, MotionEvent event) {
+				dialogPerson.dismiss();
+				
+				String dialogTitle = null;
+				int dialogLayoutID = 0;
+				final Dialog dialogInstruction = new Dialog(CameraActivity.this, R.style.myInstructionDialog);
+
+				switch(currentStage) {
+				case STAGE_TREETOP_ANGLE:
+					dialogTitle = "Highest Point!";
+					dialogLayoutID = R.layout.dialog_custom_math_treetop;
+					break;
+
+				case STAGE_TREE_BOTTOM_ANGLE:
+					dialogTitle = "Lowest Point!";
+					dialogLayoutID = R.layout.dialog_custom_math_tree_bottom;
+					break;
+					
+				case STAGE_CALCULATE_TREE_HEIGHT:
+					dialogTitle = "How Did We Calculate The Tree Height?";
+					dialogLayoutID = R.layout.dialog_custom_math_how;
+					currentStage = STAGE_TREETOP_ANGLE;
+					break;
+
+				default:
+					return false;
+				}
+
+				dialogInstruction.setContentView(dialogLayoutID);
+				dialogInstruction.setTitle(dialogTitle);
+				Button button = (Button) dialogInstruction.findViewById(R.id.buttonOkay);
+				button.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View view) {
+						dialogInstruction.dismiss();
+					}
+				});
+				dialogPerson.setCancelable(true);
+				dialogPerson.setCanceledOnTouchOutside(true);
+				dialogInstruction.show();
+				return false;
 			}
 		});
-		dialogInstruction.show();
+		WindowManager.LayoutParams dialogAttrib = dialogPerson.getWindow().getAttributes();
+		Point point = new Point();
+		getWindowManager().getDefaultDisplay().getSize(point);
+
+		dialogAttrib.gravity = Gravity.BOTTOM;
+		dialogAttrib.y = 1 * point.y / 4;
+		dialogAttrib.x = 3 * point.x / 4;
+
+		dialogPerson.setCancelable(true);
+		dialogPerson.setCanceledOnTouchOutside(true);
+		dialogPerson.show();
 	}
 
 
@@ -643,7 +663,6 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			return true;
 		case R.id.action_instruction:
 			isInstructionEnabled = !isInstructionEnabled;
-			showInsturctions(isInstructionEnabled);
 			return true;
 		case R.id.action_debugging_information:
 			isDebuggingEnabled = !isDebuggingEnabled;

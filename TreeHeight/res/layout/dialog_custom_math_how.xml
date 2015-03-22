@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ScrollViewTreeTop"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:scrollbars="none" >
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/textViewMathHow1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:padding="10dp"
+            android:text="To calculate the height of the tree, we needed three peices of information:" />
+
+        <TextView
+            android:id="@+id/textViewMathHow2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textViewMathHow1"
+            android:padding="10dp"
+            android:text="Your height" />
+
+        <TextView
+            android:id="@+id/textViewMathHow3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textViewMathHow1"
+            android:layout_toEndOf="@+id/textViewMathHow2"
+            android:padding="10dp"
+            android:text="Angle to treetop" />
+
+        <TextView
+            android:id="@+id/textViewMathHow4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textViewMathHow1"
+            android:layout_toEndOf="@+id/textViewMathHow3"
+            android:padding="10dp"
+            android:text="Angle to tree bottom" />
+
+        <ImageView
+            android:id="@+id/imageViewMathHow1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textViewMathHow2"
+            android:contentDescription="@string/empty"
+            android:padding="10dp"
+            android:src="@drawable/height_person" />
+
+        <ImageView
+            android:id="@+id/imageViewMathHow2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textViewMathHow2"
+            android:layout_toEndOf="@+id/imageViewMathHow1"
+            android:contentDescription="@string/empty"
+            android:padding="10dp"
+            android:src="@drawable/snap_top" />
+
+        <ImageView
+            android:id="@+id/imageViewMathHow3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textViewMathHow4"
+            android:layout_toEndOf="@+id/imageViewMathHow2"
+            android:contentDescription="@string/empty"
+            android:padding="10dp"
+            android:src="@drawable/snap_bottom" />
+
+        <TextView
+            android:id="@+id/textViewMathHow5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/imageViewMathHow3"
+            android:padding="10dp"
+            android:text="Using these information, we have the following setting:" />
+
+        <ImageView
+            android:id="@+id/imageViewMathHow4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textViewMathHow5"
+            android:layout_centerHorizontal="true"
+            android:contentDescription="@string/empty"
+            android:padding="10dp"
+            android:src="@drawable/math_triangles" />
+
+        <TextView
+            android:id="@+id/textViewMathHow6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/imageViewMathHow4"
+            android:padding="10dp"
+            android:text="Two triangles, two known angles and a known side of the small triangle" />
+        
+        <Button
+            android:id="@+id/buttonOkay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textViewMathHow6"
+            android:layout_centerHorizontal="true"
+            android:padding="10dp"
+            android:text="@string/ok" />
+    </RelativeLayout>
+
+</ScrollView>
