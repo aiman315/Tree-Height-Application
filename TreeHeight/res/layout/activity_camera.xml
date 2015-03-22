@@ -51,7 +51,7 @@
              android:layout_alignTop="@+id/buttonReadAngle"
              android:layout_toStartOf="@+id/buttonReadAngle"
              android:text="@string/reset"
-             android:onClick="onClickUndoAngle"
+             android:onClick="onClickResetAngle"
              android:enabled="false"
              android:textSize="14sp" />
         

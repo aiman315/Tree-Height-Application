@@ -35,6 +35,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	private final int STAGE_HEIGHT_INPUT = 0;
 	private final int STAGE_TREETOP_ANGLE = 1;
 	private final int STAGE_TREE_BOTTOM_ANGLE = 2;
+	private final int STAGE_CALCULATE_TREE_HEIGHT = 3;
 
 	private final String SELETED_CAMERA_ID_KEY = "selectedCameraId";
 	private final int CAMERA_ID_NOT_SET = -1;
@@ -61,9 +62,9 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	private double heightCamera;
 
 	// Angle readings
-	private double tempAngle;
-	private int angle1;
-	private int angle2;
+	private double accelerometerAngle;
+	private double angleTreetop;
+	private double angleTreeBottom;
 
 	//Tree height
 	private double heightTree;
@@ -89,9 +90,9 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 */
 	public void onClickReadAngle(View v) {
 		Log.d(TAG, "onClickReadAngle");
-		if (angle1 == INVALID_ANGLE) {
-			angle1 = (int) tempAngle;
-			Toast.makeText(this, String.format("1st angle reading: %dº", angle1), Toast.LENGTH_SHORT).show();
+		if (currentStage == STAGE_TREETOP_ANGLE) {
+			angleTreetop = accelerometerAngle;
+			Toast.makeText(this, String.format("Angle at treetop = %.2fº", angleTreetop), Toast.LENGTH_SHORT).show();
 
 			Button buttonUndoAngle = (Button) findViewById(R.id.buttonUndoAngle);
 			buttonUndoAngle.setEnabled(true);
@@ -99,13 +100,15 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			//show next step's instructions
 			showInsturctions(isInstructionEnabled);
 
-			//TODO:remove later
-			TextView angleFirst = (TextView) findViewById(R.id.firstAngle);
-			angleFirst.setText("angle 1 = "+angle1);
+			//change programme stage
+			currentStage = STAGE_TREE_BOTTOM_ANGLE;
 
-		} else {
-			angle2 = (int) tempAngle;
-			Toast.makeText(this, String.format("2nd angle reading: %dº", angle2), Toast.LENGTH_SHORT).show();
+			//TODO:remove later
+			textViewFirstAngle.setText("angle treetop = "+angleTreetop);
+
+		} else if (currentStage == STAGE_TREE_BOTTOM_ANGLE){
+			angleTreeBottom = accelerometerAngle;
+			Toast.makeText(this, String.format("Angle at tree bottom = %.2fº", angleTreeBottom), Toast.LENGTH_SHORT).show();
 
 			Button buttonReadAngle = (Button) v;
 			buttonReadAngle.setEnabled(false);
@@ -113,9 +116,11 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			Button buttonCalculateHeight = (Button) findViewById(R.id.buttonCalculateHeight);
 			buttonCalculateHeight.setEnabled(true);
 
+			//change programme stage
+			currentStage = STAGE_CALCULATE_TREE_HEIGHT;
+
 			//TODO:remove later
-			TextView angleSecond = (TextView) findViewById(R.id.secondAngle);
-			angleSecond.setText("angle 2 = "+angle2);
+			textViewSecondAngle.setText("angle tree bottom = "+angleTreeBottom);
 		}	
 	}
 
@@ -123,25 +128,28 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 * Reset angles readings
 	 * @param v
 	 */
-	public void onClickUndoAngle(View v) {
-		Log.d(TAG, "onClickResetAngles");
+	public void onClickResetAngle(View v) {
+		Log.d(TAG, "onClickResetAngle");
 
-		if (angle2 != INVALID_ANGLE) {
-			angle2 = INVALID_ANGLE;
-			Toast.makeText(this, "Cleared 2nd angle reading", Toast.LENGTH_SHORT).show();
+		if (currentStage == STAGE_TREE_BOTTOM_ANGLE) {
+			currentStage = STAGE_TREETOP_ANGLE;
+			angleTreetop = INVALID_ANGLE;
+			Toast.makeText(this, "Cleared treetop angle value", Toast.LENGTH_SHORT).show();
+
+
+		} else if (currentStage == STAGE_CALCULATE_TREE_HEIGHT){
+			currentStage = STAGE_TREE_BOTTOM_ANGLE;
+			angleTreeBottom = INVALID_ANGLE;
+			Toast.makeText(this, "Cleared tree bottom angle value", Toast.LENGTH_SHORT).show();
 
 			Button buttonCalculateHeight = (Button) findViewById(R.id.buttonCalculateHeight);
 			buttonCalculateHeight.setEnabled(false);
 
 			Button buttonReadAngle = (Button) findViewById(R.id.buttonReadAngle);
 			buttonReadAngle.setEnabled(true);
-		} else {
-			angle1 = INVALID_ANGLE;
-			Toast.makeText(this, "Cleared 1st angle reading", Toast.LENGTH_SHORT).show();
-
-			Button buttonUndoAngle = (Button) v;
-			buttonUndoAngle.setEnabled(false);
 		}
+		Button buttonReadAngle = (Button) v;
+		buttonReadAngle.setEnabled(false);
 	}
 
 	/**
@@ -155,7 +163,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		//FIXME: what is the reasonable accuracy %.2f m or cm?
 		Toast.makeText(this, String.format("Total Tree Height: %.2f cm", heightTree), Toast.LENGTH_SHORT).show();
 
-		angle1 = angle2 = INVALID_ANGLE;
+		angleTreetop = angleTreeBottom = INVALID_ANGLE;
 
 		Button buttonCalculateHeight = (Button) v;
 		buttonCalculateHeight.setEnabled(false);
@@ -165,6 +173,12 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 		Button buttonUndoAngle = (Button) findViewById(R.id.buttonUndoAngle);
 		buttonUndoAngle.setEnabled(false);
+
+		//change programme stage
+		currentStage = STAGE_TREETOP_ANGLE;
+
+		//disable instructions
+		isInstructionEnabled = false;
 	}
 
 	/**
@@ -305,10 +319,6 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		//Log.d(TAG, "onSensorChanged");
 
 		//TODO: remove TextViews. Only need to capture the values
-		TextView textX = (TextView)findViewById(R.id.textViewX);
-		TextView textY = (TextView)findViewById(R.id.textViewY);
-		TextView textZ = (TextView)findViewById(R.id.textViewZ);
-		TextView textAngle = (TextView)findViewById(R.id.textViewAngle);
 
 		float valueX = event.values[0];
 		float valueY = event.values[1];
@@ -319,19 +329,19 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		switch (rotation) {
 		case Surface.ROTATION_0:
 			//portrait
-			tempAngle = calculateAngle(valueY, valueZ);
+			accelerometerAngle = calculateAngle(valueY, valueZ);
 			break;
 		case Surface.ROTATION_90:
 			//landscape
-			tempAngle = calculateAngle(valueX, valueZ);
+			accelerometerAngle = calculateAngle(valueX, valueZ);
 			break;
 		case Surface.ROTATION_180:
 			//reverse portrait
-			tempAngle = calculateAngle(-1*valueY, valueZ);
+			accelerometerAngle = calculateAngle(-1*valueY, valueZ);
 			break;
 		default:
 			//reverse landscape
-			tempAngle = calculateAngle(-1*valueX, valueZ);
+			accelerometerAngle = calculateAngle(-1*valueX, valueZ);
 			break;
 		}
 
@@ -340,10 +350,10 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			Toast.makeText(this, "You have exceeded angle value", Toast.LENGTH_SHORT).show();
 		}*/
 
-		textX.setText(Float.toString(valueX));
-		textY.setText(Float.toString(valueY));
-		textZ.setText(Float.toString(valueZ));
-		textAngle.setText(String.format("%.2f",tempAngle));
+		textViewX.setText(Float.toString(valueX));
+		textViewY.setText(Float.toString(valueY));
+		textViewZ.setText(Float.toString(valueZ));
+		textViewAngle.setText(String.format("%.2f",accelerometerAngle));
 
 	}
 
@@ -397,7 +407,6 @@ public class CameraActivity extends Activity implements SensorEventListener {
 						dialogInstruction.dismiss();
 
 						//Display Height
-						TextView textViewCameraHeight = (TextView) findViewById(R.id.textViewCameraHeight);
 						textViewCameraHeight.setText(String.format("Camera Height: %f", heightCamera));
 						//Enable interface
 						Button buttonReadAngle = (Button) findViewById(R.id.buttonReadAngle);
@@ -415,7 +424,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 			}
 		});
-		
+
 		CheckBox checkBoxInstruction = (CheckBox) dialogInstruction.findViewById(R.id.checkBoxInstructions);
 		if (checkBoxInstruction.isChecked()){
 			isInstructionEnabled = true;
@@ -448,13 +457,11 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			break;
 
 		case STAGE_TREETOP_ANGLE:
-			currentStage = STAGE_TREE_BOTTOM_ANGLE;
 			dialogTitle = "Lowest Point!";
 			dialogLayoutID = R.layout.dialog_custom_math_tree_bottom;
 			break;
 
 		case STAGE_TREE_BOTTOM_ANGLE:
-			currentStage = STAGE_HEIGHT_INPUT;
 			dialogTitle = "How Did We Calculate The Tree Height?";
 			dialogLayoutID = R.layout.dialog_custom_math_treetop;
 			break;
@@ -495,7 +502,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 			textViewFormula.setVisibility(View.VISIBLE);
 			textViewTreeHeight.setVisibility(View.VISIBLE);
-			
+
 		} else {
 			textViewCameraHeight.setVisibility(View.INVISIBLE);
 
@@ -518,26 +525,18 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 */
 	private void calculateTreeHeight() {
 		Log.d(TAG, "calculateTreeHeight");
-		TextView textViewTreeHeight = (TextView) findViewById(R.id.textViewTotalHeight);
 
-		if (angle1 < angle2) {
-			TextView formula = (TextView) findViewById(R.id.formula);
-			formula.setText(String.format("%.2f*((%d/%d)+1)",heightCamera, angle2, angle1));
+		if (angleTreetop < angleTreeBottom) {
+			double temp = angleTreeBottom;
+			angleTreeBottom = angleTreetop;
+			angleTreetop = temp;
+		} 
 
-			angle1 = Math.abs(angle1);
-			angle2 = Math.abs(angle2);
-			heightTree = heightCamera*((Math.tan(Math.toRadians(angle2))/Math.tan(Math.toRadians(angle1)))+ 1);
-
-		} else {
-			TextView formula = (TextView) findViewById(R.id.formula);
-			formula.setText(String.format("%.2f*((%d/%d)+1)",heightCamera, angle1, angle2));
-
-			angle1 = Math.abs(angle1);
-			angle2 = Math.abs(angle2);
-			heightTree = heightCamera*((Math.tan(Math.toRadians(angle1))/Math.tan(Math.toRadians(angle2)))+ 1);
-		}
-
+		angleTreetop = Math.abs(angleTreetop);
+		angleTreeBottom = Math.abs(angleTreeBottom);
+		heightTree = heightCamera*((Math.tan(Math.toRadians(angleTreetop))/Math.tan(Math.toRadians(angleTreeBottom)))+ 1);
 		heightTree = Math.abs(heightTree);
+		textViewFormula.setText(String.format("%.2f*((%.2f/%.2f)+1)",heightCamera, angleTreetop, angleTreeBottom));
 		textViewTreeHeight.setText(String.format("Tree Height = %.2f",heightTree));
 	}
 
@@ -572,8 +571,8 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 		heightCamera = 0;
 		heightTree = 0;
-		angle1 = INVALID_ANGLE;
-		angle2 = INVALID_ANGLE;
+		angleTreetop = INVALID_ANGLE;
+		angleTreeBottom = INVALID_ANGLE;
 		currentStage = STAGE_HEIGHT_INPUT;
 		isInstructionEnabled = false;
 		isDebuggingEnabled = false;
