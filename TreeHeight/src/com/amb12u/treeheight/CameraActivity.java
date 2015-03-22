@@ -30,7 +30,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	//TODO: Move all text to strings.xml
 	private final String TAG = "CameraActivity";
 	private final int INVALID_ANGLE = -999;
-	
+
 	private final int STAGE_HEIGHT_INPUT = 0;
 	private final int STAGE_TREETOP_ANGLE = 1;
 	private final int STAGE_TREE_BOTTOM_ANGLE = 2;
@@ -45,7 +45,8 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	private Camera selectedCamera;
 	private int currentStage;
 	private boolean isInstructionEnabled;
-	
+	private boolean isDebuggingEnabled;
+
 	// Holds ID values for cameras
 	private int frontFacingCameraId;
 	private int backFacingCameraId;
@@ -68,6 +69,17 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 	private SeekBar seekBarZoom;
 
+	//Debugging textViews
+	TextView textViewCameraHeight;
+	TextView textViewX;
+	TextView textViewY;
+	TextView textViewZ;
+	TextView textViewAngle;
+	TextView textViewFirstAngle;
+	TextView textViewSecondAngle;
+	TextView textViewFormula;
+	TextView textViewTreeHeight;
+
 
 
 	/**
@@ -82,6 +94,9 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 			Button buttonUndoAngle = (Button) findViewById(R.id.buttonUndoAngle);
 			buttonUndoAngle.setEnabled(true);
+
+			//show next step's instructions
+			showInsturctions(isInstructionEnabled);
 
 			//TODO:remove later
 			TextView angleFirst = (TextView) findViewById(R.id.firstAngle);
@@ -101,9 +116,6 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			TextView angleSecond = (TextView) findViewById(R.id.secondAngle);
 			angleSecond.setText("angle 2 = "+angle2);
 		}	
-		
-		//show next step's instructions
-		showInsturctions(isInstructionEnabled);
 	}
 
 	/**
@@ -389,7 +401,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 						//Enable interface
 						Button buttonReadAngle = (Button) findViewById(R.id.buttonReadAngle);
 						buttonReadAngle.setEnabled(true);
-						
+
 						//show next step's instructions
 						showInsturctions(isInstructionEnabled);
 					} else {
@@ -416,35 +428,35 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		if (!isEnabled) {
 			return;
 		}
-		
+
 		String dialogTitle = null;
 		int dialogLayoutID = 0;
 		final Dialog dialogInstruction = new Dialog(CameraActivity.this, R.style.myInstructionDialog);
-		
+
 		switch(currentStage) {
-		
+
 		case STAGE_HEIGHT_INPUT:
 			currentStage = STAGE_TREETOP_ANGLE;
 			dialogTitle = "Highest Point!";
 			dialogLayoutID = R.layout.dialog_custom_math_treetop;
 			break;
-		
+
 		case STAGE_TREETOP_ANGLE:
 			currentStage = STAGE_TREE_BOTTOM_ANGLE;
 			dialogTitle = "Lowest Point!";
 			dialogLayoutID = R.layout.dialog_custom_math_tree_bottom;
 			break;
-		
+
 		case STAGE_TREE_BOTTOM_ANGLE:
 			currentStage = STAGE_HEIGHT_INPUT;
 			dialogTitle = "How Did We Calculate The Tree Height?";
 			dialogLayoutID = R.layout.dialog_custom_math_treetop;
 			break;
-			
+
 		default:
 			return;
 		}
-		
+
 		dialogInstruction.setContentView(dialogLayoutID);
 		dialogInstruction.setTitle(dialogTitle);
 		Button button = (Button) dialogInstruction.findViewById(R.id.buttonOkay);
@@ -455,6 +467,38 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			}
 		});
 		dialogInstruction.show();
+	}
+
+
+	private void showDebuggingInfo(boolean isEnabled) {
+		if (isEnabled) {
+			textViewCameraHeight.setVisibility(View.VISIBLE);
+
+			textViewX.setVisibility(View.VISIBLE);
+			textViewY.setVisibility(View.VISIBLE);
+			textViewZ.setVisibility(View.VISIBLE);
+			textViewAngle.setVisibility(View.VISIBLE);
+
+			textViewFirstAngle.setVisibility(View.VISIBLE);
+			textViewSecondAngle.setVisibility(View.VISIBLE);
+
+			textViewFormula.setVisibility(View.VISIBLE);
+			textViewTreeHeight.setVisibility(View.VISIBLE);
+			
+		} else {
+			textViewCameraHeight.setVisibility(View.INVISIBLE);
+
+			textViewX.setVisibility(View.INVISIBLE);
+			textViewY.setVisibility(View.INVISIBLE);
+			textViewZ.setVisibility(View.INVISIBLE);
+			textViewAngle.setVisibility(View.INVISIBLE);
+
+			textViewFirstAngle.setVisibility(View.INVISIBLE);
+			textViewSecondAngle.setVisibility(View.INVISIBLE);
+
+			textViewFormula.setVisibility(View.INVISIBLE);
+			textViewTreeHeight.setVisibility(View.INVISIBLE);
+		}
 	}
 
 	/**
@@ -521,6 +565,21 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		angle2 = INVALID_ANGLE;
 		currentStage = STAGE_HEIGHT_INPUT;
 		isInstructionEnabled = true;
+		isDebuggingEnabled = false;
+
+
+		textViewCameraHeight = (TextView)findViewById(R.id.textViewCameraHeight);
+
+		textViewX = (TextView)findViewById(R.id.textViewX);
+		textViewY = (TextView)findViewById(R.id.textViewY);
+		textViewZ = (TextView)findViewById(R.id.textViewZ);
+		textViewAngle = (TextView)findViewById(R.id.textViewAngle);
+
+		textViewFirstAngle = (TextView) findViewById(R.id.firstAngle);
+		textViewSecondAngle= (TextView) findViewById(R.id.secondAngle);
+
+		textViewFormula = (TextView) findViewById(R.id.formula);
+		textViewTreeHeight = (TextView) findViewById(R.id.textViewTotalHeight);
 
 
 		//check for camera feature
@@ -544,6 +603,9 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 		mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+
+		//disable debugging information
+		showDebuggingInfo(isDebuggingEnabled);
 
 		//camera height setup
 		setupCameraHeight();
