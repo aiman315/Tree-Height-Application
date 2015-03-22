@@ -49,7 +49,7 @@ public class DescActivity extends Activity {
 		descSnap1 = (TextView) findViewById(R.id.textViewDescSnap1);
 		descSnap2 = (TextView) findViewById(R.id.textViewDescSnap2);
 
-		imageViewHeightPerson = (ImageView) findViewById(R.id.imageViewHeightPerson);
+		imageViewHeightPerson = (ImageView) findViewById(R.id.imageViewMathTreetop);
 		imageViewTree1 = (ImageView) findViewById(R.id.imageViewTree1);
 		imageViewTree2 = (ImageView) findViewById(R.id.imageViewTree2);
 		imageViewSnap1 = (ImageView) findViewById(R.id.imageViewSnap1);

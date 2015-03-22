@@ -41,7 +41,7 @@
                 android:text="@string/empty" />
 
             <ImageView
-                android:id="@+id/imageViewHeightPerson"
+                android:id="@+id/imageViewMathTreetop"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/textViewDescHeightPerson"
@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentStart="true"
-                android:layout_below="@+id/imageViewHeightPerson"
+                android:layout_below="@+id/imageViewMathTreetop"
                 android:text="@string/empty" />
 
             <ImageView

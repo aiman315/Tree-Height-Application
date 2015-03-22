@@ -28,9 +28,12 @@ public class CameraActivity extends Activity implements SensorEventListener {
 
 
 	//TODO: Move all text to strings.xml
-
 	private final String TAG = "CameraActivity";
 	private final int INVALID_ANGLE = -999;
+	
+	private final int STAGE_HEIGHT_INPUT = 0;
+	private final int STAGE_TREETOP_ANGLE = 1;
+	private final int STAGE_TREE_BOTTOM_ANGLE = 2;
 
 	private final String SELETED_CAMERA_ID_KEY = "selectedCameraId";
 	private final int CAMERA_ID_NOT_SET = -1;
@@ -40,7 +43,9 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	private boolean hasFrontCamera;
 
 	private Camera selectedCamera;
-
+	private int currentStage;
+	private boolean isInstructionEnabled;
+	
 	// Holds ID values for cameras
 	private int frontFacingCameraId;
 	private int backFacingCameraId;
@@ -96,6 +101,9 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			TextView angleSecond = (TextView) findViewById(R.id.secondAngle);
 			angleSecond.setText("angle 2 = "+angle2);
 		}	
+		
+		//show next step's instructions
+		showInsturctions(isInstructionEnabled);
 	}
 
 	/**
@@ -335,6 +343,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 * @return the angle between dimensions in degrees 
 	 */
 	private double calculateAngle(float axis, float depth) {
+		Log.d(TAG, "calculateAngle");
 		//TODO: remove to degrees. used only for easier reading
 		return Math.toDegrees(Math.atan(depth/axis));
 	}
@@ -345,6 +354,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 * @return (0: portrait, 90: landscape, 180: reverse portrait, 270: reverse landscape)
 	 */
 	private int getRotation(Context context){
+		Log.d(TAG, "getRotation");
 		return ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
 	}
 
@@ -354,6 +364,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 * The unit for camera height is cm
 	 */
 	private void setupCameraHeight() {
+		Log.d(TAG, "setupCameraHeight");
 		//camera height input-dialog setup
 		final Dialog dialogInstruction = new Dialog(this, R.style.myInstructionDialog);
 		dialogInstruction.setContentView(R.layout.dialog_custom_person_height);
@@ -378,6 +389,9 @@ public class CameraActivity extends Activity implements SensorEventListener {
 						//Enable interface
 						Button buttonReadAngle = (Button) findViewById(R.id.buttonReadAngle);
 						buttonReadAngle.setEnabled(true);
+						
+						//show next step's instructions
+						showInsturctions(isInstructionEnabled);
 					} else {
 						Toast.makeText(CameraActivity.this, "Input Must be greater than zero", Toast.LENGTH_SHORT).show();
 					}
@@ -393,10 +407,62 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	}
 
 	/**
+	 * Display instructions using a custom dialog.
+	 * Depends on the current application stage
+	 * @param isEnabled: flag to show or hide instruction dialogs
+	 */
+	private void showInsturctions(boolean isEnabled) {
+		Log.d(TAG, "showInsturctions");
+		if (!isEnabled) {
+			return;
+		}
+		
+		String dialogTitle = null;
+		int dialogLayoutID = 0;
+		final Dialog dialogInstruction = new Dialog(CameraActivity.this, R.style.myInstructionDialog);
+		
+		switch(currentStage) {
+		
+		case STAGE_HEIGHT_INPUT:
+			currentStage = STAGE_TREETOP_ANGLE;
+			dialogTitle = "Highest Point!";
+			dialogLayoutID = R.layout.dialog_custom_math_treetop;
+			break;
+		
+		case STAGE_TREETOP_ANGLE:
+			currentStage = STAGE_TREE_BOTTOM_ANGLE;
+			dialogTitle = "Lowest Point!";
+			dialogLayoutID = R.layout.dialog_custom_math_tree_bottom;
+			break;
+		
+		case STAGE_TREE_BOTTOM_ANGLE:
+			currentStage = STAGE_HEIGHT_INPUT;
+			dialogTitle = "How Did We Calculate The Tree Height?";
+			dialogLayoutID = R.layout.dialog_custom_math_treetop;
+			break;
+			
+		default:
+			return;
+		}
+		
+		dialogInstruction.setContentView(dialogLayoutID);
+		dialogInstruction.setTitle(dialogTitle);
+		Button button = (Button) dialogInstruction.findViewById(R.id.buttonOkay);
+		button.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				dialogInstruction.dismiss();
+			}
+		});
+		dialogInstruction.show();
+	}
+
+	/**
 	 * Calculate height for current angles readings
 	 * and display it
 	 */
 	private void calculateTreeHeight() {
+		Log.d(TAG, "calculateTreeHeight");
 		TextView textViewTreeHeight = (TextView) findViewById(R.id.textViewTotalHeight);
 
 		if (angle1 < angle2) {
@@ -453,6 +519,8 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		heightTree = 0;
 		angle1 = INVALID_ANGLE;
 		angle2 = INVALID_ANGLE;
+		currentStage = STAGE_HEIGHT_INPUT;
+		isInstructionEnabled = true;
 
 
 		//check for camera feature
@@ -550,7 +618,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		Log.d(TAG, "onStop");
 		super.onStop();
 	}
-	
+
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);

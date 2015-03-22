@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ScrollViewTreeTop"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:isScrollContainer="true" >
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:padding="10dp"
+            android:text="Now hold your device at your height level, and point to the treetop" />
+
+        <ImageView
+            android:id="@+id/imageViewMathTreetop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView1"
+            android:layout_centerHorizontal="true"
+            android:contentDescription="@string/empty"
+            android:padding="10dp"
+            android:src="@drawable/math_treetop" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/imageViewMathTreetop"
+            android:padding="10dp"
+            android:text="When the cross is pointing at the treetop, press the capture button" />
+
+        <ImageView
+            android:id="@+id/imageViewSnapTreetop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView2"
+            android:layout_centerHorizontal="true"
+            android:contentDescription="@string/empty"
+            android:padding="10dp"
+            android:src="@drawable/snap_top" />
+
+        <Button
+            android:id="@+id/buttonOkay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/imageViewSnapTreetop"
+            android:layout_centerHorizontal="true"
+            android:padding="10dp"
+            android:text="Ok" />
+    </RelativeLayout>
+
+</ScrollView>
