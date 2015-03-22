@@ -470,7 +470,12 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	}
 
 
+	/**
+	 * Sets the visibility of debugging textViews
+	 * @param isEnabled: flag to show or hide debugging information
+	 */
 	private void showDebuggingInfo(boolean isEnabled) {
+		Log.d(TAG, "showDebuggingInfo");
 		if (isEnabled) {
 			textViewCameraHeight.setVisibility(View.VISIBLE);
 
@@ -629,6 +634,14 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		switch(id) {
 		case R.id.action_camera_height:
 			setupCameraHeight();
+			return true;
+		case R.id.action_instruction:
+			isInstructionEnabled = !isInstructionEnabled;
+			showInsturctions(isInstructionEnabled);
+			return true;
+		case R.id.action_debugging_information:
+			isDebuggingEnabled = !isDebuggingEnabled;
+			showDebuggingInfo(isDebuggingEnabled);
 			return true;
 		case R.id.action_camera_swap:
 			swapCamera();
