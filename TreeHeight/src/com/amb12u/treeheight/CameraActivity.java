@@ -104,7 +104,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			currentStage = STAGE_TREE_BOTTOM_ANGLE;
 
 			//TODO:remove later
-			textViewFirstAngle.setText("angle treetop = "+angleTreetop);
+			textViewFirstAngle.setText(String.format("angle treetop = %.2f",angleTreetop));
 
 		} else if (currentStage == STAGE_TREE_BOTTOM_ANGLE){
 			angleTreeBottom = accelerometerAngle;
@@ -120,7 +120,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			currentStage = STAGE_CALCULATE_TREE_HEIGHT;
 
 			//TODO:remove later
-			textViewSecondAngle.setText("angle tree bottom = "+angleTreeBottom);
+			textViewSecondAngle.setText(String.format("angle tree bottom = %.2f", angleTreeBottom));
 		}	
 	}
 
@@ -350,10 +350,10 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			Toast.makeText(this, "You have exceeded angle value", Toast.LENGTH_SHORT).show();
 		}*/
 
-		textViewX.setText(Float.toString(valueX));
-		textViewY.setText(Float.toString(valueY));
-		textViewZ.setText(Float.toString(valueZ));
-		textViewAngle.setText(String.format("%.2f",accelerometerAngle));
+		textViewX.setText("acceleration X = "+Float.toString(valueX));
+		textViewY.setText("acceleration Y = "+Float.toString(valueY));
+		textViewZ.setText("acceleration Z = "+Float.toString(valueZ));
+		textViewAngle.setText(String.format("Current angle = %.2f",accelerometerAngle));
 
 	}
 
@@ -407,11 +407,19 @@ public class CameraActivity extends Activity implements SensorEventListener {
 						dialogInstruction.dismiss();
 
 						//Display Height
-						textViewCameraHeight.setText(String.format("Camera Height: %f", heightCamera));
+						textViewCameraHeight.setText(String.format("Camera Height: %.2f", heightCamera));
 						//Enable interface
 						Button buttonReadAngle = (Button) findViewById(R.id.buttonReadAngle);
 						buttonReadAngle.setEnabled(true);
 
+						CheckBox checkBoxInstruction = (CheckBox) dialogInstruction.findViewById(R.id.checkBoxInstructions);
+						if (checkBoxInstruction.isChecked()){
+							isInstructionEnabled = true;
+						}
+						
+						//change programme stage
+						currentStage = STAGE_TREETOP_ANGLE;
+						
 						//show next step's instructions
 						showInsturctions(isInstructionEnabled);
 					} else {
@@ -421,14 +429,8 @@ public class CameraActivity extends Activity implements SensorEventListener {
 					Toast.makeText(CameraActivity.this, "Invalid Input", Toast.LENGTH_SHORT).show();
 					Log.e(TAG, "exception", e);
 				}
-
 			}
 		});
-
-		CheckBox checkBoxInstruction = (CheckBox) dialogInstruction.findViewById(R.id.checkBoxInstructions);
-		if (checkBoxInstruction.isChecked()){
-			isInstructionEnabled = true;
-		}
 		dialogInstruction.setCancelable(false);
 		dialogInstruction.show();
 	}
@@ -451,7 +453,6 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		switch(currentStage) {
 
 		case STAGE_HEIGHT_INPUT:
-			currentStage = STAGE_TREETOP_ANGLE;
 			dialogTitle = "Highest Point!";
 			dialogLayoutID = R.layout.dialog_custom_math_treetop;
 			break;
@@ -585,10 +586,10 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		textViewZ = (TextView)findViewById(R.id.textViewZ);
 		textViewAngle = (TextView)findViewById(R.id.textViewAngle);
 
-		textViewFirstAngle = (TextView) findViewById(R.id.firstAngle);
-		textViewSecondAngle= (TextView) findViewById(R.id.secondAngle);
+		textViewFirstAngle = (TextView) findViewById(R.id.textViewTreetopAngle);
+		textViewSecondAngle= (TextView) findViewById(R.id.textViewTreeBottomAngle);
 
-		textViewFormula = (TextView) findViewById(R.id.formula);
+		textViewFormula = (TextView) findViewById(R.id.textViewFormula);
 		textViewTreeHeight = (TextView) findViewById(R.id.textViewTotalHeight);
 
 
