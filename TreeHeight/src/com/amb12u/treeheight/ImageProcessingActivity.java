@@ -89,7 +89,6 @@ public class ImageProcessingActivity extends Activity {
 	//Make mathematical approach more visual
 	
 	//FIXME:
-	//two angles +ve and -ve
 	//offset for clicks at bottom causing app to crash
 
 
@@ -919,7 +918,6 @@ public class ImageProcessingActivity extends Activity {
 		if(taskAnimateReference != null) {
 			taskAnimateReference.cancel(true);
 		}
-		//FIXME: when activity starts again after shutting tasks, they don't run again
 	}
 
 

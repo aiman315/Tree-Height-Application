@@ -23,6 +23,24 @@
         android:layout_height="fill_parent"
         android:layout_alignParentBottom="true" >
 
+        <TextView
+            android:id="@+id/textViewAngleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/seekBarZoom"
+            android:layout_toStartOf="@+id/vertical_cross"
+            android:text="Angle = "
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <TextView
+            android:id="@+id/textViewAngleNum"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/seekBarZoom"
+            android:layout_toEndOf="@+id/vertical_cross"
+            android:text="@string/empty"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
         <View
             android:id="@+id/horizontal_cross"
             android:layout_width="fill_parent"
@@ -170,6 +188,29 @@
             android:layout_height="wrap_content"
             android:layout_alignBottom="@+id/vertical_cross"
             android:layout_alignParentStart="true" />
+
+        <ImageView
+            android:id="@+id/imageViewGrass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:alpha="0.5"
+            android:contentDescription="@string/empty"
+            android:src="@drawable/grass"
+            android:visibility="invisible" />
+
+        <ImageView
+            android:id="@+id/imageViewSky"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/seekBarZoom"
+            android:layout_alignBottom="@+id/imageViewGrass"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/gradient_math_sky"
+            android:contentDescription="@string/empty"
+            android:visibility="invisible" />
     </RelativeLayout>
 
 </RelativeLayout>

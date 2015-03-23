@@ -75,6 +75,8 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	private double heightTree;
 
 	private SeekBar seekBarZoom;
+	
+	TextView textViewAngleNum;
 
 	//Debugging textViews
 	TextView textViewCameraHeight;
@@ -363,6 +365,8 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			Toast.makeText(this, "You have exceeded angle value", Toast.LENGTH_SHORT).show();
 		}*/
 
+		textViewAngleNum.setText(String.format("%.2f", accelerometerAngle));
+		
 		textViewX.setText("acceleration X = "+Float.toString(valueX));
 		textViewY.setText("acceleration Y = "+Float.toString(valueY));
 		textViewZ.setText("acceleration Z = "+Float.toString(valueZ));
@@ -473,20 +477,34 @@ public class CameraActivity extends Activity implements SensorEventListener {
 				final Dialog dialogInstruction = new Dialog(CameraActivity.this, R.style.myInstructionDialog);
 
 				switch(currentStage) {
-				case STAGE_TREETOP_ANGLE:
+				case STAGE_TREETOP_ANGLE: 
 					dialogTitle = "Highest Point!";
 					dialogLayoutID = R.layout.dialog_custom_math_treetop;
+
+					//show sky gradient
+					((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.VISIBLE);
+
 					break;
 
-				case STAGE_TREE_BOTTOM_ANGLE:
+				case STAGE_TREE_BOTTOM_ANGLE: 
 					dialogTitle = "Lowest Point!";
 					dialogLayoutID = R.layout.dialog_custom_math_tree_bottom;
+
+					//hide sky and show grass
+					((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
+					((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.VISIBLE);
+
 					break;
 
-				case STAGE_CALCULATE_TREE_HEIGHT:
+				case STAGE_CALCULATE_TREE_HEIGHT: 
 					dialogTitle = "How Did We Calculate The Tree Height?";
 					dialogLayoutID = R.layout.dialog_custom_math_how;
-					currentStage = STAGE_TREETOP_ANGLE;
+					currentStage = STAGE_TREETOP_ANGLE;	
+
+					//hide sky and grass
+					((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
+					((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
+
 					break;
 
 				default:
@@ -616,6 +634,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		isInstructionEnabled = false;
 		isDebuggingEnabled = false;
 
+		textViewAngleNum = (TextView)findViewById(R.id.textViewAngleNum);
 
 		textViewCameraHeight = (TextView)findViewById(R.id.textViewCameraHeight);
 
