@@ -246,6 +246,14 @@ public class ImageProcessingActivity extends Activity {
 				minCol = 0;
 			}
 
+			if (minRow > originalMat.rows()-1) {
+				minRow = originalMat.rows()-1;
+			}
+
+			if (minCol > originalMat.cols()-1) {
+				minCol = originalMat.cols()-1;
+			}
+			
 			if (maxRow > originalMat.rows()-1) {
 				maxRow = originalMat.rows()-1;
 			}
