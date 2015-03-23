@@ -30,7 +30,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class CameraActivity extends Activity implements SensorEventListener {
+public class CameraActivity extends Activity implements SensorEventListener, IntStageListener{
 
 
 	//TODO: Move all text to strings.xml
@@ -50,7 +50,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	private boolean hasFrontCamera;
 
 	private Camera selectedCamera;
-	private int currentStage;
+	private ProgramStage currentStage;
 	private boolean isInstructionEnabled;
 	private boolean isDebuggingEnabled;
 
@@ -75,7 +75,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	private double heightTree;
 
 	private SeekBar seekBarZoom;
-	
+
 	TextView textViewAngleNum;
 
 	//Debugging textViews
@@ -97,7 +97,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	 */
 	public void onClickReadAngle(View v) {
 		Log.d(TAG, "onClickReadAngle");
-		if (currentStage == STAGE_TREETOP_ANGLE) {
+		if (currentStage.getStage() == STAGE_TREETOP_ANGLE) {
 			//Treetop angle must be positive
 			if(accelerometerAngle > 0) {
 				angleTreetop = accelerometerAngle;
@@ -107,7 +107,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 				buttonUndoAngle.setEnabled(true);
 
 				//change programme stage
-				currentStage = STAGE_TREE_BOTTOM_ANGLE;
+				currentStage.setStage(STAGE_TREE_BOTTOM_ANGLE);
 
 				//show next step's instructions
 				showInsturctions(isInstructionEnabled);
@@ -117,7 +117,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 			} else {
 				Toast.makeText(this, "Angle to treetop must be positive", Toast.LENGTH_SHORT).show();
 			}
-		} else if (currentStage == STAGE_TREE_BOTTOM_ANGLE){
+		} else if (currentStage.getStage() == STAGE_TREE_BOTTOM_ANGLE){
 			if(accelerometerAngle < 0) {
 				angleTreeBottom = accelerometerAngle;
 				Toast.makeText(this, String.format("Angle at tree bottom = %.2fº", angleTreeBottom), Toast.LENGTH_SHORT).show();
@@ -129,7 +129,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 				buttonCalculateHeight.setEnabled(true);
 
 				//change programme stage
-				currentStage = STAGE_CALCULATE_TREE_HEIGHT;
+				currentStage.setStage(STAGE_CALCULATE_TREE_HEIGHT);
 
 				//TODO:remove later
 				textViewSecondAngle.setText(String.format("angle tree bottom = %.2f", angleTreeBottom));
@@ -146,14 +146,14 @@ public class CameraActivity extends Activity implements SensorEventListener {
 	public void onClickResetAngle(View v) {
 		Log.d(TAG, "onClickResetAngle");
 
-		if (currentStage == STAGE_TREE_BOTTOM_ANGLE) {
-			currentStage = STAGE_TREETOP_ANGLE;
+		if (currentStage.getStage() == STAGE_TREE_BOTTOM_ANGLE) {
+			currentStage.setStage(STAGE_TREETOP_ANGLE);
 			angleTreetop = INVALID_ANGLE;
 			Toast.makeText(this, "Cleared treetop angle value", Toast.LENGTH_SHORT).show();
 
 
-		} else if (currentStage == STAGE_CALCULATE_TREE_HEIGHT){
-			currentStage = STAGE_TREE_BOTTOM_ANGLE;
+		} else if (currentStage.getStage() == STAGE_CALCULATE_TREE_HEIGHT){
+			currentStage.setStage(STAGE_TREE_BOTTOM_ANGLE);
 			angleTreeBottom = INVALID_ANGLE;
 			Toast.makeText(this, "Cleared tree bottom angle value", Toast.LENGTH_SHORT).show();
 
@@ -366,7 +366,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		}*/
 
 		textViewAngleNum.setText(String.format("%.2f", accelerometerAngle));
-		
+
 		textViewX.setText("acceleration X = "+Float.toString(valueX));
 		textViewY.setText("acceleration Y = "+Float.toString(valueY));
 		textViewZ.setText("acceleration Z = "+Float.toString(valueZ));
@@ -434,7 +434,7 @@ public class CameraActivity extends Activity implements SensorEventListener {
 						}
 
 						//change programme stage
-						currentStage = STAGE_TREETOP_ANGLE;
+						currentStage.setStage(STAGE_TREETOP_ANGLE);
 
 						//show next step's instructions
 						showInsturctions(isInstructionEnabled);
@@ -476,35 +476,21 @@ public class CameraActivity extends Activity implements SensorEventListener {
 				int dialogLayoutID = 0;
 				final Dialog dialogInstruction = new Dialog(CameraActivity.this, R.style.myInstructionDialog);
 
-				switch(currentStage) {
+				switch(currentStage.getStage()) {
 				case STAGE_TREETOP_ANGLE: 
 					dialogTitle = "Highest Point!";
 					dialogLayoutID = R.layout.dialog_custom_math_treetop;
-
-					//show sky gradient
-					((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.VISIBLE);
-
 					break;
 
 				case STAGE_TREE_BOTTOM_ANGLE: 
 					dialogTitle = "Lowest Point!";
 					dialogLayoutID = R.layout.dialog_custom_math_tree_bottom;
-
-					//hide sky and show grass
-					((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
-					((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.VISIBLE);
-
 					break;
 
 				case STAGE_CALCULATE_TREE_HEIGHT: 
 					dialogTitle = "How Did We Calculate The Tree Height?";
 					dialogLayoutID = R.layout.dialog_custom_math_how;
-					currentStage = STAGE_TREETOP_ANGLE;	
-
-					//hide sky and grass
-					((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
-					((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
-
+					currentStage.setStage(STAGE_TREETOP_ANGLE);	
 					break;
 
 				default:
@@ -537,6 +523,36 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		dialogPerson.setCancelable(true);
 		dialogPerson.setCanceledOnTouchOutside(true);
 		dialogPerson.show();
+	}
+
+	/**
+	 * Update user interface according to current stage of programme
+	 */
+	private void updateUI() {
+		switch(currentStage.getStage()) {
+		case STAGE_TREETOP_ANGLE: 
+
+			//show sky gradient
+			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.VISIBLE);
+			break;
+
+		case STAGE_TREE_BOTTOM_ANGLE: 
+
+			//hide sky and show grass
+			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
+			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.VISIBLE);
+			break;
+
+		case STAGE_CALCULATE_TREE_HEIGHT: 	
+
+			//hide sky and grass
+			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
+			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
+			break;
+
+		default:
+			return;
+		}
 	}
 
 
@@ -630,7 +646,10 @@ public class CameraActivity extends Activity implements SensorEventListener {
 		heightTree = 0;
 		angleTreetop = INVALID_ANGLE;
 		angleTreeBottom = INVALID_ANGLE;
-		currentStage = STAGE_HEIGHT_INPUT;
+		
+		currentStage = new ProgramStage(STAGE_HEIGHT_INPUT);
+		currentStage.setListener(this);
+		
 		isInstructionEnabled = false;
 		isDebuggingEnabled = false;
 
@@ -768,5 +787,10 @@ public class CameraActivity extends Activity implements SensorEventListener {
 					| View.SYSTEM_UI_FLAG_FULLSCREEN
 					| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 		}
+	}
+
+	@Override
+	public void onStageChanged() {
+		updateUI();
 	}
 }
