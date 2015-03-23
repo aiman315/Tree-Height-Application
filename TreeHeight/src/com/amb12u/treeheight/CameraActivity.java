@@ -5,6 +5,9 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.Point;
 import android.hardware.Camera;
 import android.hardware.Sensor;
@@ -13,14 +16,12 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
 import android.view.View.OnTouchListener;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -41,6 +42,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 	private final int STAGE_TREETOP_ANGLE = 1;
 	private final int STAGE_TREE_BOTTOM_ANGLE = 2;
 	private final int STAGE_CALCULATE_TREE_HEIGHT = 3;
+	private final int STAGE_END = 4;
 
 	private final String SELETED_CAMERA_ID_KEY = "selectedCameraId";
 	private final int CAMERA_ID_NOT_SET = -1;
@@ -89,8 +91,6 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 	TextView textViewFormula;
 	TextView textViewTreeHeight;
 
-
-
 	/**
 	 * Read and store current angle reading
 	 * @param v: The view that invoked the method
@@ -105,9 +105,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 
 				//change programme stage
 				currentStage.setStage(STAGE_TREE_BOTTOM_ANGLE);
-
-				//TODO:remove later
-				textViewFirstAngle.setText(String.format("angle treetop = %.2f",angleTreetop));
+				takePicture(R.id.imageViewTreetop);
 			} else {
 				Toast.makeText(this, "Angle to treetop must be positive", Toast.LENGTH_SHORT).show();
 			}
@@ -115,22 +113,50 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 			if(accelerometerAngle < 0) {
 				angleTreeBottom = accelerometerAngle;
 				Toast.makeText(this, String.format("Angle at tree bottom = %.2fº", angleTreeBottom), Toast.LENGTH_SHORT).show();
-
-				Button buttonReadAngle = (Button) v;
-				buttonReadAngle.setEnabled(false);
-
-				Button buttonCalculateHeight = (Button) findViewById(R.id.buttonCalculateHeight);
-				buttonCalculateHeight.setEnabled(true);
-
+				takePicture(R.id.imageViewTreeBottom);
 				//change programme stage
 				currentStage.setStage(STAGE_CALCULATE_TREE_HEIGHT);
-
-				//TODO:remove later
-				textViewSecondAngle.setText(String.format("angle tree bottom = %.2f", angleTreeBottom));
 			} else {
 				Toast.makeText(this, "Angle to tree bottom must be negative", Toast.LENGTH_SHORT).show();
 			}
 		}	
+	}
+
+	/**
+	 * Loads picture from preview into UI imageView with specified ID 
+	 * @param imageViewID: ID of ImageView to load image into
+	 */
+	private void takePicture(final int imageViewID) {
+		selectedCamera.takePicture(null, null, new Camera.PictureCallback() {
+
+			@Override
+			public void onPictureTaken(byte[] data, Camera camera) {
+				Point point = new Point();
+				getWindowManager().getDefaultDisplay().getSize(point);
+
+				ImageView imageViewTreetop = (ImageView) findViewById(imageViewID);
+				Bitmap bitmapImage = BitmapFactory.decodeByteArray(data, 0, data.length);
+				Matrix matrix = new Matrix();
+				switch(getRotation()) {
+				case Surface.ROTATION_0:
+					matrix.postRotate(90);
+					break;
+				case Surface.ROTATION_180:
+					matrix.postRotate(270);
+					break;
+				case Surface.ROTATION_270:
+					matrix.postRotate(180);
+					break;
+				}
+				bitmapImage = Bitmap.createBitmap(bitmapImage, 0, 0, bitmapImage.getWidth(), bitmapImage.getHeight(), matrix, false);
+				bitmapImage = Bitmap.createScaledBitmap(bitmapImage, point.x/4, point.y/4, false);
+
+				imageViewTreetop.getLayoutParams().height = bitmapImage.getHeight();
+				imageViewTreetop.getLayoutParams().width = bitmapImage.getWidth();
+				imageViewTreetop.setImageBitmap(bitmapImage);
+				selectedCamera.startPreview();
+			}
+		});
 	}
 
 	/**
@@ -149,15 +175,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 			currentStage.setStage(STAGE_TREE_BOTTOM_ANGLE);
 			angleTreeBottom = INVALID_ANGLE;
 			Toast.makeText(this, "Cleared tree bottom angle value", Toast.LENGTH_SHORT).show();
-
-			Button buttonCalculateHeight = (Button) findViewById(R.id.buttonCalculateHeight);
-			buttonCalculateHeight.setEnabled(false);
-
-			Button buttonReadAngle = (Button) findViewById(R.id.buttonReadAngle);
-			buttonReadAngle.setEnabled(true);
 		}
-		Button buttonReadAngle = (Button) v;
-		buttonReadAngle.setEnabled(false);
 	}
 
 	/**
@@ -167,30 +185,30 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 	 */
 	public void onClickCalculateHeight(View v) {
 		Log.d(TAG, "onClickCalculateHeight");
-		calculateTreeHeight();
-		//FIXME: what is the reasonable accuracy %.2f m or cm?
-		Toast.makeText(this, String.format("Total Tree Height: %.2f cm", heightTree), Toast.LENGTH_SHORT).show();
+		angleTreetop = Math.abs(angleTreetop);
+		angleTreeBottom = Math.abs(angleTreeBottom);
+		heightTree = Math.abs(heightCamera*((Math.tan(Math.toRadians(angleTreetop))/Math.tan(Math.toRadians(angleTreeBottom))) + 1));
 
-		angleTreetop = angleTreeBottom = INVALID_ANGLE;
+		currentStage.setStage(STAGE_END);
 	}
 
 	/**
 	 * Gets the ID of requested camera
-	 * @param facing: whether facing front or back
+	 * @param facingCamera: whether facing front or back
 	 * @return cameraId: ID of camera requested
 	 */
-	private int getFacingCameraId(int facing) {
+	private int getFacingCameraId(int facingCamera) {
 		Log.d(TAG, "getFacingCameraId");
-		int cameraId = CAMERA_ID_NOT_SET;
 
-		int nCameras = Camera.getNumberOfCameras();
+		int cameraId = CAMERA_ID_NOT_SET;
+		int cameras = Camera.getNumberOfCameras();
 		Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
 
-		for(int cameraInfoId = 0 ; cameraInfoId < nCameras ; cameraInfoId++) {
-			Camera.getCameraInfo(cameraInfoId, cameraInfo);
+		for (int i = 0 ; i < cameras ; i++) {
+			Camera.getCameraInfo(i, cameraInfo);
 			// is camera in list of cameras in device the same as the one requested?
-			if(cameraInfo.facing == facing) {
-				cameraId = cameraInfoId;
+			if(cameraInfo.facing == facingCamera) {
+				cameraId = i;
 				break;
 			}
 		}
@@ -311,14 +329,12 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 	public void onSensorChanged(SensorEvent event) {
 		Log.d(TAG, "onSensorChanged");
 
-		//TODO: remove TextViews. Only need to capture the values
-
 		float valueX = event.values[0];
 		float valueY = event.values[1];
 		float valueZ = -1 * event.values[2]; //multiply by -1 to obtain Z actual readings for device on its back
 
 		//Log.d(TAG, ""+System.currentTimeMillis()+","+event.values[0]+","+event.values[1]+","+(event.values[2]));
-		int rotation = getRotation(this);
+		int rotation = getRotation();
 		switch (rotation) {
 		case Surface.ROTATION_0:
 			//portrait
@@ -337,14 +353,9 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 			accelerometerAngle = calculateAngle(-1*valueX, valueZ);
 			break;
 		}
+		textViewAngleNum.setText(String.format("Angle = %.2f", accelerometerAngle));
 
-		//TODO: remove if not needed
-		/*if(valueY < 0) {
-			Toast.makeText(this, "You have exceeded angle value", Toast.LENGTH_SHORT).show();
-		}*/
-
-		textViewAngleNum.setText(String.format("%.2f", accelerometerAngle));
-
+		//debugging text
 		textViewX.setText("acceleration X = "+Float.toString(valueX));
 		textViewY.setText("acceleration Y = "+Float.toString(valueY));
 		textViewZ.setText("acceleration Z = "+Float.toString(valueZ));
@@ -367,12 +378,11 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 
 	/**
 	 * Get the current rotation of device
-	 * @param context
 	 * @return (0: portrait, 90: landscape, 180: reverse portrait, 270: reverse landscape)
 	 */
-	private int getRotation(Context context){
+	private int getRotation(){
 		Log.d(TAG, "getRotation");
-		return ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
+		return getWindowManager().getDefaultDisplay().getRotation();
 	}
 
 	/**
@@ -435,14 +445,13 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 			return;
 		}
 
-		final Dialog dialogPerson = new Dialog(CameraActivity.this, R.style.myCustomDialog);
-		dialogPerson.setContentView(R.layout.dialog_custom_person);
-		ImageView imageViewPerson = (ImageView) dialogPerson.findViewById(R.id.imageViewPerson);
+		final ImageView imageViewPerson = (ImageView) findViewById(R.id.imageViewPerson);
+		imageViewPerson.setVisibility(View.VISIBLE);
 		imageViewPerson.setOnTouchListener(new OnTouchListener() {
 
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
-				dialogPerson.dismiss();
+				imageViewPerson.setVisibility(View.INVISIBLE);
 
 				String dialogTitle = null;
 				int dialogLayoutID = 0;
@@ -459,7 +468,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 					dialogLayoutID = R.layout.dialog_custom_math_tree_bottom;
 					break;
 
-				case STAGE_CALCULATE_TREE_HEIGHT: 
+				case STAGE_END: 
 					dialogTitle = "How Did We Calculate The Tree Height?";
 					dialogLayoutID = R.layout.dialog_custom_math_how;	
 					break;
@@ -477,23 +486,10 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 						dialogInstruction.dismiss();
 					}
 				});
-				dialogPerson.setCancelable(true);
-				dialogPerson.setCanceledOnTouchOutside(true);
 				dialogInstruction.show();
 				return false;
 			}
 		});
-		WindowManager.LayoutParams dialogAttrib = dialogPerson.getWindow().getAttributes();
-		Point point = new Point();
-		getWindowManager().getDefaultDisplay().getSize(point);
-
-		dialogAttrib.gravity = Gravity.BOTTOM;
-		dialogAttrib.y = 1 * point.y / 4;
-		dialogAttrib.x = 3 * point.x / 4;
-
-		dialogPerson.setCancelable(true);
-		dialogPerson.setCanceledOnTouchOutside(true);
-		dialogPerson.show();
 	}
 
 	/**
@@ -506,14 +502,18 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(false);
 			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(false);
 			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
-			
+
 			break;
 		case STAGE_TREETOP_ANGLE: 
 			//setup buttons
 			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(false);
 			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(true);
 			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
-			
+
+			//hide treetop and tree bottom imageViews
+			((ImageView) findViewById(R.id.imageViewTreetop)).setVisibility(View.INVISIBLE);
+			((ImageView) findViewById(R.id.imageViewTreeBottom)).setVisibility(View.INVISIBLE);
+
 			//show sky gradient
 			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.VISIBLE);
 			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
@@ -525,9 +525,16 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(true);
 			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
 
+			//show treetop and hide tree bottom imageViews
+			((ImageView) findViewById(R.id.imageViewTreetop)).setVisibility(View.VISIBLE);
+			((ImageView) findViewById(R.id.imageViewTreeBottom)).setVisibility(View.INVISIBLE);
+
 			//hide sky and show grass
 			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
 			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.VISIBLE);
+
+			//debugging text
+			textViewFirstAngle.setText(String.format("angle treetop = %.2f",angleTreetop));
 			break;
 
 		case STAGE_CALCULATE_TREE_HEIGHT: 	
@@ -536,11 +543,27 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(false);
 			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(true);
 
+			//show treetop and tree bottom imageViews
+			((ImageView) findViewById(R.id.imageViewTreetop)).setVisibility(View.VISIBLE);
+			((ImageView) findViewById(R.id.imageViewTreeBottom)).setVisibility(View.VISIBLE);
+
 			//hide sky and grass
 			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
 			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
-			break;
 
+			//debugging text
+			textViewSecondAngle.setText(String.format("angle tree bottom = %.2f", angleTreeBottom));
+			break;
+		case STAGE_END:
+			//setup buttons
+			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(false);
+			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(true);
+			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
+
+			//debugging text
+			textViewFormula.setText(String.format("%.2f*((%.2f/%.2f)+1)",heightCamera, angleTreetop, angleTreeBottom));
+			textViewTreeHeight.setText(String.format("Tree Height = %.2f",heightTree));
+			break;
 		default:
 			return;
 		}
@@ -583,28 +606,6 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 		}
 	}
 
-	/**
-	 * Calculate height for current angles readings
-	 * and display it
-	 */
-	private void calculateTreeHeight() {
-		Log.d(TAG, "calculateTreeHeight");
-
-		if (angleTreetop < angleTreeBottom) {
-			double temp = angleTreeBottom;
-			angleTreeBottom = angleTreetop;
-			angleTreetop = temp;
-		} 
-
-		angleTreetop = Math.abs(angleTreetop);
-		angleTreeBottom = Math.abs(angleTreeBottom);
-		heightTree = heightCamera*((Math.tan(Math.toRadians(angleTreetop))/Math.tan(Math.toRadians(angleTreeBottom)))+ 1);
-		heightTree = Math.abs(heightTree);
-		textViewFormula.setText(String.format("%.2f*((%.2f/%.2f)+1)",heightCamera, angleTreetop, angleTreeBottom));
-		textViewTreeHeight.setText(String.format("Tree Height = %.2f",heightTree));
-	}
-
-
 	//	---------------- Activity Methods ---------------- //
 
 	@Override
@@ -637,10 +638,10 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 		heightTree = 0;
 		angleTreetop = INVALID_ANGLE;
 		angleTreeBottom = INVALID_ANGLE;
-		
+
 		currentStage = new ProgramStage(STAGE_HEIGHT_INPUT);
 		currentStage.setListener(this);
-		
+
 		isInstructionEnabled = false;
 		isDebuggingEnabled = false;
 
@@ -654,7 +655,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 		textViewAngle = (TextView)findViewById(R.id.textViewAngle);
 
 		textViewFirstAngle = (TextView) findViewById(R.id.textViewTreetopAngle);
-		textViewSecondAngle= (TextView) findViewById(R.id.textViewTreeBottomAngle);
+		textViewSecondAngle = (TextView) findViewById(R.id.textViewTreeBottomAngle);
 
 		textViewFormula = (TextView) findViewById(R.id.textViewFormula);
 		textViewTreeHeight = (TextView) findViewById(R.id.textViewTotalHeight);
@@ -683,7 +684,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
 		//disable debugging information
-		showDebuggingInfo(isDebuggingEnabled);
+		showDebuggingInfo(false);
 
 		//camera height setup
 		setupCameraHeight();

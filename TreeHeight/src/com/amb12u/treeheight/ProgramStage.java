@@ -38,21 +38,25 @@ public class ProgramStage{
 		String stageString = "Stage is (";
 		switch (stage) {
 		case 0:
-			stageString += "STAGE_HEIGHT_INPUT)";
+			stageString += "STAGE_HEIGHT_INPUT";
 			break;
 		case 1:
-			stageString += "STAGE_TREETOP_ANGLE)";
+			stageString += "STAGE_TREETOP_ANGLE";
 			break;
 		case 2:
-			stageString += "STAGE_TREE_BOTTOM_ANGLE)";
+			stageString += "STAGE_TREE_BOTTOM_ANGLE";
 			break;
 		case 3:
-			stageString += "STAGE_CALCULATE_TREE_HEIGHT)";
+			stageString += "STAGE_CALCULATE_TREE_HEIGHT";
+			break;
+		case 4:
+			stageString += "STAGE_END";
 			break;
 		default:
-			stageString += "not recognised)";
+			stageString += "not recognised";
 			break;
 		}
+		stageString += ")";
 		return stageString;
 	}
 }

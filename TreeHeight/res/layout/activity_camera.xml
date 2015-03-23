@@ -23,21 +23,61 @@
         android:layout_height="fill_parent"
         android:layout_alignParentBottom="true" >
 
-        <TextView
-            android:id="@+id/textViewAngleText"
+        <Button
+            android:id="@+id/buttonReadAngle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/seekBarZoom"
-            android:layout_toStartOf="@+id/vertical_cross"
-            android:text="Angle = "
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="40dp"
+            android:enabled="false"
+            android:onClick="onClickReadAngle"
+            android:text="@string/button_read_angle"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/buttonUndoAngle"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignTop="@+id/buttonReadAngle"
+            android:layout_marginBottom="40dp"
+            android:layout_toStartOf="@+id/buttonReadAngle"
+            android:enabled="false"
+            android:onClick="onClickResetAngle"
+            android:text="@string/reset"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/buttonCalculateHeight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignTop="@+id/buttonReadAngle"
+            android:layout_marginBottom="40dp"
+            android:layout_toEndOf="@+id/buttonReadAngle"
+            android:enabled="false"
+            android:onClick="onClickCalculateHeight"
+            android:text="@string/button_calculate_height"
+            android:textSize="14sp" />
+
+        <SeekBar
+            android:id="@+id/seekBarZoom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/buttonReadAngle"
+            android:layout_alignParentStart="true" />
 
         <TextView
             android:id="@+id/textViewAngleNum"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_above="@+id/seekBarZoom"
-            android:layout_toEndOf="@+id/vertical_cross"
+            android:layout_centerHorizontal="true"
+            android:gravity="start"
             android:text="@string/empty"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
@@ -57,46 +97,28 @@
             android:layout_centerHorizontal="true"
             android:background="@android:color/darker_gray" />
 
-        <Button
-            android:id="@+id/buttonUndoAngle"
-            style="?android:attr/buttonStyleSmall"
+        <ImageView
+            android:id="@+id/imageViewGrass"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignTop="@+id/buttonReadAngle"
-            android:layout_toStartOf="@+id/buttonReadAngle"
-            android:layout_marginBottom="40dp"
-            android:enabled="false"
-            android:onClick="onClickResetAngle"
-            android:text="@string/reset"
-            android:textSize="14sp" />
+            android:layout_centerInParent="true"
+            android:alpha="0.5"
+            android:contentDescription="@string/empty"
+            android:src="@drawable/grass"
+            android:visibility="invisible" />
 
-        <Button
-            android:id="@+id/buttonReadAngle"
+        <ImageView
+            android:id="@+id/imageViewSky"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="40dp"
-            android:enabled="false"
-            android:onClick="onClickReadAngle"
-            android:text="@string/button_read_angle"
-            android:textSize="14sp" />
-
-        <Button
-            android:id="@+id/buttonCalculateHeight"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
+            android:layout_above="@+id/seekBarZoom"
+            android:layout_alignBottom="@+id/imageViewGrass"
             android:layout_alignParentEnd="true"
-            android:layout_alignTop="@+id/buttonReadAngle"
-            android:layout_toEndOf="@+id/buttonReadAngle"
-            android:layout_marginBottom="40dp"
-            android:enabled="false"
-            android:onClick="onClickCalculateHeight"
-            android:text="@string/button_calculate_height"
-            android:textSize="14sp" />
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/gradient_math_sky"
+            android:contentDescription="@string/empty"
+            android:visibility="invisible" />
 
         <TextView
             android:id="@+id/textViewCameraHeight"
@@ -185,35 +207,57 @@
             android:text="@string/empty"
             android:textColor="#ff0000" />
 
-        <SeekBar
-            android:id="@+id/seekBarZoom"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignBottom="@+id/vertical_cross"
-            android:layout_alignParentStart="true" />
-
         <ImageView
-            android:id="@+id/imageViewGrass"
+            android:id="@+id/imageViewPerson"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:alpha="0.5"
+            android:layout_above="@+id/horizontal_cross"
+            android:layout_centerHorizontal="true"
             android:contentDescription="@string/empty"
-            android:src="@drawable/grass"
-            android:visibility="invisible" />
+            android:padding="10dp"
+            android:src="@drawable/person_click" />
 
-        <ImageView
-            android:id="@+id/imageViewSky"
+        <TextView
+            android:id="@+id/textViewTreetop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/seekBarZoom"
-            android:layout_alignBottom="@+id/imageViewGrass"
-            android:layout_alignParentEnd="true"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:background="@drawable/gradient_math_sky"
-            android:contentDescription="@string/empty"
+            android:layout_marginTop="20dp"
+            android:padding="10dp"
+            android:text="Treetop Image"
+            android:textColor="#ff0000" 
             android:visibility="invisible" />
+
+        <TextView
+            android:id="@+id/textViewTreeBottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="20dp"
+            android:padding="10dp"
+            android:text="Tree Bottom Image"
+            android:textColor="#ff0000"
+            android:visibility="invisible" />
+
+        <ImageView
+            android:id="@+id/imageViewTreetop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/textViewTreetop"
+            android:contentDescription="@string/empty"
+            android:padding="10dp" />
+
+        <ImageView
+            android:id="@+id/imageViewTreeBottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_below="@+id/textViewTreeBottom"
+            android:contentDescription="@string/empty"
+            android:padding="10dp" />
     </RelativeLayout>
 
 </RelativeLayout>
