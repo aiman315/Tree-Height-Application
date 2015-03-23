@@ -99,7 +99,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 		Log.d(TAG, "onClickReadAngle");
 		if (currentStage.getStage() == STAGE_TREETOP_ANGLE) {
 			//Treetop angle must be positive
-			if(accelerometerAngle > 0) {
+			if(accelerometerAngle >= 0) {
 				angleTreetop = accelerometerAngle;
 				Toast.makeText(this, String.format("Angle at treetop = %.2fº", angleTreetop), Toast.LENGTH_SHORT).show();
 

@@ -12,7 +12,6 @@
     <string name="methods">Please Select One Of The Methods</string>
     <string name="button_math">Mathematical</string>
     <string name="button_image_processing">Image Processing</string>
-    <string name="button_something_else">make up something</string>
     <string name="action_settings">Settings</string>
 
     <!-- DescActivity -->

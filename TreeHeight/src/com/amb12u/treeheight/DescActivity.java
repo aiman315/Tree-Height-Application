@@ -92,10 +92,8 @@ public class DescActivity extends Activity {
 				selectedMethod = IMAGE_PROCESSING_METHOD_SELECTION;
 				break;
 			default:
-				//TODO: what to do here?
-				setTitle(R.string.button_something_else);
-				descTree1.setText("Error");
-				selectedMethod = INVALID_METHOD_SELECTION;
+				Toast.makeText(this, "Invalid Selection", Toast.LENGTH_SHORT).show();
+				finish();
 				break;
 			}
 		}
