@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.hardware.Camera;
@@ -62,8 +63,8 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 	private int selectedCameraId;
 
 	// Accelerometer variables
-	private SensorManager mSensorManager;
-	private Sensor mAccelerometer;
+	private SensorManager sensorManager;
+	private Sensor accelerometer;
 
 	// Camera height
 	private double heightCamera;
@@ -189,7 +190,12 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 		angleTreeBottom = Math.abs(angleTreeBottom);
 		heightTree = Math.abs(heightCamera*((Math.tan(Math.toRadians(angleTreetop))/Math.tan(Math.toRadians(angleTreeBottom))) + 1));
 
+		sensorManager.unregisterListener(this);
 		currentStage.setStage(STAGE_END);
+	}
+
+	public void onClickReset(View v) {
+		currentStage.setStage(STAGE_HEIGHT_INPUT);
 	}
 
 	/**
@@ -372,7 +378,6 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 	 */
 	private double calculateAngle(float axis, float depth) {
 		Log.d(TAG, "calculateAngle");
-		//TODO: remove to degrees. used only for easier reading
 		return Math.toDegrees(Math.atan(depth/axis));
 	}
 
@@ -441,20 +446,23 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 	private void showInsturctions() {
 		Log.d(TAG, "showInsturctions");
 
-		if (!isInstructionEnabled) {
+		final ImageView imageViewPerson = (ImageView) findViewById(R.id.imageViewPerson);
+
+		//No instructions if user has disabled them OR current stage is height input or tree height calculation
+		if (!isInstructionEnabled || currentStage.getStage() == STAGE_HEIGHT_INPUT || currentStage.getStage() == STAGE_CALCULATE_TREE_HEIGHT) {
+			imageViewPerson.setOnTouchListener(null);
 			return;
 		}
 
-		final ImageView imageViewPerson = (ImageView) findViewById(R.id.imageViewPerson);
-		imageViewPerson.setVisibility(View.VISIBLE);
 		imageViewPerson.setOnTouchListener(new OnTouchListener() {
 
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
+
 				imageViewPerson.setVisibility(View.INVISIBLE);
 
-				String dialogTitle = null;
-				int dialogLayoutID = 0;
+				String dialogTitle;
+				int dialogLayoutID;
 				final Dialog dialogInstruction = new Dialog(CameraActivity.this, R.style.myInstructionDialog);
 
 				switch(currentStage.getStage()) {
@@ -497,26 +505,35 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 	 */
 	private void updateUI() {
 		switch(currentStage.getStage()) {
+
 		case STAGE_HEIGHT_INPUT:
 			//setup buttons
 			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(false);
 			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(false);
 			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
-
 			break;
+
 		case STAGE_TREETOP_ANGLE: 
 			//setup buttons
 			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(false);
 			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(true);
 			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
 
-			//hide treetop and tree bottom imageViews
+			//hide treetop and tree bottom imageViews and their texts
 			((ImageView) findViewById(R.id.imageViewTreetop)).setVisibility(View.INVISIBLE);
 			((ImageView) findViewById(R.id.imageViewTreeBottom)).setVisibility(View.INVISIBLE);
+			
+			((TextView) findViewById(R.id.textViewTreetop)).setVisibility(View.INVISIBLE);
+			((TextView) findViewById(R.id.textViewTreeBottom)).setVisibility(View.INVISIBLE);
 
 			//show sky gradient
 			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.VISIBLE);
 			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
+
+			//show person
+			if (isInstructionEnabled) {
+				((ImageView) findViewById(R.id.imageViewPerson)).setVisibility(View.VISIBLE);
+			}
 			break;
 
 		case STAGE_TREE_BOTTOM_ANGLE: 
@@ -525,13 +542,28 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(true);
 			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
 
-			//show treetop and hide tree bottom imageViews
+			//show treetop and hide tree bottom imageViews and their texts
 			((ImageView) findViewById(R.id.imageViewTreetop)).setVisibility(View.VISIBLE);
 			((ImageView) findViewById(R.id.imageViewTreeBottom)).setVisibility(View.INVISIBLE);
+			
+			((TextView) findViewById(R.id.textViewTreetop)).setVisibility(View.VISIBLE);
+			((TextView) findViewById(R.id.textViewTreeBottom)).setVisibility(View.INVISIBLE);
 
 			//hide sky and show grass
 			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
 			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.VISIBLE);
+
+			//show zoom seek bar
+			((SeekBar) findViewById(R.id.seekBarZoom)).setVisibility(View.VISIBLE);
+
+			//show cross
+			((View) findViewById(R.id.horizontal_cross)).setVisibility(View.VISIBLE);
+			((View) findViewById(R.id.vertical_cross)).setVisibility(View.VISIBLE);
+
+			//show person
+			if (isInstructionEnabled) {
+				((ImageView) findViewById(R.id.imageViewPerson)).setVisibility(View.VISIBLE);
+			}
 
 			//debugging text
 			textViewFirstAngle.setText(String.format("angle treetop = %.2f",angleTreetop));
@@ -543,26 +575,49 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(false);
 			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(true);
 
-			//show treetop and tree bottom imageViews
+			//show treetop and tree bottom imageViews and their texts
 			((ImageView) findViewById(R.id.imageViewTreetop)).setVisibility(View.VISIBLE);
 			((ImageView) findViewById(R.id.imageViewTreeBottom)).setVisibility(View.VISIBLE);
+			
+			((TextView) findViewById(R.id.textViewTreetop)).setVisibility(View.VISIBLE);
+			((TextView) findViewById(R.id.textViewTreeBottom)).setVisibility(View.VISIBLE);
 
 			//hide sky and grass
 			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
 			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
+
+			//hide zoom seek bar
+			((SeekBar) findViewById(R.id.seekBarZoom)).setVisibility(View.INVISIBLE);
+
+			//hide cross
+			((View) findViewById(R.id.horizontal_cross)).setVisibility(View.INVISIBLE);
+			((View) findViewById(R.id.vertical_cross)).setVisibility(View.INVISIBLE);
+
+			//hide person
+			((ImageView) findViewById(R.id.imageViewPerson)).setVisibility(View.INVISIBLE);
+
 
 			//debugging text
 			textViewSecondAngle.setText(String.format("angle tree bottom = %.2f", angleTreeBottom));
 			break;
 		case STAGE_END:
 			//setup buttons
-			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(false);
-			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(true);
-			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
+			((Button) findViewById(R.id.buttonUndoAngle)).setVisibility(View.INVISIBLE);
+			((Button) findViewById(R.id.buttonReadAngle)).setVisibility(View.INVISIBLE);
+			((Button) findViewById(R.id.buttonCalculateHeight)).setVisibility(View.INVISIBLE);
+
+			//show tree height
+			textViewAngleNum.setText(String.format("Tree Height = %.2f cm", heightTree));
+			textViewAngleNum.setTextColor(Color.YELLOW);
+			
+			//show person
+			if (isInstructionEnabled) {
+				((ImageView) findViewById(R.id.imageViewPerson)).setVisibility(View.VISIBLE);
+			}
 
 			//debugging text
-			textViewFormula.setText(String.format("%.2f*((%.2f/%.2f)+1)",heightCamera, angleTreetop, angleTreeBottom));
-			textViewTreeHeight.setText(String.format("Tree Height = %.2f",heightTree));
+			textViewFormula.setText(String.format("%.2f*((%.2f/%.2f)+1)", heightCamera, angleTreetop, angleTreeBottom));
+			textViewTreeHeight.setText(String.format("Tree Height = %.2f", heightTree));
 			break;
 		default:
 			return;
@@ -642,7 +697,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 		currentStage = new ProgramStage(STAGE_HEIGHT_INPUT);
 		currentStage.setListener(this);
 
-		isInstructionEnabled = false;
+		isInstructionEnabled = true;
 		isDebuggingEnabled = false;
 
 		textViewAngleNum = (TextView)findViewById(R.id.textViewAngleNum);
@@ -679,9 +734,9 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 		}
 
 		//accelerometer setup
-		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-		mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+		accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
 		//disable debugging information
 		showDebuggingInfo(false);
@@ -744,7 +799,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 		Log.d(TAG, "onPause");
 		super.onPause();
 		releaseSelectedCamera(); //to allow other applications to use selected camera
-		mSensorManager.unregisterListener(this);
+		sensorManager.unregisterListener(this);
 	}
 
 	@Override
@@ -752,7 +807,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 		Log.d(TAG, "onResume");
 		super.onResume();
 		openSelectedCamera(); //to restore control of selected camera resource
-		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+		sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 	}
 
 	@Override
