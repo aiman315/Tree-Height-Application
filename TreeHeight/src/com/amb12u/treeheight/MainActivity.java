@@ -85,7 +85,7 @@ public class MainActivity extends Activity {
 	public void onClickImageProcessing(View v) {
 		Log.d(TAG, "onClickImageProcessing");
 
-		Dialog dialogPhotoSource = new Dialog(this, R.style.myInstructionDialog);
+		final Dialog dialogPhotoSource = new Dialog(this, R.style.myInstructionDialog);
 		dialogPhotoSource.setContentView(R.layout.dialog_custom_ip_photo_source);
 		dialogPhotoSource.setTitle("Where is the tree?");
 		
@@ -99,6 +99,7 @@ public class MainActivity extends Activity {
 				galleryIntent.setType("image/*");
 				galleryIntent.putExtra("return-data", true);
 				startActivityForResult(galleryIntent,REQUEST_CODE_GALLERY);
+				dialogPhotoSource.dismiss();
 			}
 		});
 
@@ -107,6 +108,7 @@ public class MainActivity extends Activity {
 			public void onClick(View v) {
 				Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 				startActivityForResult(cameraIntent,REQUEST_CODE_CAMERA);
+				dialogPhotoSource.dismiss();
 			}
 		});
 		
