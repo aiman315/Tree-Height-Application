@@ -20,6 +20,7 @@ import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
@@ -67,7 +68,10 @@ public class ImageProcessingActivity extends Activity {
 	private int treetopRow, treeBottomRow;
 	private int [] referenceObjBound;
 	private int currentState;
+	
+	private boolean isInstructionEnabled;
 	private boolean isPortraitImg;
+	
 	private Uri imgUri;
 	private ImageView imageView;
 	private Button buttonTask;
@@ -121,6 +125,10 @@ public class ImageProcessingActivity extends Activity {
 		Log.d(TAG, "detectReference");
 
 		if (displayMat != null) {
+			
+			//show instruction
+			showIncsturctions();
+			
 			imageView.setOnTouchListener(new View.OnTouchListener() {
 
 				@Override
@@ -129,7 +137,7 @@ public class ImageProcessingActivity extends Activity {
 					return true;
 				}
 			});
-			Toast.makeText(getApplicationContext(), "Reference detection touch input enabled", Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), "A4 paper detection touch input enabled", Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -492,7 +500,7 @@ public class ImageProcessingActivity extends Activity {
 			processingMat = originalMat.submat(minRow, maxRow, minCol, maxCol).clone();
 
 			progressDialog = new ProgressDialog(ImageProcessingActivity.this);
-			progressDialog.setMessage("Detecting Reference Object...");
+			progressDialog.setMessage("Detecting A4 paper...");
 			progressDialog.show(); 
 		}
 
@@ -516,12 +524,12 @@ public class ImageProcessingActivity extends Activity {
 				org.opencv.core.Point pt2 = new org.opencv.core.Point(referenceObjBound[INDEX_REF_RIGHT], referenceObjBound[INDEX_REF_BOTTOM]);
 				Core.rectangle(displayMat, pt1, pt2, new Scalar(255,128,100), LINE_THICKNESS);	
 
-				Toast.makeText(getApplicationContext(), "Reference Object Detected (Row: "+referenceObjBound[INDEX_REF_TOP]+"-"+referenceObjBound[INDEX_REF_BOTTOM]+")", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), "A4 Paper Detected (Row: "+referenceObjBound[INDEX_REF_TOP]+"-"+referenceObjBound[INDEX_REF_BOTTOM]+")", Toast.LENGTH_SHORT).show();
 
 				//check with user if reference object is correctly detected
 				verifyDetection();
 			} else {
-				Toast.makeText(getApplicationContext(), "No Reference Object Detected .. try again or use different image", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), "No A4 Paper Detected .. try again or use different image", Toast.LENGTH_SHORT).show();
 			}
 			updateDisplayImage();
 		}
@@ -562,7 +570,7 @@ public class ImageProcessingActivity extends Activity {
 
 			buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
 
-			textTreeHeight.setText(String.format("Tree Height = ( %d * %.2f ) / %d = %.2f", treePixelHeight, referenceObjHeight, referenceObjPixelHeight, treeHeight));
+			textTreeHeight.setText(String.format("Tree Height = ( %d * %.2f ) / %d = %.2f cm", treePixelHeight, referenceObjHeight, referenceObjPixelHeight, treeHeight));
 			textTreeHeight.setPivotX(0);
 			textTreeHeight.setPivotY(0);
 			textTreeHeight.setY((int)(treetopRow/heightRatio)-30);
@@ -727,7 +735,7 @@ public class ImageProcessingActivity extends Activity {
 					break;
 				case STATE_REFERENCE:
 					if (referenceObjBound[INDEX_REF_TOP] < treetopRow) {
-						Toast.makeText(getApplicationContext(), "Reference object must be below treetop", Toast.LENGTH_SHORT).show();
+						Toast.makeText(getApplicationContext(), "A4 paper must be below treetop", Toast.LENGTH_SHORT).show();
 					} else {
 						currentState = STATE_HEIGHT;
 						buttonTask.setVisibility(View.VISIBLE);
@@ -747,6 +755,7 @@ public class ImageProcessingActivity extends Activity {
 				switch(currentState) {
 				case STATE_TREETOP:
 					Toast.makeText(getApplicationContext(), "Treetop detection touch input enabled", Toast.LENGTH_SHORT).show();
+					
 					imageView.setOnTouchListener(new View.OnTouchListener() {
 
 						@Override
@@ -759,7 +768,11 @@ public class ImageProcessingActivity extends Activity {
 				case STATE_REFERENCE:
 					Toast.makeText(getApplicationContext(), "Try again or use different image", Toast.LENGTH_SHORT).show();
 					break;
+				default:
+					return;
 				}
+				//show instruction dialog
+				showIncsturctions();
 			}
 		});
 
@@ -778,6 +791,47 @@ public class ImageProcessingActivity extends Activity {
 		verifyDetectionDialog.show();
 	}
 
+	/**
+	 * Display instruction dialog depending of programme state
+	 */
+	private void showIncsturctions() {
+		Log.d(TAG, "showIncsturctions");
+		
+		if (!isInstructionEnabled) {
+			return;
+		}
+		
+		final Dialog dialogInstruction = new Dialog(ImageProcessingActivity.this, R.style.myInstructionDialog);
+		int dialogLayoutID;
+		String dialogTitle;
+		
+		switch(currentState) {
+		case STATE_TREETOP:
+			dialogTitle = "Treetop!";
+			dialogLayoutID = R.layout.dialog_custom_ip_treetop_touch;
+			break;
+		case STATE_REFERENCE:
+			dialogTitle = "Paper!";
+			dialogLayoutID = R.layout.dialog_custom_ip_tree_bottom_touch;
+			break;
+		case STATE_HEIGHT:
+			default:
+				return;
+		}
+		
+		dialogInstruction.setContentView(dialogLayoutID);
+		dialogInstruction.setTitle(dialogTitle);
+		Button button = (Button) dialogInstruction.findViewById(R.id.buttonOkay);
+		button.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				dialogInstruction.dismiss();
+			}
+		});
+		dialogInstruction.show();
+		
+	}
+	
 	//	---------------- Activity Methods ---------------- //
 
 	@Override
@@ -797,6 +851,7 @@ public class ImageProcessingActivity extends Activity {
 		//initializations
 		currentState = STATE_TREETOP;
 		isPortraitImg = true;
+		isInstructionEnabled = true;
 
 		treeHeight = 0;
 		treePixelHeight = 0;
