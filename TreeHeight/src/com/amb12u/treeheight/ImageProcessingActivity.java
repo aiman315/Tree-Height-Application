@@ -384,8 +384,8 @@ public class ImageProcessingActivity extends Activity {
 	 * Detection Algorithm:
 	 * <ol>
 	 * <li>Limit search region within touch range</li>
-	 * <li>Use HSV color model to threshold specified color (default is white)</li>
-	 * <li>Select largest area of connected points of the specified color and mark it as reference object</li>
+	 * <li>Use HSV color model to threshold white colour</li>
+	 * <li>Select largest area of connected points of white colour and mark it as reference object</li>
 	 * </ol>  
 	 * @author Aiman
 	 *
@@ -453,7 +453,7 @@ public class ImageProcessingActivity extends Activity {
 
 			// Detect white colour
 			Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY, 0);
-			Imgproc.threshold(processingMat, processingMat, (float) 80 * 255 / 100, 255, Imgproc.THRESH_BINARY);
+			Imgproc.threshold(processingMat, processingMat, (float) 60 * 255 / 100, 255, Imgproc.THRESH_BINARY);
 
 			/// Find contours
 			List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
