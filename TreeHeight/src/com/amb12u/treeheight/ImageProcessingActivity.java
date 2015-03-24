@@ -743,11 +743,11 @@ public class ImageProcessingActivity extends Activity {
 
 		switch(currentState) {
 		case STATE_TREETOP:
-			buttonTask.setEnabled(false);
+			buttonTask.setVisibility(View.INVISIBLE);
 			detectTreetop();
 			break;
 		case STATE_REFERENCE:
-			buttonTask.setEnabled(false);
+			buttonTask.setVisibility(View.INVISIBLE);
 			detectReference();
 			break;
 		case STATE_HEIGHT:
@@ -778,7 +778,7 @@ public class ImageProcessingActivity extends Activity {
 				switch(currentState) {
 				case STATE_TREETOP:
 					currentState = STATE_REFERENCE;
-					buttonTask.setEnabled(true);
+					buttonTask.setVisibility(View.VISIBLE);
 					buttonTask.setText(R.string.button_detect_reference);
 					break;
 				case STATE_REFERENCE:
@@ -787,7 +787,7 @@ public class ImageProcessingActivity extends Activity {
 					} else {
 						currentState = STATE_HEIGHT;
 						setupReferenceObjHeight();
-						buttonTask.setEnabled(true);
+						buttonTask.setVisibility(View.VISIBLE);
 						buttonTask.setText(R.string.button_calc_height);
 						imageView.setOnTouchListener(null);
 					}
