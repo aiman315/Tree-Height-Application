@@ -35,6 +35,18 @@
             android:layout_centerInParent="true"
             android:layout_margin="20dp"
             android:text="@string/ok" />
+
+        <ImageView
+            android:id="@+id/imageViewIpTouch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignEnd="@+id/buttonOkay"
+            android:layout_alignTop="@+id/imageViewIpTreetop"
+            android:layout_marginEnd="63dp"
+            android:layout_marginTop="34dp"
+            android:contentDescription="@string/empty"
+            android:src="@drawable/ip_touch" />
+
     </RelativeLayout>
 
 </ScrollView>

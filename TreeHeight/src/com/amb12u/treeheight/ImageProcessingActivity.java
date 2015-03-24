@@ -40,6 +40,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -804,24 +805,25 @@ public class ImageProcessingActivity extends Activity {
 		}
 		
 		final Dialog dialogInstruction = new Dialog(ImageProcessingActivity.this, R.style.myInstructionDialog);
-		int dialogLayoutID;
 		String dialogTitle;
 		
 		switch(currentState) {
 		case STATE_TREETOP:
 			dialogTitle = "Treetop!";
-			dialogLayoutID = R.layout.dialog_custom_ip_treetop_touch;
+			dialogInstruction.setContentView(R.layout.dialog_custom_ip_treetop_touch);
+			((ImageView) dialogInstruction.findViewById(R.id.imageViewIpTouch)).startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.animation_touch));
 			break;
 		case STATE_REFERENCE:
 			dialogTitle = "Paper!";
-			dialogLayoutID = R.layout.dialog_custom_ip_tree_bottom_touch;
+			dialogInstruction.setContentView(R.layout.dialog_custom_ip_tree_bottom_touch);
+			((ImageView) dialogInstruction.findViewById(R.id.imageViewIpTouch1)).startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.animation_touch));
+			((ImageView) dialogInstruction.findViewById(R.id.imageViewIpTouch2)).startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.animation_touch));
 			break;
 		case STATE_HEIGHT:
 			default:
 				return;
 		}
 		
-		dialogInstruction.setContentView(dialogLayoutID);
 		dialogInstruction.setTitle(dialogTitle);
 		Button button = (Button) dialogInstruction.findViewById(R.id.buttonOkay);
 		button.setOnClickListener(new View.OnClickListener() {
