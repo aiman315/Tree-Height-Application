@@ -36,6 +36,9 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 
 
 	//TODO: Move all text to strings.xml
+	//complete instruction (How we calculated tree height)
+	//delete Desc Activity
+	//detect shake
 	private final String TAG = "CameraActivity";
 	private final int INVALID_ANGLE = -999;
 

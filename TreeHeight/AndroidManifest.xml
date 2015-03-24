@@ -47,10 +47,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".DescActivity"
-            android:label="@string/title_activity_desc" >
-        </activity>
-        <activity
             android:name=".CameraActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/title_activity_camera" 

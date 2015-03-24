@@ -14,12 +14,6 @@
     <string name="button_image_processing">Image Processing</string>
     <string name="action_settings">Settings</string>
 
-    <!-- DescActivity -->
-    <string name="title_activity_desc">Approach Description</string>
-    <string name="math_approach_desc">this is Math approach</string>
-    <string name="img_processing_approach_desc">Image Processing Approach</string>
-    <string name="button_try_me">Try Me!</string>
-
     <!-- CameraActivity -->
     <string name="title_activity_camera">Camera Activity</string>
     <string name="instruction_text">Instruction Text</string>
@@ -53,5 +47,7 @@
     <!-- Math Tree Bottom Dialog -->
     <string name="text_view_tree_bottom_instruction_1">We have to do this again, but this time for tree bottom. Don\'t forget! The device has to be at your height level</string>
     <string name="text_view_tree_bottom_instruction_2">Again, try to press the button when the cross is pointing on the lowest point of tree</string>
-
+    
+    <!-- Math Tree How Dialog -->
+	<string name="text_View_setting">Using these information, we have the following setting:\n <font color="purple">Two triangles\n Two known angles\n A known side of the small triangle</font></string>
 </resources>

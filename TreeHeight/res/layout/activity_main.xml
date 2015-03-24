@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
-        android:onClick="onClickDesc"
+        android:onClick="onClickImageProcessing"
         android:text="@string/button_image_processing" />
 
     <Button
@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/buttonIP"
         android:layout_alignParentStart="true"
-        android:onClick="onClickDesc"
+        android:onClick="onClickMath"
         android:text="@string/button_math" />
 
     <ImageView
