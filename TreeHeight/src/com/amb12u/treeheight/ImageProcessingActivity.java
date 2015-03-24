@@ -30,7 +30,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.view.MotionEventCompat;
-import android.text.InputType;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
@@ -39,7 +38,6 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -58,6 +56,8 @@ public class ImageProcessingActivity extends Activity {
 	private final int INDEX_REF_RIGHT = 1;
 	private final int INDEX_REF_TOP = 2;
 	private final int INDEX_REF_LEFT = 3;
+
+	private final double HEIGHT_A4_PAPER = 29.7;
 
 	private final int LINE_THICKNESS = 5;
 
@@ -87,7 +87,7 @@ public class ImageProcessingActivity extends Activity {
 	//Code documentation
 	//markTouch at bottom of image has large offset
 	//Make mathematical approach more visual
-	
+
 	//FIXME:
 	//offset for clicks at bottom causing app to crash
 
@@ -147,11 +147,8 @@ public class ImageProcessingActivity extends Activity {
 
 		switch(currentState) {
 		case STATE_TREETOP:
-			//handle touch of one finger
-			int posY = (int) (event.getY() *heightRatio);
-			int posX = (int) (event.getX() *widthRatio);
 			//start treetop detection at touch position
-			taskDetectTreetop = new TaskDetectTreetop(posY, posX).execute();
+			taskDetectTreetop = new TaskDetectTreetop((int) (event.getY() *heightRatio), (int) (event.getX() *widthRatio)).execute();
 			break;
 		case STATE_REFERENCE:
 			//handle touch of two fingers
@@ -252,7 +249,7 @@ public class ImageProcessingActivity extends Activity {
 			if (minCol > originalMat.cols()-1) {
 				minCol = originalMat.cols()-1;
 			}
-			
+
 			if (maxRow > originalMat.rows()-1) {
 				maxRow = originalMat.rows()-1;
 			}
@@ -455,6 +452,7 @@ public class ImageProcessingActivity extends Activity {
 			Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY, 0);
 			Imgproc.threshold(processingMat, processingMat, (float) 60 * 255 / 100, 255, Imgproc.THRESH_BINARY);
 
+
 			/// Find contours
 			List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 			Imgproc.findContours(processingMat, contours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
@@ -565,7 +563,7 @@ public class ImageProcessingActivity extends Activity {
 
 			buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
 
-			textTreeHeight.setText(String.format("Tree Height = ( %d * %d ) / %d = %d", treePixelHeight, (int)referenceObjHeight, referenceObjPixelHeight, (int)treeHeight));
+			textTreeHeight.setText(String.format("Tree Height = ( %d * %.2f ) / %d = %.2f", treePixelHeight, referenceObjHeight, referenceObjPixelHeight, treeHeight));
 			textTreeHeight.setPivotX(0);
 			textTreeHeight.setPivotY(0);
 			textTreeHeight.setY((int)(treetopRow/heightRatio)-30);
@@ -633,57 +631,6 @@ public class ImageProcessingActivity extends Activity {
 		}
 	}
 
-
-	/**
-	 * Creates a dialog to input reference object height
-	 * The value of reference object height is a positive double, and can't be zero
-	 * The unit for reference object height is cm
-	 */
-	private void setupReferenceObjHeight() {
-		//EditText to allow user input
-		final EditText input = new EditText(this);
-		input.setHint(R.string.ref_height_dialog_text);
-		input.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-
-		//reference object height input-dialog setup
-		final AlertDialog heightDialog = new AlertDialog.Builder(this, R.style.myCustomDialog)
-		.setView(input)
-		.setTitle(R.string.ref_height_dialog_title)
-		.setPositiveButton(android.R.string.ok, null)
-		.create();
-
-		heightDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-
-			@Override
-			public void onShow(DialogInterface dialog) {
-
-				Button buttonOk = heightDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-				buttonOk.setOnClickListener(new View.OnClickListener() {
-
-					@Override
-					public void onClick(View view) {
-						//verify correct input
-						try {
-							referenceObjHeight = Double.parseDouble(input.getText().toString());
-
-							if (referenceObjHeight > 0) {
-								heightDialog.dismiss();
-							} else {
-								Toast.makeText(ImageProcessingActivity.this, "Input Must be greater than zero", Toast.LENGTH_SHORT).show();
-							}
-						} catch (NumberFormatException e) {
-							Toast.makeText(ImageProcessingActivity.this, "Invalid Input", Toast.LENGTH_SHORT).show();
-							Log.e(TAG, "exception", e);
-						}
-					}
-				});
-			}
-		});
-		heightDialog.setCancelable(false);
-		heightDialog.show();
-	}
-
-
 	/**
 	 * Loads selected image into application, and setup program matrices
 	 * @throws FileNotFoundException
@@ -701,7 +648,7 @@ public class ImageProcessingActivity extends Activity {
 
 		Log.i("XXXXX", "height "+loadedImage.getHeight());
 		Log.i("XXXXX", "width "+loadedImage.getWidth());
-		
+
 		if (loadedImage.getHeight() < loadedImage.getWidth()) {
 			isPortraitImg = false;
 		}
@@ -786,7 +733,6 @@ public class ImageProcessingActivity extends Activity {
 						Toast.makeText(getApplicationContext(), "Reference object must be below treetop", Toast.LENGTH_SHORT).show();
 					} else {
 						currentState = STATE_HEIGHT;
-						setupReferenceObjHeight();
 						buttonTask.setVisibility(View.VISIBLE);
 						buttonTask.setText(R.string.button_calc_height);
 						imageView.setOnTouchListener(null);
@@ -857,13 +803,13 @@ public class ImageProcessingActivity extends Activity {
 
 		treeHeight = 0;
 		treePixelHeight = 0;
-		referenceObjHeight = 0;
+		referenceObjHeight = HEIGHT_A4_PAPER;
 
 		treetopRow = 0;
 		treeBottomRow = 0;
 
 		referenceObjBound = new int [4];
-		
+
 		buttonTask = (Button) findViewById(R.id.buttonTask);
 		textTreeHeight = (TextView) findViewById(R.id.textTreeHeight);
 		imgUri = getIntent().getExtras().getParcelable("ImgUri");
@@ -947,7 +893,7 @@ public class ImageProcessingActivity extends Activity {
 		Log.d(TAG, "onStop");
 		super.onStop();
 	}
-	
+
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);
