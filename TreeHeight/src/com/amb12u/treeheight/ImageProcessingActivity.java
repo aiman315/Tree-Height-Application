@@ -34,6 +34,8 @@ import android.support.v4.view.MotionEventCompat;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -833,6 +835,25 @@ public class ImageProcessingActivity extends Activity {
 	}
 	
 	//	---------------- Activity Methods ---------------- //
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.image_processing, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int id = item.getItemId();
+
+		switch(id) {
+		case R.id.action_instruction:
+			isInstructionEnabled = !isInstructionEnabled;
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

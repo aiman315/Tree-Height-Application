@@ -1,0 +1,10 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.amb12u.treeheight.MathActivity" >
+
+    <item
+        android:id="@+id/action_instruction"
+        android:showAsAction="never"
+        android:title="@string/action_instructions"/>
+
+</menu>
