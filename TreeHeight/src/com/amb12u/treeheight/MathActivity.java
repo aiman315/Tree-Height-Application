@@ -127,43 +127,6 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 	}
 
 	/**
-	 * Loads picture from preview into UI imageView with specified ID 
-	 * @param imageViewID: ID of ImageView to load image into
-	 */
-	private void takePicture(final int imageViewID) {
-		selectedCamera.takePicture(null, null, new Camera.PictureCallback() {
-
-			@Override
-			public void onPictureTaken(byte[] data, Camera camera) {
-				Point point = new Point();
-				getWindowManager().getDefaultDisplay().getSize(point);
-
-				ImageView imageViewTreetop = (ImageView) findViewById(imageViewID);
-				Bitmap bitmapImage = BitmapFactory.decodeByteArray(data, 0, data.length);
-				Matrix matrix = new Matrix();
-				switch(getRotation()) {
-				case Surface.ROTATION_0:
-					matrix.postRotate(90);
-					break;
-				case Surface.ROTATION_180:
-					matrix.postRotate(270);
-					break;
-				case Surface.ROTATION_270:
-					matrix.postRotate(180);
-					break;
-				}
-				bitmapImage = Bitmap.createBitmap(bitmapImage, 0, 0, bitmapImage.getWidth(), bitmapImage.getHeight(), matrix, false);
-				bitmapImage = Bitmap.createScaledBitmap(bitmapImage, point.x/4, point.y/4, false);
-
-				imageViewTreetop.getLayoutParams().height = bitmapImage.getHeight();
-				imageViewTreetop.getLayoutParams().width = bitmapImage.getWidth();
-				imageViewTreetop.setImageBitmap(bitmapImage);
-				selectedCamera.startPreview();
-			}
-		});
-	}
-
-	/**
 	 * Reset angles readings
 	 * @param v
 	 */
@@ -198,6 +161,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 	}
 
 	public void onClickReset(View v) {
+		Log.d(TAG, "onClickReset");
 		currentStage.setStage(STAGE_HEIGHT_INPUT);
 	}
 
@@ -304,7 +268,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 	/**
 	 * Swaps the selected camera, between front facing and back facing
 	 */
-	public void swapCamera() {
+	private void swapCamera() {
 		Log.d(TAG, "swapCamera");
 		if (selectedCameraId == frontFacingCameraId) {
 			selectedCameraId = getBackFacingCameraId();	
@@ -327,48 +291,42 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 		}
 	}
 
+	/**
+	 * Loads picture from preview into UI imageView with specified ID 
+	 * @param imageViewID: ID of ImageView to load image into
+	 */
+	private void takePicture(final int imageViewID) {
+		Log.d(TAG, "takePicture");
+		selectedCamera.takePicture(null, null, new Camera.PictureCallback() {
 
-	@Override
-	public void onAccuracyChanged(Sensor sensor, int accuracy) {
-		Log.d(TAG, "onAccuracyChanged");
+			@Override
+			public void onPictureTaken(byte[] data, Camera camera) {
+				Point point = new Point();
+				getWindowManager().getDefaultDisplay().getSize(point);
 
-	}
+				ImageView imageViewTreetop = (ImageView) findViewById(imageViewID);
+				Bitmap bitmapImage = BitmapFactory.decodeByteArray(data, 0, data.length);
+				Matrix matrix = new Matrix();
+				switch(getRotation()) {
+				case Surface.ROTATION_0:
+					matrix.postRotate(90);
+					break;
+				case Surface.ROTATION_180:
+					matrix.postRotate(270);
+					break;
+				case Surface.ROTATION_270:
+					matrix.postRotate(180);
+					break;
+				}
+				bitmapImage = Bitmap.createBitmap(bitmapImage, 0, 0, bitmapImage.getWidth(), bitmapImage.getHeight(), matrix, false);
+				bitmapImage = Bitmap.createScaledBitmap(bitmapImage, point.x/4, point.y/4, false);
 
-	@Override
-	public void onSensorChanged(SensorEvent event) {
-		Log.d(TAG, "onSensorChanged");
-
-		float valueX = event.values[0];
-		float valueY = event.values[1];
-		float valueZ = -1 * event.values[2]; //multiply by -1 to obtain Z actual readings for device on its back
-
-		//Log.d(TAG, ""+System.currentTimeMillis()+","+event.values[0]+","+event.values[1]+","+(event.values[2]));
-		int rotation = getRotation();
-		switch (rotation) {
-		case Surface.ROTATION_0:
-			//portrait
-			accelerometerAngle = calculateAngle(valueY, valueZ);
-			break;
-		case Surface.ROTATION_90:
-			//landscape
-			accelerometerAngle = calculateAngle(valueX, valueZ);
-			break;
-		case Surface.ROTATION_180:
-			//reverse portrait
-			accelerometerAngle = calculateAngle(-1*valueY, valueZ);
-			break;
-		default:
-			//reverse landscape
-			accelerometerAngle = calculateAngle(-1*valueX, valueZ);
-			break;
-		}
-		textViewAngleNum.setText(String.format("Angle = %.2f", accelerometerAngle));
-
-		//debugging text
-		textViewX.setText("acceleration X = "+Float.toString(valueX));
-		textViewY.setText("acceleration Y = "+Float.toString(valueY));
-		textViewZ.setText("acceleration Z = "+Float.toString(valueZ));
-		textViewAngle.setText(String.format("Current angle = %.2f",accelerometerAngle));
+				imageViewTreetop.getLayoutParams().height = bitmapImage.getHeight();
+				imageViewTreetop.getLayoutParams().width = bitmapImage.getWidth();
+				imageViewTreetop.setImageBitmap(bitmapImage);
+				selectedCamera.startPreview();
+			}
+		});
 	}
 
 	/**
@@ -394,13 +352,23 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 	}
 
 	/**
+	 * Initializes accelerometer sensor and register listener
+	 */
+	private void setupAccelerometer() {
+		Log.d(TAG, "setupAccelerometer");
+		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+		accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+	}
+
+	/**
 	 * Creates a dialog to input camera height
 	 * The value of camera height is positive double, and can't be zero
 	 * The unit for camera height is cm
 	 */
 	private void setupCameraHeight() {
 		Log.d(TAG, "setupCameraHeight");
-		//camera height input-dialog setup
+		
 		final Dialog dialogInstruction = new Dialog(this, R.style.myInstructionDialog);
 		dialogInstruction.setContentView(R.layout.dialog_custom_person_height);
 		dialogInstruction.setTitle("Your Height");
@@ -440,6 +408,132 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 		dialogInstruction.setCancelable(false);
 		dialogInstruction.show();
 	}
+
+	/**
+	 * Update user interface according to current stage of programme
+	 */
+	private void updateUI() {
+		Log.d(TAG, "updateUI");
+		switch(currentStage.getStage()) {
+
+		case STAGE_HEIGHT_INPUT:
+			//setup buttons
+			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(false);
+			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(false);
+			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
+			break;
+
+		case STAGE_TREETOP_ANGLE: 
+			//setup buttons
+			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(false);
+			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(true);
+			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
+
+			//hide treetop and tree bottom imageViews and their texts
+			((ImageView) findViewById(R.id.imageViewTreetop)).setVisibility(View.INVISIBLE);
+			((ImageView) findViewById(R.id.imageViewTreeBottom)).setVisibility(View.INVISIBLE);
+
+			((TextView) findViewById(R.id.textViewTreetop)).setVisibility(View.INVISIBLE);
+			((TextView) findViewById(R.id.textViewTreeBottom)).setVisibility(View.INVISIBLE);
+
+			//show sky gradient
+			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.VISIBLE);
+			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
+
+			//show person
+			if (isInstructionEnabled) {
+				((ImageView) findViewById(R.id.imageViewPerson)).setVisibility(View.VISIBLE);
+			}
+			break;
+
+		case STAGE_TREE_BOTTOM_ANGLE: 
+			//setup buttons
+			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(true);
+			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(true);
+			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
+
+			//show treetop and hide tree bottom imageViews and their texts
+			((ImageView) findViewById(R.id.imageViewTreetop)).setVisibility(View.VISIBLE);
+			((ImageView) findViewById(R.id.imageViewTreeBottom)).setVisibility(View.INVISIBLE);
+
+			((TextView) findViewById(R.id.textViewTreetop)).setVisibility(View.VISIBLE);
+			((TextView) findViewById(R.id.textViewTreeBottom)).setVisibility(View.INVISIBLE);
+
+			//hide sky and show grass
+			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
+			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.VISIBLE);
+
+			//show zoom seek bar
+			((SeekBar) findViewById(R.id.seekBarZoom)).setVisibility(View.VISIBLE);
+
+			//show cross
+			((View) findViewById(R.id.horizontal_cross)).setVisibility(View.VISIBLE);
+			((View) findViewById(R.id.vertical_cross)).setVisibility(View.VISIBLE);
+
+			//show person
+			if (isInstructionEnabled) {
+				((ImageView) findViewById(R.id.imageViewPerson)).setVisibility(View.VISIBLE);
+			}
+
+			//debugging text
+			textViewFirstAngle.setText(String.format("angle treetop = %.2f",angleTreetop));
+			break;
+
+		case STAGE_CALCULATE_TREE_HEIGHT: 	
+			//setup buttons
+			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(true);
+			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(false);
+			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(true);
+
+			//show treetop and tree bottom imageViews and their texts
+			((ImageView) findViewById(R.id.imageViewTreetop)).setVisibility(View.VISIBLE);
+			((ImageView) findViewById(R.id.imageViewTreeBottom)).setVisibility(View.VISIBLE);
+
+			((TextView) findViewById(R.id.textViewTreetop)).setVisibility(View.VISIBLE);
+			((TextView) findViewById(R.id.textViewTreeBottom)).setVisibility(View.VISIBLE);
+
+			//hide sky and grass
+			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
+			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
+
+			//hide zoom seek bar
+			((SeekBar) findViewById(R.id.seekBarZoom)).setVisibility(View.INVISIBLE);
+
+			//hide cross
+			((View) findViewById(R.id.horizontal_cross)).setVisibility(View.INVISIBLE);
+			((View) findViewById(R.id.vertical_cross)).setVisibility(View.INVISIBLE);
+
+			//hide person
+			((ImageView) findViewById(R.id.imageViewPerson)).setVisibility(View.INVISIBLE);
+
+
+			//debugging text
+			textViewSecondAngle.setText(String.format("angle tree bottom = %.2f", angleTreeBottom));
+			break;
+		case STAGE_END:
+			//setup buttons
+			((Button) findViewById(R.id.buttonUndoAngle)).setVisibility(View.INVISIBLE);
+			((Button) findViewById(R.id.buttonReadAngle)).setVisibility(View.INVISIBLE);
+			((Button) findViewById(R.id.buttonCalculateHeight)).setVisibility(View.INVISIBLE);
+
+			//show tree height
+			textViewAngleNum.setText(String.format("Tree Height = %.2f cm", heightTree));
+			textViewAngleNum.setTextColor(Color.YELLOW);
+
+			//show person
+			if (isInstructionEnabled) {
+				((ImageView) findViewById(R.id.imageViewPerson)).setVisibility(View.VISIBLE);
+			}
+
+			//debugging text
+			textViewFormula.setText(String.format("%.2f*((%.2f/%.2f)+1)", heightCamera, angleTreetop, angleTreeBottom));
+			textViewTreeHeight.setText(String.format("Tree Height = %.2f", heightTree));
+			break;
+		default:
+			return;
+		}
+	}
+
 
 	/**
 	 * Display instructions using a custom dialog.
@@ -504,131 +598,6 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 	}
 
 	/**
-	 * Update user interface according to current stage of programme
-	 */
-	private void updateUI() {
-		switch(currentStage.getStage()) {
-
-		case STAGE_HEIGHT_INPUT:
-			//setup buttons
-			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(false);
-			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(false);
-			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
-			break;
-
-		case STAGE_TREETOP_ANGLE: 
-			//setup buttons
-			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(false);
-			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(true);
-			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
-
-			//hide treetop and tree bottom imageViews and their texts
-			((ImageView) findViewById(R.id.imageViewTreetop)).setVisibility(View.INVISIBLE);
-			((ImageView) findViewById(R.id.imageViewTreeBottom)).setVisibility(View.INVISIBLE);
-			
-			((TextView) findViewById(R.id.textViewTreetop)).setVisibility(View.INVISIBLE);
-			((TextView) findViewById(R.id.textViewTreeBottom)).setVisibility(View.INVISIBLE);
-
-			//show sky gradient
-			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.VISIBLE);
-			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
-
-			//show person
-			if (isInstructionEnabled) {
-				((ImageView) findViewById(R.id.imageViewPerson)).setVisibility(View.VISIBLE);
-			}
-			break;
-
-		case STAGE_TREE_BOTTOM_ANGLE: 
-			//setup buttons
-			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(true);
-			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(true);
-			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(false);
-
-			//show treetop and hide tree bottom imageViews and their texts
-			((ImageView) findViewById(R.id.imageViewTreetop)).setVisibility(View.VISIBLE);
-			((ImageView) findViewById(R.id.imageViewTreeBottom)).setVisibility(View.INVISIBLE);
-			
-			((TextView) findViewById(R.id.textViewTreetop)).setVisibility(View.VISIBLE);
-			((TextView) findViewById(R.id.textViewTreeBottom)).setVisibility(View.INVISIBLE);
-
-			//hide sky and show grass
-			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
-			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.VISIBLE);
-
-			//show zoom seek bar
-			((SeekBar) findViewById(R.id.seekBarZoom)).setVisibility(View.VISIBLE);
-
-			//show cross
-			((View) findViewById(R.id.horizontal_cross)).setVisibility(View.VISIBLE);
-			((View) findViewById(R.id.vertical_cross)).setVisibility(View.VISIBLE);
-
-			//show person
-			if (isInstructionEnabled) {
-				((ImageView) findViewById(R.id.imageViewPerson)).setVisibility(View.VISIBLE);
-			}
-
-			//debugging text
-			textViewFirstAngle.setText(String.format("angle treetop = %.2f",angleTreetop));
-			break;
-
-		case STAGE_CALCULATE_TREE_HEIGHT: 	
-			//setup buttons
-			((Button) findViewById(R.id.buttonUndoAngle)).setEnabled(true);
-			((Button) findViewById(R.id.buttonReadAngle)).setEnabled(false);
-			((Button) findViewById(R.id.buttonCalculateHeight)).setEnabled(true);
-
-			//show treetop and tree bottom imageViews and their texts
-			((ImageView) findViewById(R.id.imageViewTreetop)).setVisibility(View.VISIBLE);
-			((ImageView) findViewById(R.id.imageViewTreeBottom)).setVisibility(View.VISIBLE);
-			
-			((TextView) findViewById(R.id.textViewTreetop)).setVisibility(View.VISIBLE);
-			((TextView) findViewById(R.id.textViewTreeBottom)).setVisibility(View.VISIBLE);
-
-			//hide sky and grass
-			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
-			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
-
-			//hide zoom seek bar
-			((SeekBar) findViewById(R.id.seekBarZoom)).setVisibility(View.INVISIBLE);
-
-			//hide cross
-			((View) findViewById(R.id.horizontal_cross)).setVisibility(View.INVISIBLE);
-			((View) findViewById(R.id.vertical_cross)).setVisibility(View.INVISIBLE);
-
-			//hide person
-			((ImageView) findViewById(R.id.imageViewPerson)).setVisibility(View.INVISIBLE);
-
-
-			//debugging text
-			textViewSecondAngle.setText(String.format("angle tree bottom = %.2f", angleTreeBottom));
-			break;
-		case STAGE_END:
-			//setup buttons
-			((Button) findViewById(R.id.buttonUndoAngle)).setVisibility(View.INVISIBLE);
-			((Button) findViewById(R.id.buttonReadAngle)).setVisibility(View.INVISIBLE);
-			((Button) findViewById(R.id.buttonCalculateHeight)).setVisibility(View.INVISIBLE);
-
-			//show tree height
-			textViewAngleNum.setText(String.format("Tree Height = %.2f cm", heightTree));
-			textViewAngleNum.setTextColor(Color.YELLOW);
-			
-			//show person
-			if (isInstructionEnabled) {
-				((ImageView) findViewById(R.id.imageViewPerson)).setVisibility(View.VISIBLE);
-			}
-
-			//debugging text
-			textViewFormula.setText(String.format("%.2f*((%.2f/%.2f)+1)", heightCamera, angleTreetop, angleTreeBottom));
-			textViewTreeHeight.setText(String.format("Tree Height = %.2f", heightTree));
-			break;
-		default:
-			return;
-		}
-	}
-
-
-	/**
 	 * Sets the visibility of debugging textViews
 	 * @param isEnabled: flag to show or hide debugging information
 	 */
@@ -664,11 +633,14 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 		}
 	}
 
+
+
 	//	---------------- Activity Methods ---------------- //
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
+		Log.d(TAG, "onSaveInstanceState");
 		//gets the selected camera ID from previous state
 		outState.putInt(SELETED_CAMERA_ID_KEY, selectedCameraId);
 	}
@@ -705,16 +677,14 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 
 		textViewAngleNum = (TextView)findViewById(R.id.textViewAngleNum);
 
+		//debugging textViews
 		textViewCameraHeight = (TextView)findViewById(R.id.textViewCameraHeight);
-
 		textViewX = (TextView)findViewById(R.id.textViewX);
 		textViewY = (TextView)findViewById(R.id.textViewY);
 		textViewZ = (TextView)findViewById(R.id.textViewZ);
 		textViewAngle = (TextView)findViewById(R.id.textViewAngle);
-
 		textViewFirstAngle = (TextView) findViewById(R.id.textViewTreetopAngle);
 		textViewSecondAngle = (TextView) findViewById(R.id.textViewTreeBottomAngle);
-
 		textViewFormula = (TextView) findViewById(R.id.textViewFormula);
 		textViewTreeHeight = (TextView) findViewById(R.id.textViewTotalHeight);
 
@@ -737,9 +707,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 		}
 
 		//accelerometer setup
-		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-		accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-		sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+		setupAccelerometer();
 
 		//disable debugging information
 		showDebuggingInfo(false);
@@ -829,8 +797,54 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 		}
 	}
 
+	//	---------------- Interface Methods ---------------- //
+
+	@Override
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+		Log.d(TAG, "onAccuracyChanged");
+
+	}
+
+	@Override
+	public void onSensorChanged(SensorEvent event) {
+		Log.d(TAG, "onSensorChanged");
+
+		float valueX = event.values[0];
+		float valueY = event.values[1];
+		float valueZ = -1 * event.values[2]; //multiply by -1 to obtain Z actual readings for device on its back
+
+		//Log.d(TAG, ""+System.currentTimeMillis()+","+event.values[0]+","+event.values[1]+","+(event.values[2]));
+		int rotation = getRotation();
+		switch (rotation) {
+		case Surface.ROTATION_0:
+			//portrait
+			accelerometerAngle = calculateAngle(valueY, valueZ);
+			break;
+		case Surface.ROTATION_90:
+			//landscape
+			accelerometerAngle = calculateAngle(valueX, valueZ);
+			break;
+		case Surface.ROTATION_180:
+			//reverse portrait
+			accelerometerAngle = calculateAngle(-1*valueY, valueZ);
+			break;
+		default:
+			//reverse landscape
+			accelerometerAngle = calculateAngle(-1*valueX, valueZ);
+			break;
+		}
+		textViewAngleNum.setText(String.format("Angle = %.2f", accelerometerAngle));
+
+		//debugging text
+		textViewX.setText("acceleration X = "+Float.toString(valueX));
+		textViewY.setText("acceleration Y = "+Float.toString(valueY));
+		textViewZ.setText("acceleration Z = "+Float.toString(valueZ));
+		textViewAngle.setText(String.format("Current angle = %.2f",accelerometerAngle));
+	}
+
 	@Override
 	public void onStageChanged() {
+		Log.d(TAG, "onStageChanged");
 		showInsturctions();
 		updateUI();
 	}
