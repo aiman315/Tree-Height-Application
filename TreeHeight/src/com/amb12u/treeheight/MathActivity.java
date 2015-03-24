@@ -23,6 +23,7 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -368,7 +369,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 	 */
 	private void setupCameraHeight() {
 		Log.d(TAG, "setupCameraHeight");
-		
+
 		final Dialog dialogInstruction = new Dialog(this, R.style.myInstructionDialog);
 		dialogInstruction.setContentView(R.layout.dialog_custom_person_height);
 		dialogInstruction.setTitle("Your Height");
@@ -439,6 +440,12 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 			//show sky gradient
 			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.VISIBLE);
 			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
+			
+			//show clouds and animate them
+			((ImageView) findViewById(R.id.imageViewCloud1)).setVisibility(View.VISIBLE);
+			((ImageView) findViewById(R.id.imageViewCloud2)).setVisibility(View.VISIBLE);
+			((ImageView) findViewById(R.id.imageViewCloud1)).startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.animation_cloud));
+			((ImageView) findViewById(R.id.imageViewCloud2)).startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.animation_cloud));
 
 			//show person
 			if (isInstructionEnabled) {
@@ -462,6 +469,13 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 			//hide sky and show grass
 			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
 			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.VISIBLE);
+			
+			//hide clouds and stop animation
+			((ImageView) findViewById(R.id.imageViewCloud1)).setVisibility(View.INVISIBLE);
+			((ImageView) findViewById(R.id.imageViewCloud2)).setVisibility(View.INVISIBLE);
+			((ImageView) findViewById(R.id.imageViewCloud1)).clearAnimation();
+			((ImageView) findViewById(R.id.imageViewCloud2)).clearAnimation();
+
 
 			//show zoom seek bar
 			((SeekBar) findViewById(R.id.seekBarZoom)).setVisibility(View.VISIBLE);
