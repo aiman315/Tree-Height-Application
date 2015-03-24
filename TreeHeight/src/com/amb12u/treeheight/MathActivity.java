@@ -440,7 +440,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 			//show sky gradient
 			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.VISIBLE);
 			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.INVISIBLE);
-			
+
 			//show clouds and animate them
 			((ImageView) findViewById(R.id.imageViewCloud1)).setVisibility(View.VISIBLE);
 			((ImageView) findViewById(R.id.imageViewCloud2)).setVisibility(View.VISIBLE);
@@ -469,7 +469,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 			//hide sky and show grass
 			((ImageView) findViewById(R.id.imageViewSky)).setVisibility(View.INVISIBLE);
 			((ImageView) findViewById(R.id.imageViewGrass)).setVisibility(View.VISIBLE);
-			
+
 			//hide clouds and stop animation
 			((ImageView) findViewById(R.id.imageViewCloud1)).setVisibility(View.INVISIBLE);
 			((ImageView) findViewById(R.id.imageViewCloud2)).setVisibility(View.INVISIBLE);

@@ -60,7 +60,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 		int previewOrientation = getCameraPreviewOrientation(cameraId);
 		camera.setDisplayOrientation(previewOrientation);
 
-		//TODO: set other camera params
 		Camera.Parameters params = camera.getParameters();
 		params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
 		camera.setParameters(params);

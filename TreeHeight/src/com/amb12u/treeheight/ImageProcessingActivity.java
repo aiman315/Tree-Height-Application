@@ -86,7 +86,6 @@ public class ImageProcessingActivity extends Activity {
 	//Indicate that tree bottom = reference object bottom
 	//Code documentation
 	//markTouch at bottom of image has large offset
-	//Make mathematical approach more visual
 
 	//FIXME:
 	//offset for clicks at bottom causing app to crash
@@ -673,8 +672,6 @@ public class ImageProcessingActivity extends Activity {
 	private synchronized void updateDisplayImage() {
 		Log.d(TAG, "updateImage");
 
-		//FIXME: is it correct to keep synchronized?
-		//FIXME: is this the correct format to use for Bitmap (RGB_565)?
 		Bitmap image = Bitmap.createBitmap(displayMat.cols(), displayMat.rows(), Bitmap.Config.RGB_565);
 		Utils.matToBitmap(displayMat, image);
 		imageView.setImageBitmap(image);
