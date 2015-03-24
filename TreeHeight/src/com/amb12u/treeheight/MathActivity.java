@@ -32,14 +32,14 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class CameraActivity extends Activity implements SensorEventListener, IntStageListener{
+public class MathActivity extends Activity implements SensorEventListener, IntStageListener{
 
 
 	//TODO: Move all text to strings.xml
 	//complete instruction (How we calculated tree height)
 	//delete Desc Activity
 	//detect shake
-	private final String TAG = "CameraActivity";
+	private final String TAG = "MathActivity";
 	private final int INVALID_ANGLE = -999;
 
 	private final int STAGE_HEIGHT_INPUT = 0;
@@ -429,10 +429,10 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 						//change programme stage
 						currentStage.setStage(STAGE_TREETOP_ANGLE);
 					} else {
-						Toast.makeText(CameraActivity.this, "Input Must be greater than zero", Toast.LENGTH_SHORT).show();
+						Toast.makeText(MathActivity.this, "Input Must be greater than zero", Toast.LENGTH_SHORT).show();
 					}
 				} catch (NumberFormatException e) {
-					Toast.makeText(CameraActivity.this, "Invalid Input", Toast.LENGTH_SHORT).show();
+					Toast.makeText(MathActivity.this, "Invalid Input", Toast.LENGTH_SHORT).show();
 					Log.e(TAG, "exception", e);
 				}
 			}
@@ -466,7 +466,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 
 				String dialogTitle;
 				int dialogLayoutID;
-				final Dialog dialogInstruction = new Dialog(CameraActivity.this, R.style.myInstructionDialog);
+				final Dialog dialogInstruction = new Dialog(MathActivity.this, R.style.myInstructionDialog);
 
 				switch(currentStage.getStage()) {
 				case STAGE_TREETOP_ANGLE: 
@@ -677,7 +677,7 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate");
-		setContentView(R.layout.activity_camera);
+		setContentView(R.layout.activity_math);
 		//hide navigation bar
 		getWindow().getDecorView().setSystemUiVisibility(
 				View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -750,23 +750,15 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.math, menu);
 		return true;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-
 		int id = item.getItemId();
 
 		switch(id) {
-		case R.id.action_camera_height:
-			setupCameraHeight();
-			return true;
 		case R.id.action_instruction:
 			isInstructionEnabled = !isInstructionEnabled;
 			return true;
@@ -776,8 +768,6 @@ public class CameraActivity extends Activity implements SensorEventListener, Int
 			return true;
 		case R.id.action_camera_swap:
 			swapCamera();
-			return true;
-		case R.id.action_settings:
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);

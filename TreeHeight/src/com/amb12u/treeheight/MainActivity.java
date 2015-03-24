@@ -79,7 +79,7 @@ public class MainActivity extends Activity {
 
 	public void onClickMath(View v) {
 		Log.d(TAG, "onClickMath");
-		Intent cameraIntent = new Intent(this, CameraActivity.class);
+		Intent cameraIntent = new Intent(this, MathActivity.class);
 		startActivity(cameraIntent);
 	}
 

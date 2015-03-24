@@ -14,7 +14,7 @@
     <string name="button_image_processing">Image Processing</string>
     <string name="action_settings">Settings</string>
 
-    <!-- CameraActivity -->
+    <!-- Math Activity -->
     <string name="title_activity_camera">Camera Activity</string>
     <string name="instruction_text">Instruction Text</string>
     <string name="button_read_angle">Read Angle</string>
