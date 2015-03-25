@@ -71,10 +71,10 @@ public class ImageProcessingActivity extends Activity {
 	private int treetopRow, treeBottomRow;
 	private int [] referenceObjBound;
 	private int currentState;
-	
+
 	private boolean isInstructionEnabled;
 	private boolean isPortraitImg;
-	
+
 	private Uri imgUri;
 	private ImageView imageView;
 	private Button buttonTask;
@@ -131,10 +131,10 @@ public class ImageProcessingActivity extends Activity {
 		Log.d(TAG, "detectReference");
 
 		if (displayMat != null) {
-			
+
 			//show instruction
 			showIncsturctions();
-			
+
 			imageView.setOnTouchListener(new View.OnTouchListener() {
 
 				@Override
@@ -758,7 +758,7 @@ public class ImageProcessingActivity extends Activity {
 				switch(currentState) {
 				case STATE_TREETOP:
 					Toast.makeText(getApplicationContext(), getString(R.string.ip_toast_touch_enable_treetop), Toast.LENGTH_SHORT).show();
-					
+
 					imageView.setOnTouchListener(new View.OnTouchListener() {
 
 						@Override
@@ -799,14 +799,14 @@ public class ImageProcessingActivity extends Activity {
 	 */
 	private void showIncsturctions() {
 		Log.d(TAG, "showIncsturctions");
-		
+
 		if (!isInstructionEnabled) {
 			return;
 		}
-		
+
 		final Dialog dialogInstruction = new Dialog(ImageProcessingActivity.this, R.style.myInstructionDialog);
 		String dialogTitle;
-		
+
 		switch(currentState) {
 		case STATE_TREETOP:
 			dialogTitle = getString(R.string.dialog_ip_treetop_title);
@@ -820,10 +820,10 @@ public class ImageProcessingActivity extends Activity {
 			((ImageView) dialogInstruction.findViewById(R.id.imageViewIpTouch2)).startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.animation_touch));
 			break;
 		case STATE_HEIGHT:
-			default:
-				return;
+		default:
+			return;
 		}
-		
+
 		dialogInstruction.setTitle(dialogTitle);
 		Button button = (Button) dialogInstruction.findViewById(R.id.buttonOkay);
 		button.setOnClickListener(new View.OnClickListener() {
@@ -833,11 +833,11 @@ public class ImageProcessingActivity extends Activity {
 			}
 		});
 		dialogInstruction.show();
-		
+
 	}
-	
+
 	//	---------------- Activity Methods ---------------- //
-	
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.image_processing, menu);

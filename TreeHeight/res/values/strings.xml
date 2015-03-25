@@ -41,13 +41,13 @@
     <string name="ip_title_activity_ip">Image Processing Activity</string>
     <string name="ip_action_gallery_img">Image from Gallery</string>
     <string name="ip_button_detect_tree">Detect Treetop</string>
-    <string name="ip_button_detect_reference">Detect Reference</string>
+    <string name="ip_button_detect_reference">Detect the A4</string>
     <string name="ip_button_calculate_height">Calculate Tree Height</string>
-    <string name="ip_progress_dialog_treetop">Detecting Treetop...</string>
+    <string name="ip_progress_dialog_treetop">Detecting Treetop&#8230;</string>
     <string name="ip_toast_treetop_detected_row">Treetop Detected (Row: %d)</string>
     <string name="ip_toast_treetop_not_detected">No Treetop Detected .. try touch input or use a different image</string>
     <string name="ip_toast_touch_enable_a4">A4 paper detection touch input enabled</string>
-    <string name="ip_progress_dialog_reference">Detecting A4 paper...</string>
+    <string name="ip_progress_dialog_reference">Detecting A4 paper&#8230;</string>
     <string name="ip_toast_reference_detected_row">A4 Paper Detected (Rows: %1$d-%2$d)</string>
     <string name="ip_toast_reference_not_detected">No A4 Paper Detected .. try again or use different image</string>
     <string name="ip_button_task_tree_height">Tree Height = %.2f cm</string>
