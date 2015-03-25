@@ -54,7 +54,7 @@
         </activity>
         <activity
             android:name=".ImageProcessingActivity"
-            android:label="@string/title_activity_ip"
+            android:label="@string/ip_title_activity_ip"
             android:screenOrientation="portrait"
             android:theme="@android:style/Theme.Holo.NoActionBar.TranslucentDecor" >
         </activity>

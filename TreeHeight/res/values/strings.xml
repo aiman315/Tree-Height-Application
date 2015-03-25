@@ -4,6 +4,8 @@
     <!-- General Strings -->
     <string name="empty"></string>
     <string name="reset">Reset</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
     <string name="ok">Okay</string>
     <string name="confirm">Confirm</string>
     <string name="canceled">Canceled</string>
@@ -18,16 +20,16 @@
 
     <!-- Math Activity -->
     <string name="title_activity_camera">Camera Activity</string>
-    <string name="toast_angle_treetop">Angle at treetop = %.2fº</string>
-    <string name="toast_angle_tree_bottom">Angle at tree bottom = %.2fº</string>
+    <string name="toast_angle_treetop">Angle at treetop = %%.2fº</string>
+    <string name="toast_angle_tree_bottom">Angle at tree bottom = %%.2fº</string>
     <string name="toast_angle_treetop_invalid">Angle to treetop must be positive</string>
     <string name="toast_angle_tree_bottom_invalid">Angle to tree bottom must be negative</string>
     <string name="toast_angle_treetop_reset">Cleared treetop angle value</string>
     <string name="toast_angle_tree_bottom_reset">Cleared tree bottom angle value</string>
     <string name="toast_camera_not_supported_error">Camera Feature is not supported by this device</string>
     <string name="toast_camera_open_error">Error loading camera</string>
-    <string name="text_view_math_angle">Angle = %.2f</string>
-    <string name="text_view_math_tree_height">Tree Height = %.2f cm</string>
+    <string name="text_view_math_angle">Angle = %%.2f</string>
+    <string name="text_view_math_tree_height">Tree Height = %%.2f cm</string>
     <string name="text_view_math_treetop_image">Tree Bottom Image</string>
     <string name="text_view_math_tree_bottom_image">Treetop Image</string>
     <string name="button_read_angle">Read Angle</string>
@@ -36,13 +38,25 @@
     <string name="action_debugging_information">Show/Hide Debuggin Information</string>
 
     <!-- Image Processing Activity -->
-    <string name="title_activity_ip">Image Processing Activity</string>
-    <string name="action_gallery_img">Image from Gallery</string>
-    <string name="button_detect_tree">Detect Treetop</string>
-    <string name="button_detect_reference">Detect Reference</string>
-    <string name="button_calc_height">Calculate Tree Height</string>
-    <string name="ref_height_dialog_title">Reference Object Height (cm):</string>
-    <string name="ref_height_dialog_text">"Enter reference object height"</string>
+    <string name="ip_title_activity_ip">Image Processing Activity</string>
+    <string name="ip_action_gallery_img">Image from Gallery</string>
+    <string name="ip_button_detect_tree">Detect Treetop</string>
+    <string name="ip_button_detect_reference">Detect Reference</string>
+    <string name="ip_button_calculate_height">Calculate Tree Height</string>
+    <string name="ip_progress_dialog_treetop">Detecting Treetop...</string>
+    <string name="ip_toast_treetop_detected_row">Treetop Detected (Row: %%d)</string>
+    <string name="ip_toast_treetop_not_detected">No Treetop Detected .. try touch input or use a different image</string>
+    <string name="ip_toast_touch_enable_a4">A4 paper detection touch input enabled</string>
+    <string name="ip_progress_dialog_reference">Detecting A4 paper...</string>
+    <string name="ip_toast_reference_detected_row">A4 Paper Detected (Rows: %%d-%%d)</string>
+    <string name="ip_toast_reference_not_detected">No A4 Paper Detected .. try again or use different image</string>
+    <string name="ip_button_task_tree_height">Tree Height = %%.2f cm</string>
+    <string name="ip_text_view_tree_height">Tree Height = ( %%d * %%.2f ) / %%d = %%.2f cm</string>
+    <string name="ip_verify_detection_message">Correct Detection?</string>
+    <string name="ip_toast_reference_above_treetop">A4 paper must be below treetop</string>
+    <string name="ip_toast_touch_enable_treetop">Treetop detection touch input enabled</string>
+    <string name="ip_toast_load_image_path_error">Error locating the file path</string>
+    <string name="ip_toast_load_image_error">Error loading image</string>
 
     <!-- Main Image Processing Photo Source Dialog -->
     <string name="dialog_photo_source_title">Where is the tree?</string>
@@ -78,12 +92,14 @@
     <string name="dialog_math_how_text_view_instruction_3">Angle to treetop</string>
     <string name="dialog_math_how_text_view_instruction_4">Angle to tree bottom</string>
     <string name="dialog_math_how_text_view_instruction_5">Using these information, we have the following setting:\n <font color="purple">Two triangles\n Two known angles\n A known side of the small triangle</font></string>
-	<string name="dialog_math_how_text_view_instruction_6">Tree height is equal to the sum of the sides of triangles opposite to the angles we have measured.\nSince we have know the measurement of the lower side (same as our height), we can calculate the upper side, by using the tan formula twice:</string>
-    
+    <string name="dialog_math_how_text_view_instruction_6">Tree height is equal to the sum of the sides of triangles opposite to the angles we have measured.\nSince we have know the measurement of the lower side (same as our height), we can calculate the upper side, by using the tan formula twice:</string>
+
     <!-- Image Processing Treetop Dialog -->
+    <string name="dialog_ip_treetop_title">Treetop!</string>
     <string name="dialog_ip_treetop_text_view_instruction1">Touch treetop point in image</string>
 
     <!-- Image Processing Reference Dialog -->
+    <string name="dialog_ip_reference_title">Paper!</string>
     <string name="dialog_ip_reference_text_view_instruction1">Using two fingers, touch the boundaries of area where the A4 paper is</string>
 
 </resources>

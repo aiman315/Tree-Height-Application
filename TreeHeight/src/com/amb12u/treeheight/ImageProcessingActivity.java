@@ -47,7 +47,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class ImageProcessingActivity extends Activity {
-	private final String TAG = "StillImageProcessingActivity";
+	private final String TAG = "ImageProcessingActivity";
 
 	private final int STATE_TREETOP = 0;
 	private final int STATE_REFERENCE = 1;
@@ -143,7 +143,7 @@ public class ImageProcessingActivity extends Activity {
 					return true;
 				}
 			});
-			Toast.makeText(getApplicationContext(), "A4 paper detection touch input enabled", Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), getString(R.string.ip_toast_touch_enable_a4), Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -320,7 +320,7 @@ public class ImageProcessingActivity extends Activity {
 			processingMat = originalMat.submat(minRow, maxRow, minCol, maxCol).clone();
 
 			progressDialog = new ProgressDialog(ImageProcessingActivity.this);
-			progressDialog.setMessage("Detecting Treetop...");
+			progressDialog.setMessage(getString(R.string.ip_progress_dialog_treetop));
 			progressDialog.show(); 
 		}
 
@@ -332,12 +332,12 @@ public class ImageProcessingActivity extends Activity {
 
 				//draw line at treetop position
 				displayMat.submat(new Range(treetopRow, treetopRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255,0,0));
-				Toast.makeText(getApplicationContext(), "Treetop Detected (Row: "+treetopRow+")", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), String.format(getString(R.string.ip_toast_treetop_detected_row)), Toast.LENGTH_SHORT).show();
 
 				//check with user if treetop is correctly detected
 				verifyDetection();
 			} else {
-				Toast.makeText(getApplicationContext(), "No Treetop Detected .. try touch input or use a different image", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), getString(R.string.ip_toast_treetop_not_detected), Toast.LENGTH_SHORT).show();
 				imageView.setOnTouchListener(new View.OnTouchListener() {
 
 					@Override
@@ -506,7 +506,7 @@ public class ImageProcessingActivity extends Activity {
 			processingMat = originalMat.submat(minRow, maxRow, minCol, maxCol).clone();
 
 			progressDialog = new ProgressDialog(ImageProcessingActivity.this);
-			progressDialog.setMessage("Detecting A4 paper...");
+			progressDialog.setMessage(getString(R.string.ip_progress_dialog_reference));
 			progressDialog.show(); 
 		}
 
@@ -530,12 +530,12 @@ public class ImageProcessingActivity extends Activity {
 				org.opencv.core.Point pt2 = new org.opencv.core.Point(referenceObjBound[INDEX_REF_RIGHT], referenceObjBound[INDEX_REF_BOTTOM]);
 				Core.rectangle(displayMat, pt1, pt2, new Scalar(255,128,100), LINE_THICKNESS);	
 
-				Toast.makeText(getApplicationContext(), "A4 Paper Detected (Row: "+referenceObjBound[INDEX_REF_TOP]+"-"+referenceObjBound[INDEX_REF_BOTTOM]+")", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), String.format(getString(R.string.ip_toast_reference_detected_row), referenceObjBound[INDEX_REF_TOP], referenceObjBound[INDEX_REF_BOTTOM]), Toast.LENGTH_SHORT).show();
 
 				//check with user if reference object is correctly detected
 				verifyDetection();
 			} else {
-				Toast.makeText(getApplicationContext(), "No A4 Paper Detected .. try again or use different image", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), getString(R.string.ip_toast_reference_not_detected), Toast.LENGTH_SHORT).show();
 			}
 			updateDisplayImage();
 		}
@@ -574,9 +574,9 @@ public class ImageProcessingActivity extends Activity {
 		protected void onPostExecute(Void result) {
 			//set position of textView for tree height calculation formula
 
-			buttonTask.setText(String.format("Tree Height = %.2f cm", treeHeight));
+			buttonTask.setText(String.format(getString(R.string.ip_button_task_tree_height), treeHeight));
 
-			textTreeHeight.setText(String.format("Tree Height = ( %d * %.2f ) / %d = %.2f cm", treePixelHeight, referenceObjHeight, referenceObjPixelHeight, treeHeight));
+			textTreeHeight.setText(String.format(getString(R.string.ip_text_view_tree_height), treePixelHeight, referenceObjHeight, referenceObjPixelHeight, treeHeight));
 			textTreeHeight.setPivotX(0);
 			textTreeHeight.setPivotY(0);
 			textTreeHeight.setY((int)(treetopRow/heightRatio)-30);
@@ -659,9 +659,6 @@ public class ImageProcessingActivity extends Activity {
 		Matrix matrix = new Matrix();
 		matrix.postRotate(90);
 
-		Log.i("XXXXX", "height "+loadedImage.getHeight());
-		Log.i("XXXXX", "width "+loadedImage.getWidth());
-
 		if (loadedImage.getHeight() < loadedImage.getWidth()) {
 			isPortraitImg = false;
 		}
@@ -728,24 +725,24 @@ public class ImageProcessingActivity extends Activity {
 		Log.d(TAG, "verifyDetection");
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.myCustomDialog);
-		builder.setMessage("Correct Detection?");
+		builder.setMessage(getString(R.string.ip_verify_detection_message));
 
 		//handle correct detection
-		builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+		builder.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface arg0, int arg1) {
 				switch(currentState) {
 				case STATE_TREETOP:
 					currentState = STATE_REFERENCE;
 					buttonTask.setVisibility(View.VISIBLE);
-					buttonTask.setText(R.string.button_detect_reference);
+					buttonTask.setText(R.string.ip_button_detect_reference);
 					break;
 				case STATE_REFERENCE:
 					if (referenceObjBound[INDEX_REF_TOP] < treetopRow) {
-						Toast.makeText(getApplicationContext(), "A4 paper must be below treetop", Toast.LENGTH_SHORT).show();
+						Toast.makeText(getApplicationContext(), getString(R.string.ip_toast_reference_above_treetop), Toast.LENGTH_SHORT).show();
 					} else {
 						currentState = STATE_HEIGHT;
 						buttonTask.setVisibility(View.VISIBLE);
-						buttonTask.setText(R.string.button_calc_height);
+						buttonTask.setText(R.string.ip_button_calculate_height);
 						imageView.setOnTouchListener(null);
 					}
 					break;
@@ -756,11 +753,11 @@ public class ImageProcessingActivity extends Activity {
 		});
 
 		//handle incorrect detection
-		builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+		builder.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface arg0, int arg1) {
 				switch(currentState) {
 				case STATE_TREETOP:
-					Toast.makeText(getApplicationContext(), "Treetop detection touch input enabled", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), getString(R.string.ip_toast_touch_enable_treetop), Toast.LENGTH_SHORT).show();
 					
 					imageView.setOnTouchListener(new View.OnTouchListener() {
 
@@ -772,7 +769,7 @@ public class ImageProcessingActivity extends Activity {
 					});
 					break;
 				case STATE_REFERENCE:
-					Toast.makeText(getApplicationContext(), "Try again or use different image", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), getString(R.string.ip_toast_reference_not_detected), Toast.LENGTH_SHORT).show();
 					break;
 				default:
 					return;
@@ -812,12 +809,12 @@ public class ImageProcessingActivity extends Activity {
 		
 		switch(currentState) {
 		case STATE_TREETOP:
-			dialogTitle = "Treetop!";
+			dialogTitle = getString(R.string.dialog_ip_treetop_title);
 			dialogInstruction.setContentView(R.layout.dialog_custom_ip_treetop_touch);
 			((ImageView) dialogInstruction.findViewById(R.id.imageViewIpTouch)).startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.animation_touch));
 			break;
 		case STATE_REFERENCE:
-			dialogTitle = "Paper!";
+			dialogTitle = getString(R.string.dialog_ip_reference_title);
 			dialogInstruction.setContentView(R.layout.dialog_custom_ip_reference_touch);
 			((ImageView) dialogInstruction.findViewById(R.id.imageViewIpTouch1)).startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.animation_touch));
 			((ImageView) dialogInstruction.findViewById(R.id.imageViewIpTouch2)).startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.animation_touch));
@@ -890,7 +887,7 @@ public class ImageProcessingActivity extends Activity {
 
 		buttonTask = (Button) findViewById(R.id.buttonTask);
 		textTreeHeight = (TextView) findViewById(R.id.textTreeHeight);
-		imgUri = getIntent().getExtras().getParcelable("ImgUri");
+		imgUri = getIntent().getExtras().getParcelable(getString(R.string.parcelable_image_uri_name));
 
 		taskDetectTreetop = null;
 		taskDetectReference = null;
@@ -908,12 +905,12 @@ public class ImageProcessingActivity extends Activity {
 						//calculate image to screen ratio
 						calculateImage2ScreenRatio();
 					} catch (FileNotFoundException e) {
-						Toast.makeText(getApplicationContext(), "Error locating the file path", Toast.LENGTH_SHORT).show();
-						Log.e(TAG, ""+e.getMessage());
+						Toast.makeText(getApplicationContext(), getString(R.string.ip_toast_load_image_path_error), Toast.LENGTH_SHORT).show();
+						Log.e(TAG, "exception", e);
 						finish();
 					} catch (Exception e) {
-						Toast.makeText(getApplicationContext(), "Error!!", Toast.LENGTH_SHORT).show();
-						Log.e(TAG, ""+e.getMessage());
+						Toast.makeText(getApplicationContext(), getString(R.string.ip_toast_load_image_error), Toast.LENGTH_SHORT).show();
+						Log.e(TAG, "exception", e);
 						finish();
 					}
 					break;
@@ -923,7 +920,6 @@ public class ImageProcessingActivity extends Activity {
 				}
 			}
 		};
-
 	}
 
 	@Override

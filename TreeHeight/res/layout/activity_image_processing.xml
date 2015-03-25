@@ -21,7 +21,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="41dp"
         android:onClick="onClickButton"
-        android:text="@string/button_detect_tree" />
+        android:text="@string/ip_button_detect_tree" />
 
     <TextView
         android:id="@+id/textTreeHeight"
