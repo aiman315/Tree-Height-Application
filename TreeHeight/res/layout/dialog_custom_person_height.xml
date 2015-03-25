@@ -60,9 +60,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/editTextYourHeight"
-        android:textAppearance="?android:attr/textAppearanceSmall"
         android:checked="true"
-        android:text="@string/dialog_camera_height_check_box_instructions" />
+        android:text="@string/dialog_camera_height_check_box_instructions"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <Button
         android:id="@+id/buttonConfrimHeight"

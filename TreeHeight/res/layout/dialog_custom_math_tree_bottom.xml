@@ -16,8 +16,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentStart="true"
             android:padding="10dp"
-            android:text="@string/dialog_tree_bottom_text_view_instruction_1"
-            />
+            android:text="@string/dialog_tree_bottom_text_view_instruction_1" />
 
         <ImageView
             android:id="@+id/imageViewMathTreeBottom"

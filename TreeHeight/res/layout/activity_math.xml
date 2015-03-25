@@ -77,11 +77,11 @@
             android:layout_height="wrap_content"
             android:layout_above="@+id/seekBarZoom"
             android:layout_centerHorizontal="true"
+            android:background="#66000000"
             android:gravity="start"
             android:text="@string/empty"
-            android:textColor="#FFFFFFFF"
-            android:background="#66000000"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="#FFFFFFFF" />
 
         <View
             android:id="@+id/horizontal_cross"
@@ -121,18 +121,18 @@
             android:background="@drawable/gradient_math_sky"
             android:contentDescription="@string/empty"
             android:visibility="invisible" />
-        
+
         <ImageView
             android:id="@+id/imageViewCloud1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:padding="20dp"
             android:contentDescription="@string/empty"
+            android:padding="20dp"
             android:src="@drawable/math_cloud"
             android:visibility="invisible" />
-        
+
         <ImageView
             android:id="@+id/imageViewCloud2"
             android:layout_width="wrap_content"
@@ -247,10 +247,10 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:layout_marginTop="20dp"
-            android:padding="10dp"
-            android:text="Treetop Image"
-            android:textColor="#FFFFFFFF"
             android:background="#66000000"
+            android:padding="10dp"
+            android:text="@string/text_view_math_treetop_image"
+            android:textColor="#FFFFFFFF"
             android:visibility="invisible" />
 
         <TextView
@@ -260,10 +260,10 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentTop="true"
             android:layout_marginTop="20dp"
-            android:padding="10dp"
-            android:text="Tree Bottom Image"
-            android:textColor="#FFFFFFFF"
             android:background="#66000000"
+            android:padding="10dp"
+            android:text="@string/text_view_math_tree_bottom_image"
+            android:textColor="#FFFFFFFF"
             android:visibility="invisible" />
 
         <ImageView

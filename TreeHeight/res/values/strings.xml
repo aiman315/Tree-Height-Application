@@ -28,6 +28,8 @@
     <string name="toast_camera_open_error">Error loading camera</string>
     <string name="text_view_math_angle">Angle = %.2f</string>
     <string name="text_view_math_tree_height">Tree Height = %.2f cm</string>
+    <string name="text_view_math_treetop_image">Tree Bottom Image</string>
+    <string name="text_view_math_tree_bottom_image">Treetop Image</string>
     <string name="button_read_angle">Read Angle</string>
     <string name="button_calculate_height">Find Height</string>
     <string name="action_instructions">Show/Hide Instructions</string>
