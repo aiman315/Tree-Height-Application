@@ -332,7 +332,7 @@ public class ImageProcessingActivity extends Activity {
 
 				//draw line at treetop position
 				displayMat.submat(new Range(treetopRow, treetopRow+LINE_THICKNESS), Range.all()).setTo(new Scalar(255,0,0));
-				Toast.makeText(getApplicationContext(), String.format(getString(R.string.ip_toast_treetop_detected_row)), Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), getString(R.string.ip_toast_treetop_detected_row, treetopRow), Toast.LENGTH_SHORT).show();
 
 				//check with user if treetop is correctly detected
 				verifyDetection();
@@ -530,7 +530,7 @@ public class ImageProcessingActivity extends Activity {
 				org.opencv.core.Point pt2 = new org.opencv.core.Point(referenceObjBound[INDEX_REF_RIGHT], referenceObjBound[INDEX_REF_BOTTOM]);
 				Core.rectangle(displayMat, pt1, pt2, new Scalar(255,128,100), LINE_THICKNESS);	
 
-				Toast.makeText(getApplicationContext(), String.format(getString(R.string.ip_toast_reference_detected_row), referenceObjBound[INDEX_REF_TOP], referenceObjBound[INDEX_REF_BOTTOM]), Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), getString(R.string.ip_toast_reference_detected_row, referenceObjBound[INDEX_REF_TOP], referenceObjBound[INDEX_REF_BOTTOM]), Toast.LENGTH_SHORT).show();
 
 				//check with user if reference object is correctly detected
 				verifyDetection();
@@ -574,9 +574,9 @@ public class ImageProcessingActivity extends Activity {
 		protected void onPostExecute(Void result) {
 			//set position of textView for tree height calculation formula
 
-			buttonTask.setText(String.format(getString(R.string.ip_button_task_tree_height), treeHeight));
+			buttonTask.setText(getString(R.string.ip_button_task_tree_height, treeHeight));
 
-			textTreeHeight.setText(String.format(getString(R.string.ip_text_view_tree_height), treePixelHeight, referenceObjHeight, referenceObjPixelHeight, treeHeight));
+			textTreeHeight.setText(getString(R.string.ip_text_view_tree_height, treePixelHeight, referenceObjHeight, referenceObjPixelHeight, treeHeight));
 			textTreeHeight.setPivotX(0);
 			textTreeHeight.setPivotY(0);
 			textTreeHeight.setY((int)(treetopRow/heightRatio)-30);

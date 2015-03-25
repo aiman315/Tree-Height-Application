@@ -104,7 +104,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 			//Treetop angle must be positive
 			if(accelerometerAngle >= 0) {
 				angleTreetop = accelerometerAngle;
-				Toast.makeText(this, String.format(getString(R.string.toast_angle_treetop), angleTreetop), Toast.LENGTH_SHORT).show();
+				Toast.makeText(this, getString(R.string.toast_angle_treetop, angleTreetop), Toast.LENGTH_SHORT).show();
 
 				//change programme stage
 				currentStage.setStage(STAGE_TREE_BOTTOM_ANGLE);
@@ -115,7 +115,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 		} else if (currentStage.getStage() == STAGE_TREE_BOTTOM_ANGLE){
 			if(accelerometerAngle < 0) {
 				angleTreeBottom = accelerometerAngle;
-				Toast.makeText(this, String.format(getString(R.string.toast_angle_tree_bottom), angleTreeBottom), Toast.LENGTH_SHORT).show();
+				Toast.makeText(this, getString(R.string.toast_angle_tree_bottom, angleTreeBottom), Toast.LENGTH_SHORT).show();
 				takePicture(R.id.imageViewTreeBottom);
 				//change programme stage
 				currentStage.setStage(STAGE_CALCULATE_TREE_HEIGHT);
@@ -501,7 +501,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 			((Button) findViewById(R.id.buttonCalculateHeight)).setVisibility(View.INVISIBLE);
 
 			//show tree height
-			textViewAngleNum.setText(String.format(getString(R.string.text_view_math_tree_height), heightTree));
+			textViewAngleNum.setText(getString(R.string.text_view_math_tree_height, heightTree));
 			textViewAngleNum.setTextColor(Color.YELLOW);
 
 			//show person
@@ -813,7 +813,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 			accelerometerAngle = calculateAngle(-1*valueX, valueZ);
 			break;
 		}
-		textViewAngleNum.setText(String.format(getString(R.string.text_view_math_angle), accelerometerAngle));
+		textViewAngleNum.setText(getString(R.string.text_view_math_angle, accelerometerAngle));
 
 		//debugging text
 		textViewX.setText("acceleration X = "+Float.toString(valueX));
