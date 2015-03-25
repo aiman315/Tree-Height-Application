@@ -113,6 +113,9 @@ public class ImageProcessingActivity extends Activity {
 		treeHeight = (treePixelHeight*referenceObjHeight)/referenceObjPixelHeight;
 	}
 
+	/**
+	 * Run treetop detection algorithm
+	 */
 	private void detectTreetop() {
 		Log.d(TAG, "detectTreetop");
 
@@ -690,7 +693,7 @@ public class ImageProcessingActivity extends Activity {
 
 
 	/**
-	 * Handle click on UI button according to program state
+	 * Handle click on UI button according to program state (detect treetop | detect reference object | calculate tree height and animate)
 	 * @param v
 	 */
 	public void onClickButton(View v) {

@@ -36,9 +36,8 @@ import android.widget.Toast;
 public class MathActivity extends Activity implements SensorEventListener, IntStageListener{
 
 
-	//TODO: Move all text to strings.xml
+	//TODO:
 	//complete instruction (How we calculated tree height)
-	//delete Desc Activity
 	//detect shake
 	private final String TAG = "MathActivity";
 	private final int INVALID_ANGLE = -999;
