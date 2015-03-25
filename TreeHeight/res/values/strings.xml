@@ -44,11 +44,11 @@
 
     <!-- Person Height Dialog -->
     <string name="dialog_camera_height_title">Your Height</string>
-    <string name="text_view_need_height">For this measurement approach you will need to know your height</string>
-    <string name="text_view_what_is_your_height">What is your height?</string>
-    <string name="edit_text_your_height_hint">Enter your height here</string>
-    <string name="text_view_cm_unit">cm</string>
-    <string name="check_box_instructions">Enable Application Instructions</string>
+    <string name="dialog_camera_height_text_view_need_height">For this measurement approach you will need to know your height</string>
+    <string name="dialog_camera_height_text_view_what_is_your_height">What is your height?</string>
+    <string name="dialog_camera_height_edit_text_your_height_hint">Enter your height here</string>
+    <string name="dialog_camera_height_text_view_cm_unit">cm</string>
+    <string name="dialog_camera_height_check_box_instructions">Enable Application Instructions</string>
 
     <!-- Math Treetop Dialog -->
     <string name="dialog_treetop_title">Highest Point!</string>
@@ -68,5 +68,9 @@
 
     <!-- Main Image Processing Photo Source Dialog -->
     <string name="dialog_photo_source_title">Where is the tree?</string>
+    <string name="dialog_photo_source_text_view_need_tree_a4">For this approach, you need a picture of a tree with an A4 paper standing next to it</string>
+    <string name="dialog_photo_source_text_view_ip_where_photo">Do you have that picture?</string>
+    <string name="dialog_photo_source_button_ip_gallery">Yes.\n In my gallery!</string>
+    <string name="dialog_photo_source_button_ip_camera">No.\n I will take one!</string>
 
 </resources>

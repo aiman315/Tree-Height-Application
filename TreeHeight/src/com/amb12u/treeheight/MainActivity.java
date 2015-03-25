@@ -89,8 +89,8 @@ public class MainActivity extends Activity {
 		dialogPhotoSource.setContentView(R.layout.dialog_custom_ip_photo_source);
 		dialogPhotoSource.setTitle(getString(R.string.dialog_photo_source_title));
 
-		Button buttonGallery = (Button) dialogPhotoSource.findViewById(R.id.buttonGallery);
-		Button buttonCamera = (Button) dialogPhotoSource.findViewById(R.id.buttonCamera);
+		Button buttonGallery = (Button) dialogPhotoSource.findViewById(R.id.buttonIpGallery);
+		Button buttonCamera = (Button) dialogPhotoSource.findViewById(R.id.buttonIpCamera);
 
 		buttonGallery.setOnClickListener( new OnClickListener() {	
 			@Override

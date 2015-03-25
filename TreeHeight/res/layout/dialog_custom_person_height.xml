@@ -11,7 +11,7 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentStart="true"
         android:padding="10dp"
-        android:text="@string/text_view_need_height" />
+        android:text="@string/dialog_camera_height_text_view_need_height" />
 
     <ImageView
         android:id="@+id/imageViewMathTreetop"
@@ -31,7 +31,7 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/imageViewMathTreetop"
         android:padding="10dp"
-        android:text="@string/text_view_what_is_your_height" />
+        android:text="@string/dialog_camera_height_text_view_what_is_your_height" />
 
     <EditText
         android:id="@+id/editTextYourHeight"
@@ -41,7 +41,7 @@
         android:layout_below="@+id/textViewWhatIsYourHeight"
         android:layout_toStartOf="@+id/textViewCmUnit"
         android:ems="10"
-        android:hint="@string/edit_text_your_height_hint"
+        android:hint="@string/dialog_camera_height_edit_text_your_height_hint"
         android:inputType="numberDecimal"
         android:padding="10dp" />
 
@@ -53,7 +53,7 @@
         android:layout_alignBottom="@+id/editTextYourHeight"
         android:layout_alignParentEnd="true"
         android:padding="10dp"
-        android:text="@string/text_view_cm_unit" />
+        android:text="@string/dialog_camera_height_text_view_cm_unit" />
 
     <CheckBox
         android:id="@+id/checkBoxInstructions"
@@ -62,7 +62,7 @@
         android:layout_below="@+id/editTextYourHeight"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:checked="true"
-        android:text="@string/check_box_instructions" />
+        android:text="@string/dialog_camera_height_check_box_instructions" />
 
     <Button
         android:id="@+id/buttonConfrimHeight"
