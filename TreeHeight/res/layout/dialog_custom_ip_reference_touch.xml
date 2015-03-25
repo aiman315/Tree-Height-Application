@@ -15,7 +15,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentStart="true"
             android:padding="10dp"
-            android:text="@string/dialog_ip_reference_instruction1" />
+            android:text="@string/dialog_ip_reference_text_view_instruction1" />
 
         <ImageView
             android:id="@+id/imageViewIpTreetop"
