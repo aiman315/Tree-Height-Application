@@ -87,7 +87,7 @@ public class MainActivity extends Activity {
 
 		final Dialog dialogPhotoSource = new Dialog(this, R.style.myInstructionDialog);
 		dialogPhotoSource.setContentView(R.layout.dialog_custom_ip_photo_source);
-		dialogPhotoSource.setTitle("Where is the tree?");
+		dialogPhotoSource.setTitle(getString(R.string.text_dialog_photo_source_title));
 
 		Button buttonGallery = (Button) dialogPhotoSource.findViewById(R.id.buttonGallery);
 		Button buttonCamera = (Button) dialogPhotoSource.findViewById(R.id.buttonCamera);
@@ -95,6 +95,7 @@ public class MainActivity extends Activity {
 		buttonGallery.setOnClickListener( new OnClickListener() {	
 			@Override
 			public void onClick(View v) {
+				//open gallery
 				Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT, null);
 				galleryIntent.setType("image/*");
 				galleryIntent.putExtra("return-data", true);
@@ -106,6 +107,7 @@ public class MainActivity extends Activity {
 		buttonCamera.setOnClickListener( new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				//open camera
 				Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 				startActivityForResult(cameraIntent,REQUEST_CODE_CAMERA);
 				dialogPhotoSource.dismiss();
@@ -119,14 +121,14 @@ public class MainActivity extends Activity {
 		Log.d(TAG, "onActivityResult");
 
 		if (resultCode == RESULT_CANCELED) {
-			Toast.makeText(this, "Canceled", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, R.string.canceled, Toast.LENGTH_SHORT).show();
 
 			return;
 		} else {
 			Uri selectedImageUri = data.getData();
 			// Pass image uri and start the activity 
 			Intent intent = new Intent(this, ImageProcessingActivity.class);
-			intent.putExtra("ImgUri", selectedImageUri);
+			intent.putExtra(getString(R.string.parcelable_image_uri_name), selectedImageUri);
 			startActivity(intent);	
 		}
 	}

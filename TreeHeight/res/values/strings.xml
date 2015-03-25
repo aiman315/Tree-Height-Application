@@ -6,6 +6,7 @@
     <string name="reset">Reset</string>
     <string name="ok">Okay</string>
     <string name="confirm">Confirm</string>
+    <string name="canceled">Canceled</string>
 
     <!-- MainActivity -->
     <string name="app_name">Tree Height</string>
@@ -13,6 +14,7 @@
     <string name="button_math">Mathematical</string>
     <string name="button_image_processing">Image Processing</string>
     <string name="action_settings">Settings</string>
+    <string name="parcelable_image_uri_name">ImgUri</string>
 
     <!-- Math Activity -->
     <string name="title_activity_camera">Camera Activity</string>
@@ -50,4 +52,7 @@
     
     <!-- Math Tree How Dialog -->
 	<string name="text_View_setting">Using these information, we have the following setting:\n <font color="purple">Two triangles\n Two known angles\n A known side of the small triangle</font></string>
+	
+	<!-- Main Image Processing Photo Source Dialog -->
+	<string name="text_dialog_photo_source_title">Where is the tree?</string>
 </resources>
