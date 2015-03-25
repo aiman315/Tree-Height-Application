@@ -16,7 +16,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentStart="true"
             android:padding="10dp"
-            android:text="To calculate the height of the tree, we needed three peices of information:" />
+            android:text="@string/dialog_math_how_text_view_instruction_1" />
 
         <TextView
             android:id="@+id/textViewMathHow2"
@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/textViewMathHow1"
             android:padding="10dp"
-            android:text="Your height" />
+            android:text="@string/dialog_math_how_text_view_instruction_2" />
 
         <TextView
             android:id="@+id/textViewMathHow3"
@@ -33,7 +33,7 @@
             android:layout_below="@+id/textViewMathHow1"
             android:layout_toEndOf="@+id/textViewMathHow2"
             android:padding="10dp"
-            android:text="Angle to treetop" />
+            android:text="@string/dialog_math_how_text_view_instruction_3" />
 
         <TextView
             android:id="@+id/textViewMathHow4"
@@ -42,7 +42,7 @@
             android:layout_below="@+id/textViewMathHow1"
             android:layout_toEndOf="@+id/textViewMathHow3"
             android:padding="10dp"
-            android:text="Angle to tree bottom" />
+            android:text="@string/dialog_math_how_text_view_instruction_4" />
 
         <ImageView
             android:id="@+id/imageViewMathHow1"
@@ -81,7 +81,7 @@
             android:layout_alignParentStart="true"
             android:layout_below="@+id/imageViewMathHow3"
             android:padding="10dp"
-            android:text="@string/dialog_math_how_text_view_setting" />
+            android:text="@string/dialog_math_how_text_view_instruction_5" />
 
         <ImageView
             android:id="@+id/imageViewMathHow4"
@@ -101,7 +101,7 @@
             android:layout_alignParentStart="true"
             android:layout_below="@+id/imageViewMathHow4"
             android:padding="10dp"
-            android:text="Tree height is equal to the sum of the sides of triangles opposite to the angles we have measured.\nSince we have know the measurement of the lower side (same as our height), we can calculate the upper side, by using the tan formula twice:" />
+            android:text="@string/dialog_math_how_text_view_instruction_6" />
 
         <ImageView
             android:id="@+id/imageViewMathHow5"
@@ -112,7 +112,7 @@
             android:contentDescription="@string/empty"
             android:padding="10dp"
             android:src="@drawable/math_formula" />
-        
+
         <Button
             android:id="@+id/buttonOkay"
             android:layout_width="wrap_content"

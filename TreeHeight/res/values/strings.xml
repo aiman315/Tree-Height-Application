@@ -66,13 +66,18 @@
 
     <!-- Math Tree Bottom Dialog -->
     <string name="dialog_tree_bottom_title">Lowest Point!</string>
-    <string name="dialog_tree_bottom_text_view_nstruction_1">We have to do this again, but this time for tree bottom. Don\'t forget! The device has to be at your height level</string>
+    <string name="dialog_tree_bottom_text_view_instruction_1">We have to do this again, but this time for tree bottom. Don\'t forget! The device has to be at your height level</string>
     <string name="dialog_tree_bottom_text_view_instruction_2">Again, try to press the button when the cross is pointing on the lowest point of tree</string>
 
     <!-- Math Tree How Dialog -->
     <string name="dialog_math_how_title">How Did We Calculate The Tree Height?</string>
-    <string name="dialog_math_how_text_view_setting">Using these information, we have the following setting:\n <font color="purple">Two triangles\n Two known angles\n A known side of the small triangle</font></string>
-
+    <string name="dialog_math_how_text_view_instruction_1">To calculate the height of the tree, we needed three peices of information:</string>
+    <string name="dialog_math_how_text_view_instruction_2">Your height</string>
+    <string name="dialog_math_how_text_view_instruction_3">Angle to treetop</string>
+    <string name="dialog_math_how_text_view_instruction_4">Angle to tree bottom</string>
+    <string name="dialog_math_how_text_view_instruction_5">Using these information, we have the following setting:\n <font color="purple">Two triangles\n Two known angles\n A known side of the small triangle</font></string>
+	<string name="dialog_math_how_text_view_instruction_6">Tree height is equal to the sum of the sides of triangles opposite to the angles we have measured.\nSince we have know the measurement of the lower side (same as our height), we can calculate the upper side, by using the tan formula twice:</string>
+    
     <!-- Image Processing Treetop Dialog -->
     <string name="dialog_ip_treetop_text_view_instruction1">Touch treetop point in image</string>
 
