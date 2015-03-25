@@ -369,10 +369,10 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 						//change programme stage
 						currentStage.setStage(STAGE_TREETOP_ANGLE);
 					} else {
-						Toast.makeText(MathActivity.this, getString(R.string.dialog_toast_height_below_zero), Toast.LENGTH_SHORT).show();
+						Toast.makeText(MathActivity.this, getString(R.string.dialog_treetop_toast_height_below_zero), Toast.LENGTH_SHORT).show();
 					}
 				} catch (NumberFormatException e) {
-					Toast.makeText(MathActivity.this, getString(R.string.dialog_toast_height_error), Toast.LENGTH_SHORT).show();
+					Toast.makeText(MathActivity.this, getString(R.string.dialog_treetop_toast_height_error), Toast.LENGTH_SHORT).show();
 					Log.e(TAG, "exception", e);
 				}
 			}

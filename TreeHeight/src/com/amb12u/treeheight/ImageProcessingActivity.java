@@ -815,7 +815,7 @@ public class ImageProcessingActivity extends Activity {
 			break;
 		case STATE_REFERENCE:
 			dialogTitle = "Paper!";
-			dialogInstruction.setContentView(R.layout.dialog_custom_ip_tree_bottom_touch);
+			dialogInstruction.setContentView(R.layout.dialog_custom_ip_reference_touch);
 			((ImageView) dialogInstruction.findViewById(R.id.imageViewIpTouch1)).startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.animation_touch));
 			((ImageView) dialogInstruction.findViewById(R.id.imageViewIpTouch2)).startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.animation_touch));
 			break;

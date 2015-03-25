@@ -15,7 +15,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentStart="true"
             android:padding="10dp"
-            android:text="Using two fingers, touch the boundaries of area where the A4 paper is" />
+            android:text="@string/dialog_ip_reference_instruction1" />
 
         <ImageView
             android:id="@+id/imageViewIpTreetop"
@@ -56,10 +56,9 @@
             android:layout_marginTop="22dp"
             android:layout_toEndOf="@+id/imageViewIpTouch1"
             android:contentDescription="@string/empty"
-            android:paddingStart="17dp"
             android:paddingEnd="0dp"
+            android:paddingStart="17dp"
             android:src="@drawable/ip_touch" />
-
     </RelativeLayout>
 
 </ScrollView>

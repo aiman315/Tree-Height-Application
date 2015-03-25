@@ -41,8 +41,15 @@
     <string name="button_calc_height">Calculate Tree Height</string>
     <string name="ref_height_dialog_title">Reference Object Height (cm):</string>
     <string name="ref_height_dialog_text">"Enter reference object height"</string>
+    
+     <!-- Main Image Processing Photo Source Dialog -->
+    <string name="dialog_photo_source_title">Where is the tree?</string>
+    <string name="dialog_photo_source_text_view_need_tree_a4">For this approach, you need a picture of a tree with an A4 paper standing next to it</string>
+    <string name="dialog_photo_source_text_view_ip_where_photo">Do you have that picture?</string>
+    <string name="dialog_photo_source_button_ip_gallery">Yes.\n In my gallery!</string>
+    <string name="dialog_photo_source_button_ip_camera">No.\n I will take one!</string>
 
-    <!-- Person Height Dialog -->
+    <!-- Math Person Height Dialog -->
     <string name="dialog_camera_height_title">Your Height</string>
     <string name="dialog_camera_height_text_view_need_height">For this measurement approach you will need to know your height</string>
     <string name="dialog_camera_height_text_view_what_is_your_height">What is your height?</string>
@@ -52,25 +59,21 @@
 
     <!-- Math Treetop Dialog -->
     <string name="dialog_treetop_title">Highest Point!</string>
-    <string name="dialog_text_view_treetop_instruction_1">Now hold your device at your height level, and point to the treetop</string>
-    <string name="dialog_text_view_treetop_instruction_2">When the cross is pointing at the treetop, press the capture button</string>
-    <string name="dialog_toast_height_below_zero">Input must be greater than zero</string>
-    <string name="dialog_toast_height_error">Invalid input</string>
+    <string name="dialog_treetop_text_view_treetop_instruction_1">Now hold your device at your height level, and point to the treetop</string>
+    <string name="dialog_treetop_text_view_treetop_instruction_2">When the cross is pointing at the treetop, press the capture button</string>
+    <string name="dialog_treetop_toast_height_below_zero">Input must be greater than zero</string>
+    <string name="dialog_treetop_toast_height_error">Invalid input</string>
 
     <!-- Math Tree Bottom Dialog -->
     <string name="dialog_tree_bottom_title">Lowest Point!</string>
-    <string name="dialog_text_view_tree_bottom_instruction_1">We have to do this again, but this time for tree bottom. Don\'t forget! The device has to be at your height level</string>
-    <string name="dialog_text_view_tree_bottom_instruction_2">Again, try to press the button when the cross is pointing on the lowest point of tree</string>
+    <string name="dialog_tree_bottom_text_view_tree_bottom_instruction_1">We have to do this again, but this time for tree bottom. Don\'t forget! The device has to be at your height level</string>
+    <string name="dialog_tree_bottom_text_view_tree_bottom_instruction_2">Again, try to press the button when the cross is pointing on the lowest point of tree</string>
 
     <!-- Math Tree How Dialog -->
     <string name="dialog_math_how_title">How Did We Calculate The Tree Height?</string>
-    <string name="dialog_text_View_setting">Using these information, we have the following setting:\n <font color="purple">Two triangles\n Two known angles\n A known side of the small triangle</font></string>
-
-    <!-- Main Image Processing Photo Source Dialog -->
-    <string name="dialog_photo_source_title">Where is the tree?</string>
-    <string name="dialog_photo_source_text_view_need_tree_a4">For this approach, you need a picture of a tree with an A4 paper standing next to it</string>
-    <string name="dialog_photo_source_text_view_ip_where_photo">Do you have that picture?</string>
-    <string name="dialog_photo_source_button_ip_gallery">Yes.\n In my gallery!</string>
-    <string name="dialog_photo_source_button_ip_camera">No.\n I will take one!</string>
+    <string name="dialog_math_how_text_view_setting">Using these information, we have the following setting:\n <font color="purple">Two triangles\n Two known angles\n A known side of the small triangle</font></string>
+    
+    <!-- Image Processing Reference Dialog -->
+    <string name="dialog_ip_reference_instruction1">Using two fingers, touch the boundaries of area where the A4 paper is</string>
 
 </resources>
