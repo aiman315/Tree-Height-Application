@@ -87,7 +87,7 @@ public class MainActivity extends Activity {
 
 		final Dialog dialogPhotoSource = new Dialog(this, R.style.myInstructionDialog);
 		dialogPhotoSource.setContentView(R.layout.dialog_custom_ip_photo_source);
-		dialogPhotoSource.setTitle(getString(R.string.text_dialog_photo_source_title));
+		dialogPhotoSource.setTitle(getString(R.string.dialog_photo_source_title));
 
 		Button buttonGallery = (Button) dialogPhotoSource.findViewById(R.id.buttonGallery);
 		Button buttonCamera = (Button) dialogPhotoSource.findViewById(R.id.buttonCamera);

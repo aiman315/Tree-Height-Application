@@ -62,7 +62,6 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 	private boolean isDebuggingEnabled;
 
 	// Holds ID values for cameras
-	private int frontFacingCameraId;
 	private int backFacingCameraId;
 	private int selectedCameraId;
 
@@ -106,23 +105,23 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 			//Treetop angle must be positive
 			if(accelerometerAngle >= 0) {
 				angleTreetop = accelerometerAngle;
-				Toast.makeText(this, String.format("Angle at treetop = %.2fº", angleTreetop), Toast.LENGTH_SHORT).show();
+				Toast.makeText(this, String.format(getString(R.string.toast_angle_treetop), angleTreetop), Toast.LENGTH_SHORT).show();
 
 				//change programme stage
 				currentStage.setStage(STAGE_TREE_BOTTOM_ANGLE);
 				takePicture(R.id.imageViewTreetop);
 			} else {
-				Toast.makeText(this, "Angle to treetop must be positive", Toast.LENGTH_SHORT).show();
+				Toast.makeText(this, getString(R.string.toast_angle_treetop_invalid), Toast.LENGTH_SHORT).show();
 			}
 		} else if (currentStage.getStage() == STAGE_TREE_BOTTOM_ANGLE){
 			if(accelerometerAngle < 0) {
 				angleTreeBottom = accelerometerAngle;
-				Toast.makeText(this, String.format("Angle at tree bottom = %.2fº", angleTreeBottom), Toast.LENGTH_SHORT).show();
+				Toast.makeText(this, String.format(getString(R.string.toast_angle_tree_bottom), angleTreeBottom), Toast.LENGTH_SHORT).show();
 				takePicture(R.id.imageViewTreeBottom);
 				//change programme stage
 				currentStage.setStage(STAGE_CALCULATE_TREE_HEIGHT);
 			} else {
-				Toast.makeText(this, "Angle to tree bottom must be negative", Toast.LENGTH_SHORT).show();
+				Toast.makeText(this, getString(R.string.toast_angle_tree_bottom_invalid), Toast.LENGTH_SHORT).show();
 			}
 		}	
 	}
@@ -137,12 +136,12 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 		if (currentStage.getStage() == STAGE_TREE_BOTTOM_ANGLE) {
 			currentStage.setStage(STAGE_TREETOP_ANGLE);
 			angleTreetop = INVALID_ANGLE;
-			Toast.makeText(this, "Cleared treetop angle value", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, getString(R.string.toast_angle_treetop_reset), Toast.LENGTH_SHORT).show();
 
 		} else if (currentStage.getStage() == STAGE_CALCULATE_TREE_HEIGHT){
 			currentStage.setStage(STAGE_TREE_BOTTOM_ANGLE);
 			angleTreeBottom = INVALID_ANGLE;
-			Toast.makeText(this, "Cleared tree bottom angle value", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, getString(R.string.toast_angle_tree_bottom_reset), Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -190,18 +189,6 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 	}
 
 	/**
-	 * Gets ID of front facing camera
-	 * @return frontFacingCameraId
-	 */
-	private int getFrontFacingCameraId() {
-		Log.d(TAG, "getFrontFacingCameraId");
-		if(frontFacingCameraId == CAMERA_ID_NOT_SET) {
-			frontFacingCameraId = getFacingCameraId(Camera.CameraInfo.CAMERA_FACING_FRONT);
-		}
-		return frontFacingCameraId;
-	}
-
-	/**
 	 * Gets ID of back facing camera
 	 * @return backFacingCameraId
 	 */
@@ -222,10 +209,8 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 		releaseSelectedCamera(); //to ensure no cameras are open
 
 		if(selectedCameraId != CAMERA_ID_NOT_SET) {
-			String message;
 			try {
 				selectedCamera = Camera.open(selectedCameraId);
-				message = "Opened Camera ID:" + selectedCameraId;
 
 				CameraPreview cameraPreview = (CameraPreview) findViewById(R.id.cameraPreview);
 				cameraPreview.connectCamera(selectedCamera, selectedCameraId);
@@ -258,25 +243,11 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 					seekBarZoom.setVisibility(View.INVISIBLE);
 				}
 
-			} catch (Exception e) {
-				message = "Unable to open camera: "+ Log.getStackTraceString(e); 
-				Log.e(TAG, message);
-				Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+			} catch (Exception e) { 
+				Log.e(TAG, "exception", e);
+				Toast.makeText(this, getString(R.string.toast_camera_open_error), Toast.LENGTH_SHORT).show();
 			}
 		}
-	}
-
-	/**
-	 * Swaps the selected camera, between front facing and back facing
-	 */
-	private void swapCamera() {
-		Log.d(TAG, "swapCamera");
-		if (selectedCameraId == frontFacingCameraId) {
-			selectedCameraId = getBackFacingCameraId();	
-		} else {
-			selectedCameraId = getFrontFacingCameraId();
-		}
-		openSelectedCamera();
 	}
 
 	/**
@@ -370,44 +341,44 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 	private void setupCameraHeight() {
 		Log.d(TAG, "setupCameraHeight");
 
-		final Dialog dialogInstruction = new Dialog(this, R.style.myInstructionDialog);
-		dialogInstruction.setContentView(R.layout.dialog_custom_person_height);
-		dialogInstruction.setTitle("Your Height");
+		final Dialog dialogCameraHeight = new Dialog(this, R.style.myInstructionDialog);
+		dialogCameraHeight.setContentView(R.layout.dialog_custom_person_height);
+		dialogCameraHeight.setTitle(getString(R.string.dialog_camera_height_title));
 
-		Button button = (Button) dialogInstruction.findViewById(R.id.buttonConfrimHeight);
+		Button button = (Button) dialogCameraHeight.findViewById(R.id.buttonConfrimHeight);
 		button.setOnClickListener(new View.OnClickListener() {
 
 			@Override
 			public void onClick(View view) {
 				//verify correct input
 				try {
-					EditText editTextHeight = (EditText) dialogInstruction.findViewById(R.id.editTextYourHeight);
+					EditText editTextHeight = (EditText) dialogCameraHeight.findViewById(R.id.editTextYourHeight);
 					heightCamera = Double.parseDouble(editTextHeight.getText().toString());
 
 					if (heightCamera > 0) {
-						dialogInstruction.dismiss();
+						dialogCameraHeight.dismiss();
 
-						//Display Height
-						textViewCameraHeight.setText(String.format("Camera Height: %.2f", heightCamera));
-
-						CheckBox checkBoxInstruction = (CheckBox) dialogInstruction.findViewById(R.id.checkBoxInstructions);
+						CheckBox checkBoxInstruction = (CheckBox) dialogCameraHeight.findViewById(R.id.checkBoxInstructions);
 						if (checkBoxInstruction.isChecked()){
 							isInstructionEnabled = true;
 						}
-
+						
+						//debugging text
+						textViewCameraHeight.setText(String.format("Camera Height: %.2f", heightCamera));
+						
 						//change programme stage
 						currentStage.setStage(STAGE_TREETOP_ANGLE);
 					} else {
-						Toast.makeText(MathActivity.this, "Input Must be greater than zero", Toast.LENGTH_SHORT).show();
+						Toast.makeText(MathActivity.this, getString(R.string.dialog_toast_height_below_zero), Toast.LENGTH_SHORT).show();
 					}
 				} catch (NumberFormatException e) {
-					Toast.makeText(MathActivity.this, "Invalid Input", Toast.LENGTH_SHORT).show();
+					Toast.makeText(MathActivity.this, getString(R.string.dialog_toast_height_error), Toast.LENGTH_SHORT).show();
 					Log.e(TAG, "exception", e);
 				}
 			}
 		});
-		dialogInstruction.setCancelable(false);
-		dialogInstruction.show();
+		dialogCameraHeight.setCancelable(false);
+		dialogCameraHeight.show();
 	}
 
 	/**
@@ -531,7 +502,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 			((Button) findViewById(R.id.buttonCalculateHeight)).setVisibility(View.INVISIBLE);
 
 			//show tree height
-			textViewAngleNum.setText(String.format("Tree Height = %.2f cm", heightTree));
+			textViewAngleNum.setText(String.format(getString(R.string.text_view_math_tree_height), heightTree));
 			textViewAngleNum.setTextColor(Color.YELLOW);
 
 			//show person
@@ -578,17 +549,17 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 
 				switch(currentStage.getStage()) {
 				case STAGE_TREETOP_ANGLE: 
-					dialogTitle = "Highest Point!";
+					dialogTitle = getString(R.string.dialog_treetop_title);
 					dialogLayoutID = R.layout.dialog_custom_math_treetop;
 					break;
 
 				case STAGE_TREE_BOTTOM_ANGLE:
-					dialogTitle = "Lowest Point!";
+					dialogTitle = getString(R.string.dialog_tree_bottom_title);
 					dialogLayoutID = R.layout.dialog_custom_math_tree_bottom;
 					break;
 
 				case STAGE_END: 
-					dialogTitle = "How Did We Calculate The Tree Height?";
+					dialogTitle = getString(R.string.dialog_math_how_title);
 					dialogLayoutID = R.layout.dialog_custom_math_how;	
 					break;
 
@@ -674,7 +645,6 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 				| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
 		//initializations
-		frontFacingCameraId = CAMERA_ID_NOT_SET;
 		backFacingCameraId = CAMERA_ID_NOT_SET;
 		selectedCameraId = CAMERA_ID_NOT_SET;
 
@@ -709,7 +679,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 		hasFrontCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT);
 
 		if (!(hasCamera || hasFrontCamera)) {
-			Toast.makeText(this, "Camera Feature is not supported by this device", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, getString(R.string.toast_camera_not_supported_error), Toast.LENGTH_SHORT).show();
 		} else {
 			//sets back facing camera as default for selected camera
 			selectedCameraId = getBackFacingCameraId();
@@ -747,9 +717,6 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 		case R.id.action_debugging_information:
 			isDebuggingEnabled = !isDebuggingEnabled;
 			showDebuggingInfo(isDebuggingEnabled);
-			return true;
-		case R.id.action_camera_swap:
-			swapCamera();
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
@@ -847,7 +814,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 			accelerometerAngle = calculateAngle(-1*valueX, valueZ);
 			break;
 		}
-		textViewAngleNum.setText(String.format("Angle = %.2f", accelerometerAngle));
+		textViewAngleNum.setText(String.format(getString(R.string.text_view_math_angle), accelerometerAngle));
 
 		//debugging text
 		textViewX.setText("acceleration X = "+Float.toString(valueX));
