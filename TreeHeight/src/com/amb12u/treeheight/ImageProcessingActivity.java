@@ -32,7 +32,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.view.MotionEventCompat;
 import android.util.Log;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -73,7 +72,6 @@ public class ImageProcessingActivity extends Activity {
 	private int currentState;
 
 	private boolean isInstructionEnabled;
-	private boolean isPortraitImg;
 
 	private Uri imgUri;
 	private ImageView imageView;
@@ -92,11 +90,6 @@ public class ImageProcessingActivity extends Activity {
 	//Test for landscape images (Added isPortraitImg variable . use it)
 	//Indicate that tree bottom = reference object bottom
 	//Code documentation
-	//markTouch at bottom of image has large offset
-
-	//FIXME:
-	//offset for clicks at bottom causing app to crash
-
 
 	/**
 	 * Calculate tree height by finding the ratio of reference object to the tree
@@ -181,22 +174,15 @@ public class ImageProcessingActivity extends Activity {
 	}
 
 	/**
-	 * Calculate image pixels to screen pixels ratio (width ratio and height ratio separately).
+	 * Calculate image pixels to imageView pixels ratio (width ratio and height ratio separately).
 	 * Normally, the ratios are greater than 1
 	 */
 	private void calculateImage2ScreenRatio() {
 		Log.d(TAG, "calculateImage2ScreenRatio");
 
-		Display display = getWindowManager().getDefaultDisplay();
-		Point size = new Point();
-		display.getSize(size);
-
-		int screenWid = size.x;
-		int screenHei = size.y;
-
 		if (displayMat != null) {
-			heightRatio = (double) displayMat.rows()/screenHei;
-			widthRatio = (double) displayMat.cols()/screenWid;
+			heightRatio = (double) displayMat.rows()/imageView.getHeight();
+			widthRatio = (double) displayMat.cols()/imageView.getWidth();
 		}
 	}
 
@@ -659,9 +645,6 @@ public class ImageProcessingActivity extends Activity {
 		Matrix matrix = new Matrix();
 		matrix.postRotate(90);
 
-		if (loadedImage.getHeight() < loadedImage.getWidth()) {
-			isPortraitImg = false;
-		}
 		loadedImage = Bitmap.createBitmap(loadedImage , 0, 0, loadedImage.getWidth(), loadedImage .getHeight(), matrix, true);
 
 		//load image in image view 
@@ -873,7 +856,6 @@ public class ImageProcessingActivity extends Activity {
 
 		//initializations
 		currentState = STATE_TREETOP;
-		isPortraitImg = true;
 		isInstructionEnabled = true;
 
 		treeHeight = 0;
