@@ -6,7 +6,7 @@
     <string name="reset">Reset</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
-    <string name="ok">Okay</string>
+    <string name="ok">OK</string>
     <string name="confirm">Confirm</string>
     <string name="canceled">Canceled</string>
 
@@ -30,8 +30,8 @@
     <string name="toast_camera_open_error">Error loading camera</string>
     <string name="text_view_math_angle">Angle = %.2f</string>
     <string name="text_view_math_tree_height">Tree Height = %.2f cm</string>
-    <string name="text_view_math_treetop_image">Tree Bottom Image</string>
-    <string name="text_view_math_tree_bottom_image">Treetop Image</string>
+    <string name="text_view_math_treetop_image">Treetop Image</string>
+    <string name="text_view_math_tree_bottom_image">Tree Bottom Image</string>
     <string name="button_read_angle">Read Angle</string>
     <string name="button_calculate_height">Find Height</string>
     <string name="action_instructions">Show/Hide Instructions</string>
@@ -52,7 +52,7 @@
     <string name="ip_toast_reference_not_detected">No A4 Paper Detected .. try again or use different image</string>
     <string name="ip_button_task_tree_height">Tree Height = %.2f cm</string>
     <string name="ip_text_view_tree_height">Tree Height = ( %1$d * %2$.2f ) / %3$d = %4$.2f cm</string>
-    <string name="ip_verify_detection_message">Correct Detection?</string>
+    <string name="ip_verify_detection_message">Is the detection successful?</string>
     <string name="ip_toast_reference_above_treetop">A4 paper must be below treetop</string>
     <string name="ip_toast_touch_enable_treetop">Treetop detection touch input enabled</string>
     <string name="ip_toast_load_image_path_error">Error locating the file path</string>
@@ -71,7 +71,7 @@
     <string name="dialog_camera_height_text_view_what_is_your_height">What is your height?</string>
     <string name="dialog_camera_height_edit_text_your_height_hint">Enter your height here</string>
     <string name="dialog_camera_height_text_view_cm_unit">cm</string>
-    <string name="dialog_camera_height_check_box_instructions">Enable Application Instructions</string>
+    <string name="dialog_camera_height_check_box_instructions">Enable Helping Instructions</string>
 
     <!-- Math Treetop Dialog -->
     <string name="dialog_treetop_title">Highest Point!</string>

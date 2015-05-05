@@ -84,7 +84,7 @@ public class ImageProcessingActivity extends Activity {
 	private AsyncTask<Void, Void, Integer[]> taskDetectReference;
 	private AsyncTask<Void, Void, Void> taskAnimateReference;
 
-	private BaseLoaderCallback mLoaderCallback;
+	private BaseLoaderCallback loaderCallback;
 
 	//TODO:
 	//Test for landscape images (Added isPortraitImg variable . use it)
@@ -875,7 +875,7 @@ public class ImageProcessingActivity extends Activity {
 		taskDetectReference = null;
 		taskAnimateReference = null;
 
-		mLoaderCallback = new BaseLoaderCallback(this) {
+		loaderCallback = new BaseLoaderCallback(this) {
 			@Override
 			public void onManagerConnected(int status) {
 				switch (status) {
@@ -934,7 +934,7 @@ public class ImageProcessingActivity extends Activity {
 	protected void onResume() {
 		Log.d(TAG, "onResume");
 		super.onResume();
-		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
+		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, loaderCallback);
 	}
 
 

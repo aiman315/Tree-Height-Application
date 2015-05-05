@@ -14,6 +14,7 @@ import android.view.WindowManager;
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
 
 	private final String TAG = "CameraPreview";
+	private final int MAX_DEGREES = 360; 
 	private Camera camera;
 	private SurfaceHolder holder;
 
@@ -119,7 +120,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 	 */
 	private int getCameraPreviewOrientation(int cameraId) {
 		Log.d(TAG, "getCameraPreviewOrientation");
-		final int DEGREES_IN_CIRCLE = 360; 
 		int temp = 0;
 		int previewOrientation = 0;
 
@@ -130,12 +130,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
 		switch(cameraInfo.facing) {
 		case Camera.CameraInfo.CAMERA_FACING_BACK:
-			temp = cameraInfo.orientation - deviceOrientation + DEGREES_IN_CIRCLE;
-			previewOrientation = temp % DEGREES_IN_CIRCLE;
+			temp = cameraInfo.orientation - deviceOrientation + MAX_DEGREES;
+			previewOrientation = temp % MAX_DEGREES;
 			break;
 		case Camera.CameraInfo.CAMERA_FACING_FRONT:
-			temp = (cameraInfo.orientation + deviceOrientation ) % DEGREES_IN_CIRCLE;
-			previewOrientation = (DEGREES_IN_CIRCLE - temp) % DEGREES_IN_CIRCLE;
+			temp = (cameraInfo.orientation + deviceOrientation ) % MAX_DEGREES;
+			previewOrientation = (MAX_DEGREES - temp) % MAX_DEGREES;
 			break;
 		}
 		return previewOrientation;

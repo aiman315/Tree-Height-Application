@@ -153,7 +153,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 		Log.d(TAG, "onClickCalculateHeight");
 		angleTreetop = Math.abs(angleTreetop);
 		angleTreeBottom = Math.abs(angleTreeBottom);
-		heightTree = Math.abs(heightCamera*((Math.tan(Math.toRadians(angleTreetop))/Math.tan(Math.toRadians(angleTreeBottom))) + 1));
+		heightTree = Math.abs(heightCamera*(Math.tan(Math.toRadians(angleTreetop))/Math.tan(Math.toRadians(angleTreeBottom)) + 1));
 
 		sensorManager.unregisterListener(this);
 		currentStage.setStage(STAGE_END);
@@ -268,6 +268,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 	 */
 	private void takePicture(final int imageViewID) {
 		Log.d(TAG, "takePicture");
+
 		selectedCamera.takePicture(null, null, new Camera.PictureCallback() {
 
 			@Override
@@ -361,10 +362,10 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 						if (checkBoxInstruction.isChecked()){
 							isInstructionEnabled = true;
 						}
-						
+
 						//debugging text
 						textViewCameraHeight.setText(String.format("Camera Height: %.2f", heightCamera));
-						
+
 						//change programme stage
 						currentStage.setStage(STAGE_TREETOP_ANGLE);
 					} else {
@@ -522,7 +523,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 	/**
 	 * Display instructions using a custom dialog.
 	 * Depends on the current application stage
-	 * @param isEnabled: flag to show or hide instruction dialogs
+	 * Depending on flag, instruction dialog is shown or hidden
 	 */
 	private void showInsturctions() {
 		Log.d(TAG, "showInsturctions");
@@ -793,7 +794,7 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 		float valueY = event.values[1];
 		float valueZ = -1 * event.values[2]; //multiply by -1 to obtain Z actual readings for device on its back
 
-		//Log.d(TAG, ""+System.currentTimeMillis()+","+event.values[0]+","+event.values[1]+","+(event.values[2]));
+		Log.e(TAG, ""+System.currentTimeMillis()+","+event.values[0]+","+event.values[1]+","+(event.values[2]));
 		int rotation = getRotation();
 		switch (rotation) {
 		case Surface.ROTATION_0:
