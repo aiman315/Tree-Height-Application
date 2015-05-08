@@ -359,9 +359,8 @@ public class MathActivity extends Activity implements SensorEventListener, IntSt
 						dialogCameraHeight.dismiss();
 
 						CheckBox checkBoxInstruction = (CheckBox) dialogCameraHeight.findViewById(R.id.checkBoxInstructions);
-						if (checkBoxInstruction.isChecked()){
-							isInstructionEnabled = true;
-						}
+						isInstructionEnabled = checkBoxInstruction.isChecked();
+
 
 						//debugging text
 						textViewCameraHeight.setText(String.format("Camera Height: %.2f", heightCamera));
